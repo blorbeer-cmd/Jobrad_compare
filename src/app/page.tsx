@@ -1,4 +1,5 @@
 import { requireAuth } from "@/lib/auth-guard";
+import { BikeExplorer } from "./_components/bike-explorer";
 
 export default async function Home() {
   await requireAuth();
@@ -10,16 +11,10 @@ export default async function Home() {
           Fahrrad-Angebote vergleichen
         </h2>
         <p className="text-muted-foreground">
-          Finde das beste JobRad-Angebot bei verschiedenen Händlern.
+          Finde das beste JobRad-Angebot bei verschiedenen H\u00e4ndlern.
         </p>
       </div>
-
-      <div className="rounded-lg border p-8 text-center text-muted-foreground">
-        <p>Noch keine Händler-Daten vorhanden.</p>
-        <p className="text-sm mt-2">
-          Händler-Adapter werden in Phase 4 implementiert.
-        </p>
-      </div>
+      <BikeExplorer />
     </div>
   );
 }
