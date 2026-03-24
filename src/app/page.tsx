@@ -1,4 +1,8 @@
-export default function Home() {
+import { requireAuth } from "@/lib/auth-guard";
+
+export default async function Home() {
+  await requireAuth();
+
   return (
     <div className="space-y-6">
       <div>

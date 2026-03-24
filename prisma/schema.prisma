@@ -7,12 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id            String      @id @default(cuid())
   name          String?
   email         String      @unique
   emailVerified DateTime?
   image         String?
+  role          Role        @default(USER)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   consentGiven  Boolean     @default(false)
@@ -21,6 +27,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   savedBikes    SavedBike[]
+  invitesSent   Invite[]    @relation("InviteSender")
 }
 
 model Account {
@@ -57,6 +64,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Invite {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  invitedBy String
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  sender User @relation("InviteSender", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@index([email])
 }
 
 model SavedBike {

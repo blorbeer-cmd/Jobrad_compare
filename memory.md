@@ -12,15 +12,17 @@ Diese Datei dient als Gedächtnis für das Projekt. Fehler, die gemacht und beho
 ## Phasen-Status
 
 - [x] Phase 1: Projekt-Setup (Next.js, Prisma, Tailwind, shadcn/ui, Zod, Vitest)
-- [ ] Phase 2: Authentifizierung
+- [x] Phase 2: Authentifizierung (Magic Link + Invite-System)
 - [ ] Phase 3: UI-Komponenten (Filter, Vergleichstabelle)
 - [ ] Phase 4: Händler-Adapter (Scraping/API)
 - [ ] Phase 5: Deployment
 
-## Offene Entscheidungen
+## Entscheidungen
 
-- Auth-Methode: Magic Link vs. Credentials? (Noch offen)
-- Zugangsbeschränkung: Domain-Filter vs. Invite-System? (Noch offen)
+- Auth: Magic Link (via NextAuth.js Email Provider + nodemailer)
+- Zugangsbeschränkung: Invite-System (Admin lädt per E-Mail ein, 7 Tage gültig)
+- Später ggf. Switch auf Domain-Filter möglich
+- Erste Admin-E-Mail wird über `ADMIN_EMAIL` Env-Variable konfiguriert
 
 ## Fehler & Lessons Learned
 

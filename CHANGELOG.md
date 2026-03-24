@@ -2,6 +2,29 @@
 
 Alle Änderungen am Projekt werden hier dokumentiert.
 
+## [0.2.0] - 2026-03-24
+
+### Phase 2: Authentifizierung (Magic Link + Invite-System)
+
+#### Hinzugefügt
+- NextAuth.js mit Email-Provider (Magic Link)
+- `@auth/prisma-adapter` für Prisma-Integration
+- `nodemailer` für E-Mail-Versand
+- `Invite` Model im Prisma-Schema (email, invitedBy, usedAt, expiresAt)
+- `Role` Enum (USER, ADMIN) im User-Model
+- Login-Seite (`/login`) mit Magic-Link-Formular und Fehlermeldungen (deutsch)
+- Admin-Bereich für Einladungen (`/admin/invites`) mit Formular und Tabelle
+- API-Routen: `POST/GET /api/invites`, `DELETE /api/invites/:id`
+- Zod-Validierung für Invite-Erstellung
+- `signIn` Callback: Prüft ob Invite existiert, gültig und nicht abgelaufen ist
+- Auto-Admin: Erste E-Mail aus `ADMIN_EMAIL` Env-Variable wird automatisch Admin
+- Auth-Guards: `requireAuth()` und `requireAdmin()` Server-Helpers
+- `SessionProvider` Client-Wrapper für NextAuth
+- `UserNav` Komponente (Anmelden/Abmelden, Admin-Link, E-Mail-Anzeige)
+- TypeScript-Typerweiterung für NextAuth Session (id, role)
+- Layout aktualisiert mit SessionProvider und UserNav
+- Startseite erfordert jetzt Authentifizierung
+
 ## [0.1.0] - 2026-03-24
 
 ### Phase 1: Projekt-Setup
