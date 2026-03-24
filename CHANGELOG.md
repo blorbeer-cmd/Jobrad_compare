@@ -2,6 +2,48 @@
 
 Alle Änderungen am Projekt werden hier dokumentiert.
 
+## [0.3.0] - 2026-03-24
+
+### Phase 3: Modernes UI (User + Admin)
+
+#### Hinzugefügt
+
+**shadcn/ui Basiskomponenten:**
+- Button (6 Varianten: default, destructive, outline, secondary, ghost, link)
+- Input, Select (mit nativen HTML-Elementen)
+- Card (Header, Title, Description, Content, Footer)
+- Badge (default, secondary, destructive, outline, success, warning)
+- Table (Header, Body, Row, Head, Cell)
+- Dialog (mit Overlay, Close-Button, Header, Title, Description)
+- Tabs (Context-basiert, mit TabsList, TabsTrigger, TabsContent)
+- DropdownMenu (mit Click-Outside-Handling)
+- Avatar + AvatarFallback
+- Separator, Skeleton
+
+**User-Bereich — Fahrrad-Explorer:**
+- `BikeCard` — Karte mit Bild, Kategorie-Badge, Preis, Favorisieren-Button, Vergleich-Button
+- `BikeGrid` — Responsive Grid (1-4 Spalten), Loading Skeletons, Empty State
+- `FilterSidebar` — Suche, Kategorie-Chips, Preisspanne, Händler-/Marken-Dropdown, Sortierung, Mobile-Toggle
+- `ComparisonView` — Vergleichstabelle mit Bild, Preis, Kategorie, Verfügbarkeit; günstigster Preis grün markiert
+- `ComparisonBar` — Fixierte Bottom-Bar mit ausgewählten Rädern und Vergleich-Button
+- `StatsBar` — Ergebnisse, Durchschnittspreis, Preisspanne, Anzahl Händler
+- `BikeExplorer` — Hauptkomponente mit Tabs (Durchsuchen/Vergleich), Filter-State, Demo-Daten
+- 8 Demo-Fahrräder aus verschiedenen Kategorien und Händlern
+
+**Admin-Bereich:**
+- Admin-Layout mit Sidebar-Navigation (Dashboard, Einladungen, Benutzer)
+- Admin-Sidebar mit Avatar, Shield-Icon, aktiver Navigationszustand
+- Dashboard (`/admin`) mit Statistik-Karten (Benutzer, Einladungen, Angenommen, Offen) und Liste der letzten Registrierungen
+- Benutzerverwaltung (`/admin/users`) mit Tabelle, Suche, Rollenänderung (Admin/User Toggle)
+- API-Route `PATCH /api/admin/users/:id/role` mit Selbst-Degradierungs-Schutz
+- Einladungsseite (`/admin/invites`) verbessert mit Mini-Statistiken und neuen shadcn-Komponenten
+
+**Login-Seite:**
+- Redesign mit Card-Layout, Icons (Mail, CheckCircle), verbesserter UX
+
+**UserNav:**
+- Redesign als Dropdown-Menü mit Avatar, Admin-Link, Abmelden
+
 ## [0.2.0] - 2026-03-24
 
 ### Phase 2: Authentifizierung (Magic Link + Invite-System)
