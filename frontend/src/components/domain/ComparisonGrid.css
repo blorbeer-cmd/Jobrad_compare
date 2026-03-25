@@ -1,0 +1,31 @@
+/* ── ComparisonGrid ────────────────────────────────────────── */
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.comparison-grid__empty {
+  grid-column: 1 / -1;
+  padding: var(--space-16) var(--space-8);
+  text-align: center;
+  background: var(--color-neutral-0);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.comparison-grid__empty-icon {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-4);
+}
+
+.comparison-grid__empty h3 {
+  font-size: var(--font-size-lg);
+  color: var(--color-neutral-800);
+  margin-bottom: var(--space-2);
+}
+
+.comparison-grid__empty p {
+  color: var(--color-neutral-500);
+}
