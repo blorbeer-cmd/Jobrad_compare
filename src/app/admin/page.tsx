@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Mail, CheckCircle, Clock } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const [userCount, inviteCount, usedInviteCount, pendingInviteCount] =
     await Promise.all([
@@ -51,7 +53,7 @@ export default async function AdminDashboardPage() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
         <p className="text-muted-foreground">
-          \u00dcbersicht \u00fcber Benutzer und Einladungen.
+          Übersicht über Benutzer und Einladungen.
         </p>
       </div>
 
