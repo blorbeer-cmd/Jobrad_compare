@@ -16,10 +16,11 @@ import { Trash2 } from "lucide-react";
 interface Invite {
   id: string;
   email: string;
-  usedAt: string | null;
-  createdAt: string;
-  expiresAt: string;
-  sender: { email: string | null; name: string | null };
+  usedAt: Date | null;
+  createdAt: Date;
+  expiresAt: Date;
+  invitedBy: string;
+  sender: { email: string; name: string | null };
 }
 
 export function InviteList({ invites }: { invites: Invite[] }) {
@@ -53,7 +54,7 @@ export function InviteList({ invites }: { invites: Invite[] }) {
             <TableHead>E-Mail</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Eingeladen am</TableHead>
-            <TableHead>L\u00e4uft ab</TableHead>
+            <TableHead>Läuft ab</TableHead>
             <TableHead>Eingeladen von</TableHead>
             <TableHead className="text-right">Aktion</TableHead>
           </TableRow>
@@ -74,7 +75,7 @@ export function InviteList({ invites }: { invites: Invite[] }) {
                   {new Date(invite.expiresAt).toLocaleDateString("de-DE")}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {invite.sender.email ?? "\u2013"}
+                  {invite.sender.email ?? "–"}
                 </TableCell>
                 <TableCell className="text-right">
                   {!invite.usedAt && (
