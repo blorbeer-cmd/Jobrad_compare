@@ -16,9 +16,10 @@ import { Trash2 } from "lucide-react";
 interface Invite {
   id: string;
   email: string;
-  usedAt: string | null;
-  createdAt: string;
-  expiresAt: string;
+  usedAt: Date | string | null;
+  createdAt: Date | string;
+  expiresAt: Date | string;
+  invitedBy: string;
   sender: { email: string | null; name: string | null };
 }
 
