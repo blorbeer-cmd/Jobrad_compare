@@ -20,7 +20,7 @@ export async function PATCH(
   // Prevent self-demotion
   if (params.id === session.user.id) {
     return NextResponse.json(
-      { error: "Du kannst deine eigene Rolle nicht \u00e4ndern." },
+      { error: "Du kannst deine eigene Rolle nicht aendern." },
       { status: 400 }
     );
   }
@@ -28,7 +28,7 @@ export async function PATCH(
   const body = await request.json();
   const parsed = roleSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Ung\u00fcltige Rolle" }, { status: 400 });
+    return NextResponse.json({ error: "Ungueltige Rolle" }, { status: 400 });
   }
 
   const user = await db.user.update({
