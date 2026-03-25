@@ -1,6 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
+import { Trash2 } from "lucide-react";
 
 interface Invite {
   id: string;
@@ -17,21 +28,19 @@ export function InviteList({ invites }: { invites: Invite[] }) {
 
   async function handleRevoke(id: string) {
     if (!confirm("Einladung wirklich widerrufen?")) return;
-
     await fetch(`/api/invites/${id}`, { method: "DELETE" });
     router.refresh();
   }
 
   function getStatus(invite: Invite) {
-    if (invite.usedAt) return { label: "Angenommen", className: "text-green-600" };
-    if (new Date(invite.expiresAt) < new Date())
-      return { label: "Abgelaufen", className: "text-muted-foreground" };
-    return { label: "Offen", className: "text-yellow-600" };
+    if (invite.usedAt) return { label: "Angenommen", variant: "success" as const };
+    if (new Date(invite.expiresAt) < new Date()) return { label: "Abgelaufen", variant: "secondary" as const };
+    return { label: "Offen", variant: "warning" as const };
   }
 
   if (invites.length === 0) {
     return (
-      <div className="rounded-lg border p-8 text-center text-muted-foreground">
+      <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
         Noch keine Einladungen vorhanden.
       </div>
     );
@@ -39,48 +48,52 @@ export function InviteList({ invites }: { invites: Invite[] }) {
 
   return (
     <div className="rounded-lg border">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">E-Mail</th>
-              <th className="px-4 py-3 text-left font-medium">Status</th>
-              <th className="px-4 py-3 text-left font-medium">Eingeladen am</th>
-              <th className="px-4 py-3 text-left font-medium">Läuft ab</th>
-              <th className="px-4 py-3 text-right font-medium">Aktion</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invites.map((invite) => {
-              const status = getStatus(invite);
-              return (
-                <tr key={invite.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-medium">{invite.email}</td>
-                  <td className={`px-4 py-3 ${status.className}`}>
-                    {status.label}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {new Date(invite.createdAt).toLocaleDateString("de-DE")}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {new Date(invite.expiresAt).toLocaleDateString("de-DE")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {!invite.usedAt && (
-                      <button
-                        onClick={() => handleRevoke(invite.id)}
-                        className="text-sm text-destructive hover:underline"
-                      >
-                        Widerrufen
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>E-Mail</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Eingeladen am</TableHead>
+            <TableHead>L\u00e4uft ab</TableHead>
+            <TableHead>Eingeladen von</TableHead>
+            <TableHead className="text-right">Aktion</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invites.map((invite) => {
+            const status = getStatus(invite);
+            return (
+              <TableRow key={invite.id}>
+                <TableCell className="font-medium">{invite.email}</TableCell>
+                <TableCell>
+                  <Badge variant={status.variant}>{status.label}</Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {new Date(invite.createdAt).toLocaleDateString("de-DE")}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {new Date(invite.expiresAt).toLocaleDateString("de-DE")}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {invite.sender.email ?? "\u2013"}
+                </TableCell>
+                <TableCell className="text-right">
+                  {!invite.usedAt && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRevoke(invite.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }

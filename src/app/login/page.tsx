@@ -46,7 +46,7 @@ function LoginForm() {
         <CardContent className="text-center">
           <p className="text-sm text-muted-foreground">
             Klicke auf den Link in der E-Mail, um dich anzumelden.
-            Pr\u00fcfe auch deinen Spam-Ordner.
+            Prüfe auch deinen Spam-Ordner.
           </p>
         </CardContent>
       </Card>

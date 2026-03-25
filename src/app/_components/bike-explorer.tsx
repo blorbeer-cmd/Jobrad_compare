@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Bike } from "@/adapters/types";
 import { BikeGrid } from "@/components/bikes/bike-grid";
 import { FilterSidebar, defaultFilters, type FilterValues } from "@/components/bikes/filter-sidebar";
@@ -8,89 +8,9 @@ import { ComparisonView } from "@/components/bikes/comparison-view";
 import { ComparisonBar } from "@/components/bikes/comparison-bar";
 import { StatsBar } from "@/components/bikes/stats-bar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-// Demo data — will be replaced by real adapter data in Phase 4
-const demoBikes: Bike[] = [
-  {
-    name: "Cube Touring Hybrid ONE 625",
-    brand: "Cube",
-    category: "E-Bike",
-    price: 2799,
-    dealer: "Fahrrad XXL",
-    dealerUrl: "https://example.com/cube-touring",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Canyon Roadlite CF 7",
-    brand: "Canyon",
-    category: "Rennrad",
-    price: 1899,
-    dealer: "Canyon Direct",
-    dealerUrl: "https://example.com/canyon-roadlite",
-    imageUrl: "",
-    availability: "2-3 Wochen",
-  },
-  {
-    name: "Kalkhoff Endeavour 5.B Move+",
-    brand: "Kalkhoff",
-    category: "E-Bike",
-    price: 3499,
-    dealer: "Lucky Bike",
-    dealerUrl: "https://example.com/kalkhoff",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Stevens Trekking E-14",
-    brand: "Stevens",
-    category: "Trekking",
-    price: 3199,
-    dealer: "Fahrrad XXL",
-    dealerUrl: "https://example.com/stevens",
-    imageUrl: "",
-  },
-  {
-    name: "Bergamont Revox 3",
-    brand: "Bergamont",
-    category: "Mountainbike",
-    price: 799,
-    dealer: "Lucky Bike",
-    dealerUrl: "https://example.com/bergamont",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Riese & M\u00fcller Load 75",
-    brand: "Riese & M\u00fcller",
-    category: "Cargo",
-    price: 5999,
-    dealer: "Radwelt",
-    dealerUrl: "https://example.com/rm-load",
-    imageUrl: "",
-    availability: "Auf Anfrage",
-  },
-  {
-    name: "Specialized Diverge E5",
-    brand: "Specialized",
-    category: "Gravel",
-    price: 1499,
-    dealer: "Fahrrad XXL",
-    dealerUrl: "https://example.com/diverge",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Puky Cyke 20-3",
-    brand: "Puky",
-    category: "Kinder",
-    price: 399,
-    dealer: "Lucky Bike",
-    dealerUrl: "https://example.com/puky",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-];
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { RefreshCw } from "lucide-react";
 
 function bikeKey(bike: Bike) {
   return `${bike.dealer}:${bike.name}`;
@@ -100,8 +20,31 @@ export function BikeExplorer() {
   const [filters, setFilters] = useState<FilterValues>(defaultFilters);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
   const [compareBikes, setCompareBikes] = useState<Bike[]>([]);
+  const [allBikes, setAllBikes] = useState<Bike[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fetchInfo, setFetchInfo] = useState<{ fromCache: boolean; fetchedAt: string; errors: { dealer: string; error: string }[] } | null>(null);
 
-  const allBikes = demoBikes;
+  const loadBikes = useCallback(async (refresh = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = refresh ? "/api/bikes?refresh=true" : "/api/bikes";
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setAllBikes(data.bikes);
+      setFetchInfo({ fromCache: data.fromCache, fetchedAt: data.fetchedAt, errors: data.errors });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fehler beim Laden");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBikes();
+  }, [loadBikes]);
 
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
@@ -165,12 +108,40 @@ export function BikeExplorer() {
 
   return (
     <Tabs defaultValue="browse">
-      <TabsList>
-        <TabsTrigger value="browse">Durchsuchen</TabsTrigger>
-        <TabsTrigger value="compare">
-          Vergleich{compareBikes.length > 0 && ` (${compareBikes.length})`}
-        </TabsTrigger>
-      </TabsList>
+      <div className="flex items-center justify-between">
+        <TabsList>
+          <TabsTrigger value="browse">Durchsuchen</TabsTrigger>
+          <TabsTrigger value="compare">
+            Vergleich{compareBikes.length > 0 && ` (${compareBikes.length})`}
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="flex items-center gap-2">
+          {fetchInfo && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {fetchInfo.fromCache && <Badge variant="outline">Cache</Badge>}
+              {fetchInfo.errors.length > 0 && (
+                <Badge variant="warning">{fetchInfo.errors.length} Fehler</Badge>
+              )}
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadBikes(true)}
+            disabled={loading}
+          >
+            <RefreshCw className={`mr-2 h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+            Aktualisieren
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          Fehler beim Laden der Daten: {error}
+        </div>
+      )}
 
       <TabsContent value="browse" className="space-y-6">
         <StatsBar bikes={filteredBikes} totalCount={allBikes.length} />
@@ -189,6 +160,7 @@ export function BikeExplorer() {
               comparingKeys={comparingKeys}
               onToggleSave={toggleSave}
               onCompare={toggleCompare}
+              loading={loading}
             />
           </div>
         </div>
@@ -196,10 +168,7 @@ export function BikeExplorer() {
         <ComparisonBar
           bikes={compareBikes}
           onRemove={(bike) => toggleCompare(bike)}
-          onCompare={() => {
-            const tabsTrigger = document.querySelector('[data-tab="compare"]') as HTMLButtonElement;
-            tabsTrigger?.click();
-          }}
+          onCompare={() => {}}
         />
       </TabsContent>
 
