@@ -1,0 +1,36 @@
+/* ── ComparePage ───────────────────────────────────────────── */
+
+.compare-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.compare-page__hero {
+  text-align: center;
+  padding: var(--space-4) 0;
+}
+
+.compare-page__title {
+  font-size: var(--font-size-2xl);
+  color: var(--color-neutral-900);
+  margin-bottom: var(--space-2);
+}
+
+.compare-page__subtitle {
+  font-size: var(--font-size-md);
+  color: var(--color-neutral-500);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.compare-page__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.compare-page__results-title {
+  font-size: var(--font-size-xl);
+  color: var(--color-neutral-800);
+}

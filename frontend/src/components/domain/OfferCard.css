@@ -1,0 +1,45 @@
+/* ── OfferCard ─────────────────────────────────────────────── */
+
+.offer-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+}
+
+.offer-card__header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.offer-card__shop-name {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-neutral-900);
+}
+
+.offer-card__location {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-500);
+}
+
+.offer-card__bike-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.offer-card__bike-brand {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.offer-card__bike-model {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-neutral-900);
+}
