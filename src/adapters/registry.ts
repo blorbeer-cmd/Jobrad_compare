@@ -64,7 +64,6 @@ export async function fetchAllBikes(forceRefresh = false): Promise<FetchResult> 
     fetchedAt: new Date().toISOString(),
   };
 
-  // Only cache if at least one adapter succeeded
   if (errors.length < active.length) {
     cacheSet(CACHE_KEY, fetchResult);
   }
