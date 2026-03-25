@@ -1,48 +1,54 @@
 # Memory / Fehlerlog
 
-Diese Datei dient als Gedächtnis für das Projekt. Fehler, die gemacht und behoben wurden, werden hier dokumentiert, damit sie nicht wiederholt werden.
+Diese Datei dient als Gedaechtnis fuer das Projekt. Fehler, die gemacht und behoben wurden, werden hier dokumentiert, damit sie nicht wiederholt werden.
 
-## Projektübersicht
+## Projektuebersicht
 
 - **Repo:** blorbeer-cmd/jobrad_compare
 - **Branch:** claude/add-bike-filtering-DzZKh
-- **Stack:** Next.js 14, TypeScript, Prisma (PostgreSQL), Tailwind CSS, shadcn/ui, Zod, Vitest
-- **Zweck:** JobRad Fahrrad-Vergleichstool — Angebote verschiedener Händler aggregieren und vergleichen
+- **Stack:** Next.js 14, TypeScript, Prisma (PostgreSQL), Tailwind CSS, shadcn/ui, Zod, Cheerio, Vitest
+- **Zweck:** JobRad Fahrrad-Vergleichstool - Angebote verschiedener Haendler aggregieren und vergleichen
 
 ## Phasen-Status
 
 - [x] Phase 1: Projekt-Setup (Next.js, Prisma, Tailwind, shadcn/ui, Zod, Vitest)
 - [x] Phase 2: Authentifizierung (Magic Link + Invite-System)
 - [x] Phase 3: UI-Komponenten (Filter, Vergleichstabelle, Admin-Dashboard)
-- [ ] Phase 4: Händler-Adapter (Scraping/API)
+- [x] Phase 4: Haendler-Adapter (Scraping/API)
 - [ ] Phase 5: Deployment
 
 ## Entscheidungen
 
 - Auth: Magic Link (via NextAuth.js Email Provider + nodemailer)
-- Zugangsbeschränkung: Invite-System (Admin lädt per E-Mail ein, 7 Tage gültig)
-- Später ggf. Switch auf Domain-Filter möglich
-- Erste Admin-E-Mail wird über `ADMIN_EMAIL` Env-Variable konfiguriert
+- Zugangsbeschraenkung: Invite-System (Admin laedt per E-Mail ein, 7 Tage gueltig)
+- Erste Admin-E-Mail wird ueber ADMIN_EMAIL Env-Variable konfiguriert
 - UI: shadcn/ui Komponenten (manuell erstellt, nicht via CLI)
-- Selbst-Degradierungs-Schutz: Admins können ihre eigene Rolle nicht ändern
-- Vergleich: Max. 4 Fahrräder gleichzeitig, günstigster Preis grün hervorgehoben
+- Selbst-Degradierungs-Schutz: Admins koennen ihre eigene Rolle nicht aendern
+- Vergleich: Max. 4 Fahrraeder gleichzeitig, guenstigster Preis gruen hervorgehoben
+- Adapter: Cheerio HTML-Scraping mit BaseAdapter-Klasse
+- Cache: In-Memory mit 15 Min TTL, Admin kann Cache leeren
+- Demo-Modus: USE_DEMO_ADAPTERS=true fuer Entwicklung ohne echtes Scraping
 
 ## Architektur-Hinweise
 
-- `BikeExplorer` ist die Hauptkomponente für den User-Bereich (Client Component)
-- Demo-Daten in `bike-explorer.tsx` — wird in Phase 4 durch echte Adapter-Daten ersetzt
-- Admin-Bereich nutzt eigenes Layout mit Sidebar (`/admin/layout.tsx`)
+- `BikeExplorer` ist die Hauptkomponente fuer den User-Bereich (Client Component)
+- BikeExplorer fetcht von /api/bikes (serverseitiger Adapter-Aufruf)
+- Adapter-Registry aggregiert alle Adapter mit Promise.allSettled (graceful degradation)
+- Cache wird nur gespeichert wenn mindestens ein Adapter erfolgreich war
+- Admin-Bereich nutzt eigenes Layout mit Sidebar (/admin/layout.tsx)
 - Admin-Seiten sind Server Components, Formulare/Tabellen sind Client Components
-- `requireAuth()` und `requireAdmin()` für serverseitige Auth-Guards
+- requireAuth() und requireAdmin() fuer serverseitige Auth-Guards
 
 ## Fehler & Lessons Learned
 
-_Bisher keine Fehler dokumentiert._
+### [2026-03-25] GitHub Code Scanning blockiert Push
+- **Fehler:** push_files und create_or_update_file schlagen fehl mit "Waiting for Code Scanning results"
+- **Ursache:** Branch Protection Rule erfordert Code Scanning, das fuer neue Commits noch laeuft
+- **Fix:** Kurz warten und erneut versuchen, oder mehrere Dateien zusammen pushen
+- **Regel:** Bei Repo mit Code Scanning: Pushes buendeln und bei 422-Fehler kurz warten
 
-<!-- Format für neue Einträge:
-### [Datum] Kurzbeschreibung
-- **Fehler:** Was ist passiert?
-- **Ursache:** Warum ist es passiert?
-- **Fix:** Was wurde geändert?
-- **Regel:** Was muss in Zukunft beachtet werden?
--->
+### [2026-03-25] push_files mit Sonderzeichen
+- **Fehler:** push_files schlug mit "files parameter must be an array" fehl
+- **Ursache:** Vermutlich Encoding-Problem mit Unicode-Zeichen in Content
+- **Fix:** Umlaute als ae/oe/ue schreiben oder Unicode-Escapes vermeiden
+- **Regel:** In push_files Content keine Umlaute/Sonderzeichen verwenden, ASCII bevorzugen
