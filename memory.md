@@ -17,30 +17,6 @@ Diese Datei dient als Gedaechtnis fuer das Projekt.
 - [x] Phase 4: Haendler-Adapter (Scraping/API)
 - [x] Phase 5: Deployment (Docker, CI/CD, Vercel)
 
-## Deployment
-
-### Docker (empfohlen)
-```bash
-# Development
-docker compose up -d
-
-# Production
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-### Vercel
-- Repo verbinden, Env-Vars setzen, fertig
-- Prisma Generate laeuft automatisch via vercel.json buildCommand
-
-### Env-Variablen (Production)
-- DATABASE_URL - PostgreSQL Connection String
-- NEXTAUTH_URL - Public URL der App
-- NEXTAUTH_SECRET - Zufaelliger Secret (openssl rand -base64 32)
-- EMAIL_SERVER_HOST/PORT/USER/PASSWORD - SMTP
-- EMAIL_FROM - Absender-Adresse
-- ADMIN_EMAIL - Erste Admin-E-Mail
-- USE_DEMO_ADAPTERS - "false" fuer echte Scraper
-
 ## Entscheidungen
 
 - Auth: Magic Link via NextAuth.js
@@ -49,17 +25,13 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 - Cheerio HTML-Scraping fuer Haendler
 - In-Memory Cache mit 15 Min TTL
 - Docker Multi-Stage Build mit standalone Output
-- GitHub Actions fuer CI/CD
-- GHCR als Container Registry
+- GitHub Actions fuer CI/CD, GHCR als Container Registry
 
 ## Fehler & Lessons Learned
 
 ### [2026-03-25] GitHub Code Scanning blockiert Push
-- **Fehler:** push_files schlaegt fehl mit "Waiting for Code Scanning results"
-- **Fix:** Kurz warten und erneut versuchen
-- **Regel:** Pushes buendeln, bei 422-Fehler kurz warten
+- **Fix:** Pushes buendeln, bei 422-Fehler kurz warten
 
-### [2026-03-25] push_files mit Sonderzeichen
-- **Fehler:** push_files schlug mit "files parameter must be an array" fehl
-- **Fix:** Umlaute als ae/oe/ue schreiben
-- **Regel:** In push_files Content ASCII bevorzugen
+### [2026-03-25] frontend/ verursacht Build-Fehler
+- **Fehler:** Next.js findet frontend/src/App.tsx und importiert react-router-dom
+- **Fix:** frontend in tsconfig.json exclude aufgenommen
