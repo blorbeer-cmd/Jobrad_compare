@@ -1,3 +1,7 @@
 {
-  "framework": "nextjs"
+  "$schema": "https://vercel.com/docs/project-configuration/schema",
+  "framework": "nextjs",
+  "buildCommand": "npx prisma generate && next build",
+  "installCommand": "npm ci",
+  "outputDirectory": ".next"
 }
