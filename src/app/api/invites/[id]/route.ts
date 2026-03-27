@@ -1,1 +1,28 @@
-aW1wb3J0IHsgZ2V0U2VydmVyU2Vzc2lvbiB9IGZyb20gIm5leHQtYXV0aCI7CmltcG9ydCB7IE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgYXV0aE9wdGlvbnMgfSBmcm9tICJAL2xpYi9hdXRoIjsKaW1wb3J0IHsgZGIgfSBmcm9tICJAL2xpYi9kYiI7CgovLyBERUxFVEUgL2FwaS9pbnZpdGVzLzppZCAtLSBSZXZva2UgYW4gaW52aXRlIChBZG1pbiBvbmx5KQpleHBvcnQgYXN5bmMgZnVuY3Rpb24gREVMRVRFKAogIF9yZXF1ZXN0OiBSZXF1ZXN0LAogIHsgcGFyYW1zIH06IHsgcGFyYW1zOiBQcm9taXNlPHsgaWQ6IHN0cmluZyB9PiB9CikgewogIGNvbnN0IHsgaWQgfSA9IGF3YWl0IHBhcmFtczsKICBjb25zdCBzZXNzaW9uID0gYXdhaXQgZ2V0U2VydmVyU2Vzc2lvbihhdXRoT3B0aW9ucyk7CiAgaWYgKCFzZXNzaW9uIHx8IHNlc3Npb24udXNlci5yb2xlICE9PSAiQURNSU4iKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIk5pY2h0IGF1dG9yaXNpZXJ0IiB9LCB7IHN0YXR1czogNDAzIH0pOwogIH0KCiAgY29uc3QgaW52aXRlID0gYXdhaXQgZGIuaW52aXRlLmZpbmRVbmlxdWUoeyB3aGVyZTogeyBpZCB9IH0pOwogIGlmICghaW52aXRlKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgIHsgZXJyb3I6ICJFaW5sYWR1bmcgbmljaHQgZ2VmdW5kZW4iIH0sCiAgICAgIHsgc3RhdHVzOiA0MDQgfQogICAgKTsKICB9CgogIGF3YWl0IGRiLmludml0ZS5kZWxldGUoeyB3aGVyZTogeyBpZCB9IH0pOwoKICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBzdWNjZXNzOiB0cnVlIH0pOwp9Cg==
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+
+// DELETE /api/invites/:id -- Revoke an invite (Admin only)
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Nicht autorisiert" }, { status: 403 });
+  }
+
+  const invite = await db.invite.findUnique({ where: { id } });
+  if (!invite) {
+    return NextResponse.json(
+      { error: "Einladung nicht gefunden" },
+      { status: 404 }
+    );
+  }
+
+  await db.invite.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
+}

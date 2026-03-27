@@ -1,1 +1,41 @@
-aW1wb3J0IHsgZ2V0U2VydmVyU2Vzc2lvbiB9IGZyb20gIm5leHQtYXV0aCI7CmltcG9ydCB7IE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgeiB9IGZyb20gInpvZCI7CmltcG9ydCB7IGF1dGhPcHRpb25zIH0gZnJvbSAiQC9saWIvYXV0aCI7CmltcG9ydCB7IGRiIH0gZnJvbSAiQC9saWIvZGIiOwoKY29uc3Qgcm9sZVNjaGVtYSA9IHoub2JqZWN0KHsKICByb2xlOiB6LmVudW0oWyJVU0VSIiwgIkFETUlOIl0pLAp9KTsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQQVRDSCgKICByZXF1ZXN0OiBSZXF1ZXN0LAogIHsgcGFyYW1zIH06IHsgcGFyYW1zOiBQcm9taXNlPHsgaWQ6IHN0cmluZyB9PiB9CikgewogIGNvbnN0IHsgaWQgfSA9IGF3YWl0IHBhcmFtczsKICBjb25zdCBzZXNzaW9uID0gYXdhaXQgZ2V0U2VydmVyU2Vzc2lvbihhdXRoT3B0aW9ucyk7CiAgaWYgKCFzZXNzaW9uIHx8IHNlc3Npb24udXNlci5yb2xlICE9PSAiQURNSU4iKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIk5pY2h0IGF1dG9yaXNpZXJ0IiB9LCB7IHN0YXR1czogNDAzIH0pOwogIH0KCiAgLy8gUHJldmVudCBzZWxmLWRlbW90aW9uCiAgaWYgKGlkID09PSBzZXNzaW9uLnVzZXIuaWQpIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgeyBlcnJvcjogIkR1IGthbm5zdCBkZWluZSBlaWdlbmUgUm9sbGUgbmljaHQgYWVuZGVybi4iIH0sCiAgICAgIHsgc3RhdHVzOiA0MDAgfQogICAgKTsKICB9CgogIGNvbnN0IGJvZHkgPSBhd2FpdCByZXF1ZXN0Lmpzb24oKTsKICBjb25zdCBwYXJzZWQgPSByb2xlU2NoZW1hLnNhZmVQYXJzZShib2R5KTsKICBpZiAoIXBhcnNlZC5zdWNjZXNzKSB7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIlVuZ3VlbHRpZ2UgUm9sbGUiIH0sIHsgc3RhdHVzOiA0MDAgfSk7CiAgfQoKICBjb25zdCB1c2VyID0gYXdhaXQgZGIudXNlci51cGRhdGUoewogICAgd2hlcmU6IHsgaWQgfSwKICAgIGRhdGE6IHsgcm9sZTogcGFyc2VkLmRhdGEucm9sZSB9LAogIH0pOwoKICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBpZDogdXNlci5pZCwgcm9sZTogdXNlci5yb2xlIH0pOwp9Cg==
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+
+const roleSchema = z.object({
+  role: z.enum(["USER", "ADMIN"]),
+});
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Nicht autorisiert" }, { status: 403 });
+  }
+
+  // Prevent self-demotion
+  if (id === session.user.id) {
+    return NextResponse.json(
+      { error: "Du kannst deine eigene Rolle nicht aendern." },
+      { status: 400 }
+    );
+  }
+
+  const body = await request.json();
+  const parsed = roleSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Ungueltige Rolle" }, { status: 400 });
+  }
+
+  const user = await db.user.update({
+    where: { id },
+    data: { role: parsed.data.role },
+  });
+
+  return NextResponse.json({ id: user.id, role: user.role });
+}

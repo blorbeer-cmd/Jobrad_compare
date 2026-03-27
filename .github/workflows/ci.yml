@@ -1,1 +1,75 @@
-bmFtZTogQ0kKCm9uOgogIHB1c2g6CiAgICBicmFuY2hlczogW21haW4sIGNsYXVkZS8qXQogIHB1bGxfcmVxdWVzdDoKICAgIGJyYW5jaGVzOiBbbWFpbl0KCmVudjoKICBOT0RFX1ZFUlNJT046ICcyMCcKCmpvYnM6CiAgbGludDoKICAgIG5hbWU6IExpbnQKICAgIHJ1bnMtb246IHVidW50dS1sYXRlc3QKICAgIHN0ZXBzOgogICAgICAtIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKICAgICAgLSB1c2VzOiBhY3Rpb25zL3NldHVwLW5vZGVAdjQKICAgICAgICB3aXRoOgogICAgICAgICAgbm9kZS12ZXJzaW9uOiAke3sgZW52Lk5PREVfVkVSU0lPTiB9fQogICAgICAtIHJ1bjogbnBtIGluc3RhbGwgLS1sZWdhY3ktcGVlci1kZXBzCiAgICAgIC0gcnVuOiBucG0gcnVuIGxpbnQKCiAgdHlwZWNoZWNrOgogICAgbmFtZTogVHlwZSBDaGVjawogICAgcnVucy1vbjogdWJ1bnR1LWxhdGVzdAogICAgc3RlcHM6CiAgICAgIC0gdXNlczogYWN0aW9ucy9jaGVja291dEB2NAogICAgICAtIHVzZXM6IGFjdGlvbnMvc2V0dXAtbm9kZUB2NAogICAgICAgIHdpdGg6CiAgICAgICAgICBub2RlLXZlcnNpb246ICR7eyBlbnYuTk9ERV9WRVJTSU9OIH19CiAgICAgIC0gcnVuOiBucG0gaW5zdGFsbCAtLWxlZ2FjeS1wZWVyLWRlcHMKICAgICAgLSBydW46IG5weCB0c2MgLS1ub0VtaXQKCiAgdGVzdDoKICAgIG5hbWU6IFRlc3QKICAgIHJ1bnMtb246IHVidW50dS1sYXRlc3QKICAgIHN0ZXBzOgogICAgICAtIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKICAgICAgLSB1c2VzOiBhY3Rpb25zL3NldHVwLW5vZGVAdjQKICAgICAgICB3aXRoOgogICAgICAgICAgbm9kZS12ZXJzaW9uOiAke3sgZW52Lk5PREVfVkVSU0lPTiB9fQogICAgICAtIHJ1bjogbnBtIGluc3RhbGwgLS1sZWdhY3ktcGVlci1kZXBzCiAgICAgIC0gcnVuOiBucG0gcnVuIHRlc3Q6cnVuCgogIGJ1aWxkOgogICAgbmFtZTogQnVpbGQKICAgIHJ1bnMtb246IHVidW50dS1sYXRlc3QKICAgIG5lZWRzOiBbbGludCwgdHlwZWNoZWNrLCB0ZXN0XQogICAgZW52OgogICAgICBEQVRBQkFTRV9VUkw6IHBvc3RncmVzcWw6Ly9wbGFjZWhvbGRlcjpwbGFjZWhvbGRlckBsb2NhbGhvc3Q6NTQzMi9wbGFjZWhvbGRlcgogICAgICBORVhUQVVUSF9TRUNSRVQ6IGNpLWJ1aWxkLXNlY3JldAogICAgc3RlcHM6CiAgICAgIC0gdXNlczogYWN0aW9ucy9jaGVja291dEB2NAogICAgICAtIHVzZXM6IGFjdGlvbnMvc2V0dXAtbm9kZUB2NAogICAgICAgIHdpdGg6CiAgICAgICAgICBub2RlLXZlcnNpb246ICR7eyBlbnYuTk9ERV9WRVJTSU9OIH19CiAgICAgIC0gcnVuOiBucG0gaW5zdGFsbCAtLWxlZ2FjeS1wZWVyLWRlcHMKICAgICAgLSBydW46IG5wbSBydW4gYnVpbGQKCiAgZG9ja2VyOgogICAgbmFtZTogRG9ja2VyIEJ1aWxkCiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICBuZWVkczogW2J1aWxkXQogICAgaWY6IGdpdGh1Yi5yZWYgPT0gJ3JlZnMvaGVhZHMvbWFpbicKICAgIHN0ZXBzOgogICAgICAtIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKICAgICAgLSB1c2VzOiBkb2NrZXIvc2V0dXAtYnVpbGR4LWFjdGlvbkB2MwogICAgICAtIHVzZXM6IGRvY2tlci9idWlsZC1wdXNoLWFjdGlvbkB2NQogICAgICAgIHdpdGg6CiAgICAgICAgICBjb250ZXh0OiAuCiAgICAgICAgICBwdXNoOiBmYWxzZQogICAgICAgICAgdGFnczogam9icmFkLWNvbXBhcmU6bGF0ZXN0CiAgICAgICAgICBjYWNoZS1mcm9tOiB0eXBlPWdoYQogICAgICAgICAgY2FjaGUtdG86IHR5cGU9Z2hhLG1vZGU9bWF4Cg==
+name: CI
+
+on:
+  push:
+    branches: [main, claude/*]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install --legacy-peer-deps
+      - run: npm run lint
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install --legacy-peer-deps
+      - run: npx tsc --noEmit
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install --legacy-peer-deps
+      - run: npm run test:run
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test]
+    env:
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      NEXTAUTH_SECRET: ci-build-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install --legacy-peer-deps
+      - run: npm run build
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: jobrad-compare:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
