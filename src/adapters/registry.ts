@@ -5,6 +5,7 @@ import { DemoAdapter } from "./demo";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
+import { persistBikes, loadBikesFromDb } from "@/lib/bike-persistence";
 
 const realAdapters: BaseAdapter[] = [
   new FahrradXXLAdapter(),
@@ -54,6 +55,10 @@ export async function fetchAllBikes(forceRefresh = false): Promise<FetchResult> 
         cacheSet(key, bikes, adapter.cacheTtlMs);
         allBikes.push(...bikes);
         anyFresh = true;
+        // Persist to DB asynchronously — never blocks the API response
+        persistBikes(bikes, adapter.name).catch((err) =>
+          console.error(`[registry] DB persist failed for ${adapter.name}:`, err)
+        );
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         errors.push({ dealer: adapter.name, error: message });

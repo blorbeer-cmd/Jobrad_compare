@@ -31,7 +31,7 @@ export class BikeDiscountAdapter extends BaseAdapter {
     return this.stampAndRecord(allBikes);
   }
 
-  private parseListing(html: string, categoryPath: string): Bike[] {
+  protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
     $(".product-card, .product--box, .productCard, [data-product]").each((_, el) => {

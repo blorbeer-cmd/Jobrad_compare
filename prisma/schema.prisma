@@ -12,6 +12,10 @@ enum Role {
   ADMIN
 }
 
+// ---------------------------------------------------------------------------
+// Auth models (NextAuth.js managed)
+// ---------------------------------------------------------------------------
+
 model User {
   id            String      @id @default(cuid())
   name          String?
@@ -67,11 +71,11 @@ model VerificationToken {
 }
 
 model Invite {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   invitedBy String
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   expiresAt DateTime
 
   sender User @relation("InviteSender", fields: [invitedBy], references: [id], onDelete: Cascade)
@@ -79,16 +83,107 @@ model Invite {
   @@index([email])
 }
 
-model SavedBike {
-  id        String   @id @default(cuid())
-  userId    String
-  bikeData  Json
-  dealer    String
-  note      String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ---------------------------------------------------------------------------
+// Normalized bike data model (Phase 5)
+// ---------------------------------------------------------------------------
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+/// Known dealer/shop with adapter configuration
+model Dealer {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  url           String        @default("")
+  adapterKey    String        @unique
+  isActive      Boolean       @default(true)
+  lastFetchedAt DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  listings      BikeListing[]
+
+  @@index([adapterKey])
+}
+
+/// Canonical bike entity — one row per distinct brand+model combination
+model BikeModel {
+  id           String        @id @default(cuid())
+  brand        String
+  modelName    String
+  category     String
+  /// Normalized key for deduplication: "cube:touring-hybrid-one-625"
+  canonicalKey String        @unique
+  modelYear    Int?
+  createdAt    DateTime      @default(now())
+
+  listings     BikeListing[]
+
+  @@index([brand, modelName])
+}
+
+/// Concrete offer from a specific dealer for a specific bike model
+model BikeListing {
+  id           String          @id @default(cuid())
+  bikeModelId  String
+  dealerId     String
+  /// Unique identifier from the source system (SKU / offer ID)
+  sourceId     String?
+  sourceType   String          @default("scrape")
+  /// Main display price (offerPrice if discounted, otherwise listPrice)
+  price        Float
+  /// UVP / original list price
+  listPrice    Float?
+  /// Discounted offer price (when different from listPrice)
+  offerPrice   Float?
+  url          String
+  imageUrl     String?
+  availability String?
+  lastSeenAt   DateTime        @default(now())
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  bikeModel    BikeModel       @relation(fields: [bikeModelId], references: [id])
+  dealer       Dealer          @relation(fields: [dealerId], references: [id])
+  snapshots    PriceSnapshot[]
+  savedBikes   SavedBike[]
+
+  @@unique([dealerId, sourceId])
+  @@index([dealerId])
+  @@index([bikeModelId])
+  @@index([lastSeenAt])
+}
+
+/// Price snapshot — one row each time a price change is detected
+model PriceSnapshot {
+  id            String      @id @default(cuid())
+  bikeListingId String
+  price         Float
+  listPrice     Float?
+  offerPrice    Float?
+  recordedAt    DateTime    @default(now())
+
+  bikeListing   BikeListing @relation(fields: [bikeListingId], references: [id], onDelete: Cascade)
+
+  @@index([bikeListingId, recordedAt])
+}
+
+// ---------------------------------------------------------------------------
+// User favorites
+// ---------------------------------------------------------------------------
+
+model SavedBike {
+  id             String       @id @default(cuid())
+  userId         String
+  /// Optional normalized reference — set when the listing is in the DB
+  bikeListingId  String?
+  /// Denormalized JSON snapshot for offline/demo listings (backwards compat)
+  bikeData       Json
+  dealer         String
+  note           String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bikeListing    BikeListing? @relation(fields: [bikeListingId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([bikeListingId])
 }
