@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Bike } from "@/adapters/types";
 import { BikeGrid } from "@/components/bikes/bike-grid";
 import { FilterSidebar, defaultFilters, type FilterValues } from "@/components/bikes/filter-sidebar";
@@ -8,100 +8,68 @@ import { ComparisonView } from "@/components/bikes/comparison-view";
 import { ComparisonBar } from "@/components/bikes/comparison-bar";
 import { StatsBar } from "@/components/bikes/stats-bar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
-// Demo data — will be replaced by real adapter data in Phase 4
-const demoBikes: Bike[] = [
-  {
-    name: "Cube Touring Hybrid ONE 625",
-    brand: "Cube",
-    category: "E-Bike",
-    price: 2799,
-    dealer: "Fahrrad XXL",
-    dealerUrl: "https://example.com/cube-touring",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Canyon Roadlite CF 7",
-    brand: "Canyon",
-    category: "Rennrad",
-    price: 1899,
-    dealer: "Canyon Direct",
-    dealerUrl: "https://example.com/canyon-roadlite",
-    imageUrl: "",
-    availability: "2-3 Wochen",
-  },
-  {
-    name: "Kalkhoff Endeavour 5.B Move+",
-    brand: "Kalkhoff",
-    category: "E-Bike",
-    price: 3499,
-    dealer: "Lucky Bike",
-    dealerUrl: "https://example.com/kalkhoff",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Stevens Trekking E-14",
-    brand: "Stevens",
-    category: "Trekking",
-    price: 3199,
-    dealer: "Fahrrad XXL",
-    dealerUrl: "https://example.com/stevens",
-    imageUrl: "",
-  },
-  {
-    name: "Bergamont Revox 3",
-    brand: "Bergamont",
-    category: "Mountainbike",
-    price: 799,
-    dealer: "Lucky Bike",
-    dealerUrl: "https://example.com/bergamont",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Riese & M\u00fcller Load 75",
-    brand: "Riese & M\u00fcller",
-    category: "Cargo",
-    price: 5999,
-    dealer: "Radwelt",
-    dealerUrl: "https://example.com/rm-load",
-    imageUrl: "",
-    availability: "Auf Anfrage",
-  },
-  {
-    name: "Specialized Diverge E5",
-    brand: "Specialized",
-    category: "Gravel",
-    price: 1499,
-    dealer: "Fahrrad XXL",
-    dealerUrl: "https://example.com/diverge",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-  {
-    name: "Puky Cyke 20-3",
-    brand: "Puky",
-    category: "Kinder",
-    price: 399,
-    dealer: "Lucky Bike",
-    dealerUrl: "https://example.com/puky",
-    imageUrl: "",
-    availability: "Sofort verf\u00fcgbar",
-  },
-];
+interface FetchState {
+  bikes: Bike[];
+  errors: { dealer: string; error: string }[];
+  loading: boolean;
+  error: string | null;
+  fromCache: boolean;
+  fetchedAt: string | null;
+}
 
 function bikeKey(bike: Bike) {
   return `${bike.dealer}:${bike.name}`;
 }
 
 export function BikeExplorer() {
+  const [fetchState, setFetchState] = useState<FetchState>({
+    bikes: [],
+    errors: [],
+    loading: true,
+    error: null,
+    fromCache: false,
+    fetchedAt: null,
+  });
   const [filters, setFilters] = useState<FilterValues>(defaultFilters);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
   const [compareBikes, setCompareBikes] = useState<Bike[]>([]);
 
-  const allBikes = demoBikes;
+  const loadBikes = useCallback(async (refresh = false) => {
+    setFetchState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const url = refresh ? "/api/bikes?refresh=true" : "/api/bikes";
+      const res = await fetch(url);
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Bitte melde dich an, um Fahrraeder zu durchsuchen.");
+        }
+        throw new Error(`Fehler beim Laden der Daten (${res.status})`);
+      }
+      const data = await res.json();
+      setFetchState({
+        bikes: data.bikes ?? [],
+        errors: data.errors ?? [],
+        loading: false,
+        error: null,
+        fromCache: data.fromCache ?? false,
+        fetchedAt: data.fetchedAt ?? null,
+      });
+    } catch (err) {
+      setFetchState((prev) => ({
+        ...prev,
+        loading: false,
+        error: err instanceof Error ? err.message : "Unbekannter Fehler beim Laden der Daten.",
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBikes();
+  }, [loadBikes]);
+
+  const allBikes = fetchState.bikes;
 
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
@@ -173,34 +141,69 @@ export function BikeExplorer() {
       </TabsList>
 
       <TabsContent value="browse" className="space-y-6">
-        <StatsBar bikes={filteredBikes} totalCount={allBikes.length} />
-
-        <div className="flex gap-8">
-          <FilterSidebar
-            filters={filters}
-            onFiltersChange={setFilters}
-            availableDealers={availableDealers}
-            availableBrands={availableBrands}
-          />
-          <div className="flex-1">
-            <BikeGrid
-              bikes={filteredBikes}
-              savedBikeKeys={savedKeys}
-              comparingKeys={comparingKeys}
-              onToggleSave={toggleSave}
-              onCompare={toggleCompare}
-            />
+        {fetchState.error ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-destructive/50 bg-destructive/5 py-16">
+            <svg className="h-12 w-12 text-destructive/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <p className="mt-4 text-lg font-medium">{fetchState.error}</p>
+            <Button variant="outline" className="mt-4" onClick={() => loadBikes()}>
+              Erneut versuchen
+            </Button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <StatsBar bikes={filteredBikes} totalCount={allBikes.length} />
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                {fetchState.fromCache && fetchState.fetchedAt && (
+                  <span>Daten vom {new Date(fetchState.fetchedAt).toLocaleString("de-DE")}</span>
+                )}
+                {fetchState.errors.length > 0 && (
+                  <span className="text-amber-600" title={fetchState.errors.map((e) => `${e.dealer}: ${e.error}`).join("\n")}>
+                    {fetchState.errors.length} Quelle(n) nicht erreichbar
+                  </span>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => loadBikes(true)}
+                  disabled={fetchState.loading}
+                >
+                  Aktualisieren
+                </Button>
+              </div>
+            </div>
 
-        <ComparisonBar
-          bikes={compareBikes}
-          onRemove={(bike) => toggleCompare(bike)}
-          onCompare={() => {
-            const tabsTrigger = document.querySelector('[data-tab="compare"]') as HTMLButtonElement;
-            tabsTrigger?.click();
-          }}
-        />
+            <div className="flex gap-8">
+              <FilterSidebar
+                filters={filters}
+                onFiltersChange={setFilters}
+                availableDealers={availableDealers}
+                availableBrands={availableBrands}
+              />
+              <div className="flex-1">
+                <BikeGrid
+                  bikes={filteredBikes}
+                  savedBikeKeys={savedKeys}
+                  comparingKeys={comparingKeys}
+                  onToggleSave={toggleSave}
+                  onCompare={toggleCompare}
+                  loading={fetchState.loading}
+                />
+              </div>
+            </div>
+
+            <ComparisonBar
+              bikes={compareBikes}
+              onRemove={(bike) => toggleCompare(bike)}
+              onCompare={() => {
+                const tabsTrigger = document.querySelector('[data-tab="compare"]') as HTMLButtonElement;
+                tabsTrigger?.click();
+              }}
+            />
+          </>
+        )}
       </TabsContent>
 
       <TabsContent value="compare">
