@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Bike } from "@/adapters/types";
 import { BikeGrid } from "@/components/bikes/bike-grid";
-import { FilterSidebar, defaultFilters, type FilterValues } from "@/components/bikes/filter-sidebar";
+import { FilterSidebar, defaultFilters } from "@/components/bikes/filter-sidebar";
+import { filterAndSortBikes, type FilterValues } from "@/lib/bike-filters";
 import { ComparisonView } from "@/components/bikes/comparison-view";
 import { ComparisonBar } from "@/components/bikes/comparison-bar";
 import { StatsBar } from "@/components/bikes/stats-bar";
@@ -108,40 +109,7 @@ export function BikeExplorer() {
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
 
-  const filteredBikes = useMemo(() => {
-    let result = [...allBikes];
-
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      result = result.filter(
-        (b) => b.name.toLowerCase().includes(q) || b.brand.toLowerCase().includes(q)
-      );
-    }
-    if (filters.categories.length > 0) {
-      result = result.filter((b) => filters.categories.includes(b.category));
-    }
-    if (filters.priceMin) {
-      result = result.filter((b) => b.price >= Number(filters.priceMin));
-    }
-    if (filters.priceMax) {
-      result = result.filter((b) => b.price <= Number(filters.priceMax));
-    }
-    if (filters.dealer) {
-      result = result.filter((b) => b.dealer === filters.dealer);
-    }
-    if (filters.brand) {
-      result = result.filter((b) => b.brand === filters.brand);
-    }
-
-    switch (filters.sortBy) {
-      case "price-asc": result.sort((a, b) => a.price - b.price); break;
-      case "price-desc": result.sort((a, b) => b.price - a.price); break;
-      case "name-asc": result.sort((a, b) => a.name.localeCompare(b.name, "de")); break;
-      case "name-desc": result.sort((a, b) => b.name.localeCompare(a.name, "de")); break;
-    }
-
-    return result;
-  }, [allBikes, filters]);
+  const filteredBikes = useMemo(() => filterAndSortBikes(allBikes, filters), [allBikes, filters]);
 
   async function toggleSave(bike: Bike) {
     const key = bikeKey(bike);
