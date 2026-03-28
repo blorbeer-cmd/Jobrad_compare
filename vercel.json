@@ -1,7 +1,7 @@
 {
   "$schema": "https://vercel.com/docs/project-configuration/schema",
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate && npx prisma db push --skip-generate && next build",
+  "buildCommand": "npx prisma generate && (npx prisma db push --skip-generate || true) && next build",
   "installCommand": "npm install --legacy-peer-deps",
   "outputDirectory": ".next"
 }
