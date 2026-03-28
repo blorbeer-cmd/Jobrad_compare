@@ -11,9 +11,11 @@ import { StatsBar } from "@/components/bikes/stats-bar";
 import { SavedBikeCard } from "@/components/bikes/saved-bike-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock } from "lucide-react";
+import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDataAge } from "@/lib/freshness";
+import { groupBikes, summarizeResolution } from "@/lib/entity-resolution";
+import { BikeGroupCard } from "@/components/bikes/bike-group-card";
 
 interface FetchState {
   bikes: Bike[];
@@ -110,6 +112,8 @@ export function BikeExplorer() {
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
   const filteredBikes = useMemo(() => filterAndSortBikes(allBikes, filters), [allBikes, filters]);
+  const bikeGroups = useMemo(() => groupBikes(allBikes), [allBikes]);
+  const resolution = useMemo(() => summarizeResolution(bikeGroups), [bikeGroups]);
 
   async function toggleSave(bike: Bike) {
     const key = bikeKey(bike);
@@ -207,6 +211,15 @@ export function BikeExplorer() {
             {compareBikes.length > 0 && (
               <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">
                 {compareBikes.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="models" className="gap-1.5 text-sm rounded-md">
+            <Layers className="h-3.5 w-3.5" />
+            Modelle
+            {resolution.multiDealerGroups > 0 && (
+              <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">
+                {resolution.multiDealerGroups}
               </span>
             )}
           </TabsTrigger>
@@ -352,6 +365,49 @@ export function BikeExplorer() {
           onRemove={(bike) => toggleCompare(bike)}
           onClear={() => setCompareBikes([])}
         />
+      </TabsContent>
+
+      <TabsContent value="models" className="mt-0 space-y-4">
+        {fetchState.loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+          </div>
+        ) : bikeGroups.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center px-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <Layers className="h-7 w-7 text-muted-foreground/50" />
+            </div>
+            <p className="mt-4 font-semibold">Keine Modelle gefunden</p>
+            <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+              Lade Fahrräder, um die Modellübersicht zu sehen.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Summary banner */}
+            {resolution.multiDealerGroups > 0 && (
+              <div className="rounded-xl border bg-primary/5 px-4 py-3 text-sm">
+                <span className="font-semibold">{resolution.multiDealerGroups} Modell{resolution.multiDealerGroups !== 1 ? "e" : ""}</span>
+                {" "}bei mehreren Händlern erhältlich
+                {resolution.maxSavings !== null && resolution.maxSavings > 0 && (
+                  <span className="text-muted-foreground">
+                    {" "}— bis zu{" "}
+                    <span className="font-semibold text-green-600 dark:text-green-400">
+                      {resolution.maxSavings.toLocaleString("de-DE")} €
+                    </span>{" "}
+                    Preisunterschied
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {bikeGroups.map((group) => (
+                <BikeGroupCard key={group.canonicalKey} group={group} />
+              ))}
+            </div>
+          </>
+        )}
       </TabsContent>
     </Tabs>
   );
