@@ -6,7 +6,6 @@ services:
     restart: always
     environment:
       NODE_ENV: production
-      USE_DEMO_ADAPTERS: "false"
     logging:
       driver: json-file
       options:
