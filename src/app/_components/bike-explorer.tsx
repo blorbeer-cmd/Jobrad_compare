@@ -7,6 +7,7 @@ import { FilterSidebar, defaultFilters, type FilterValues } from "@/components/b
 import { ComparisonView } from "@/components/bikes/comparison-view";
 import { ComparisonBar } from "@/components/bikes/comparison-bar";
 import { StatsBar } from "@/components/bikes/stats-bar";
+import { SavedBikeCard } from "@/components/bikes/saved-bike-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,14 @@ interface FetchState {
   error: string | null;
   fromCache: boolean;
   fetchedAt: string | null;
+}
+
+interface SavedBikeRecord {
+  id: string;
+  bikeData: Bike;
+  dealer: string;
+  note: string | null;
+  createdAt: string;
 }
 
 function bikeKey(bike: Bike) {
@@ -33,8 +42,18 @@ export function BikeExplorer() {
     fetchedAt: null,
   });
   const [filters, setFilters] = useState<FilterValues>(defaultFilters);
-  const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+  const [savedBikes, setSavedBikes] = useState<SavedBikeRecord[]>([]);
+  const [savedLoading, setSavedLoading] = useState(true);
   const [compareBikes, setCompareBikes] = useState<Bike[]>([]);
+
+  // Derive savedKeys from savedBikes for quick lookup
+  const savedKeys = useMemo(() => {
+    const keys = new Map<string, string>(); // bikeKey -> savedBike.id
+    for (const sb of savedBikes) {
+      keys.set(bikeKey(sb.bikeData), sb.id);
+    }
+    return keys;
+  }, [savedBikes]);
 
   const loadBikes = useCallback(async (refresh = false) => {
     setFetchState((prev) => ({ ...prev, loading: true, error: null }));
@@ -65,9 +84,24 @@ export function BikeExplorer() {
     }
   }, []);
 
+  const loadSavedBikes = useCallback(async () => {
+    try {
+      const res = await fetch("/api/saved-bikes");
+      if (res.ok) {
+        const data = await res.json();
+        setSavedBikes(data.savedBikes ?? []);
+      }
+    } catch {
+      // Silently fail — saved bikes are not critical for browsing
+    } finally {
+      setSavedLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadBikes();
-  }, [loadBikes]);
+    loadSavedBikes();
+  }, [loadBikes, loadSavedBikes]);
 
   const allBikes = fetchState.bikes;
 
@@ -109,13 +143,74 @@ export function BikeExplorer() {
     return result;
   }, [allBikes, filters]);
 
-  function toggleSave(bike: Bike) {
+  async function toggleSave(bike: Bike) {
     const key = bikeKey(bike);
-    setSavedKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
+    const existingId = savedKeys.get(key);
+
+    if (existingId) {
+      // Optimistic remove
+      setSavedBikes((prev) => prev.filter((sb) => sb.id !== existingId));
+      try {
+        const res = await fetch(`/api/saved-bikes/${existingId}`, { method: "DELETE" });
+        if (!res.ok) {
+          // Revert on failure
+          loadSavedBikes();
+        }
+      } catch {
+        loadSavedBikes();
+      }
+    } else {
+      // Optimistic add with temp ID
+      const tempRecord: SavedBikeRecord = {
+        id: `temp-${Date.now()}`,
+        bikeData: bike,
+        dealer: bike.dealer,
+        note: null,
+        createdAt: new Date().toISOString(),
+      };
+      setSavedBikes((prev) => [tempRecord, ...prev]);
+      try {
+        const res = await fetch("/api/saved-bikes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bikeData: bike }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Replace temp record with real one
+          setSavedBikes((prev) =>
+            prev.map((sb) => (sb.id === tempRecord.id ? data.savedBike : sb))
+          );
+        } else if (res.status === 409) {
+          // Already saved — reload to sync
+          loadSavedBikes();
+        } else {
+          // Revert
+          setSavedBikes((prev) => prev.filter((sb) => sb.id !== tempRecord.id));
+        }
+      } catch {
+        setSavedBikes((prev) => prev.filter((sb) => sb.id !== tempRecord.id));
+      }
+    }
+  }
+
+  async function updateNote(savedBikeId: string, note: string | null) {
+    // Optimistic update
+    setSavedBikes((prev) =>
+      prev.map((sb) => (sb.id === savedBikeId ? { ...sb, note } : sb))
+    );
+    try {
+      const res = await fetch(`/api/saved-bikes/${savedBikeId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note }),
+      });
+      if (!res.ok) {
+        loadSavedBikes();
+      }
+    } catch {
+      loadSavedBikes();
+    }
   }
 
   function toggleCompare(bike: Bike) {
@@ -130,11 +225,15 @@ export function BikeExplorer() {
   }
 
   const comparingKeys = new Set(compareBikes.map(bikeKey));
+  const savedKeySet = new Set(savedKeys.keys());
 
   return (
     <Tabs defaultValue="browse">
       <TabsList>
         <TabsTrigger value="browse">Durchsuchen</TabsTrigger>
+        <TabsTrigger value="favorites">
+          Favoriten{savedBikes.length > 0 && ` (${savedBikes.length})`}
+        </TabsTrigger>
         <TabsTrigger value="compare">
           Vergleich{compareBikes.length > 0 && ` (${compareBikes.length})`}
         </TabsTrigger>
@@ -185,7 +284,7 @@ export function BikeExplorer() {
               <div className="flex-1">
                 <BikeGrid
                   bikes={filteredBikes}
-                  savedBikeKeys={savedKeys}
+                  savedBikeKeys={savedKeySet}
                   comparingKeys={comparingKeys}
                   onToggleSave={toggleSave}
                   onCompare={toggleCompare}
@@ -203,6 +302,37 @@ export function BikeExplorer() {
               }}
             />
           </>
+        )}
+      </TabsContent>
+
+      <TabsContent value="favorites" className="space-y-6">
+        {savedLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+          </div>
+        ) : savedBikes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
+            <svg className="h-12 w-12 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+            <p className="mt-4 text-lg font-medium">Keine Favoriten gespeichert</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Klicke auf das Herz-Symbol bei einem Fahrrad, um es hier zu speichern.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {savedBikes.map((sb) => (
+              <SavedBikeCard
+                key={sb.id}
+                savedBike={sb}
+                onRemove={() => toggleSave(sb.bikeData)}
+                onUpdateNote={(note) => updateNote(sb.id, note)}
+                onCompare={() => toggleCompare(sb.bikeData)}
+                isComparing={comparingKeys.has(bikeKey(sb.bikeData))}
+              />
+            ))}
+          </div>
         )}
       </TabsContent>
 
