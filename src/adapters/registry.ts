@@ -1,11 +1,12 @@
-import type { Bike, DealerAdapter } from "./types";
+import type { Bike, DealerAdapter, AdapterHealth } from "./types";
+import { BaseAdapter } from "./base-adapter";
 import { cacheGet, cacheSet } from "./cache";
 import { DemoAdapter } from "./demo";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
 
-const adapters: DealerAdapter[] = [
+const realAdapters: BaseAdapter[] = [
   new FahrradXXLAdapter(),
   new LuckyBikeAdapter(),
   new BikeDiscountAdapter(),
@@ -13,10 +14,10 @@ const adapters: DealerAdapter[] = [
 
 const demoAdapter = new DemoAdapter();
 
-function getActiveAdapters(): DealerAdapter[] {
+function getActiveAdapters(): BaseAdapter[] {
   const useDemo = process.env.USE_DEMO_ADAPTERS === "true";
   if (useDemo) return [demoAdapter];
-  return adapters;
+  return realAdapters;
 }
 
 export interface FetchResult {
@@ -26,51 +27,55 @@ export interface FetchResult {
   fetchedAt: string;
 }
 
-const CACHE_KEY = "all-bikes";
+function adapterCacheKey(name: string) {
+  return `adapter:${name}`;
+}
 
 export async function fetchAllBikes(forceRefresh = false): Promise<FetchResult> {
-  if (!forceRefresh) {
-    const cached = cacheGet<FetchResult>(CACHE_KEY);
-    if (cached) return { ...cached, fromCache: true };
-  }
-
   const active = getActiveAdapters();
-  const results = await Promise.allSettled(
+  const allBikes: Bike[] = [];
+  const errors: { dealer: string; error: string }[] = [];
+  let anyFresh = false;
+
+  await Promise.all(
     active.map(async (adapter) => {
-      const bikes = await adapter.fetchBikes();
-      return { dealer: adapter.name, bikes };
+      const key = adapterCacheKey(adapter.name);
+
+      if (!forceRefresh) {
+        const cached = cacheGet<Bike[]>(key);
+        if (cached) {
+          allBikes.push(...cached);
+          return;
+        }
+      }
+
+      try {
+        const bikes = await adapter.fetchBikes();
+        cacheSet(key, bikes, adapter.cacheTtlMs);
+        allBikes.push(...bikes);
+        anyFresh = true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push({ dealer: adapter.name, error: message });
+        // Fall back to stale cache if available
+        const stale = cacheGet<Bike[]>(key);
+        if (stale) allBikes.push(...stale);
+      }
     })
   );
 
-  const allBikes: Bike[] = [];
-  const errors: { dealer: string; error: string }[] = [];
-
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    if (result.status === "fulfilled") {
-      allBikes.push(...result.value.bikes);
-    } else {
-      errors.push({
-        dealer: active[i]?.name || "Unknown",
-        error: result.reason instanceof Error ? result.reason.message : String(result.reason),
-      });
-    }
-  }
-
-  const fetchResult: FetchResult = {
+  return {
     bikes: allBikes,
     errors,
-    fromCache: false,
+    fromCache: !anyFresh,
     fetchedAt: new Date().toISOString(),
   };
-
-  if (errors.length < active.length) {
-    cacheSet(CACHE_KEY, fetchResult);
-  }
-
-  return fetchResult;
 }
 
 export function getAdapterNames(): string[] {
   return getActiveAdapters().map((a) => a.name);
+}
+
+export function getAdapterHealthStatuses(): AdapterHealth[] {
+  return getActiveAdapters().map((a) => a.getHealth());
 }

@@ -1,15 +1,19 @@
-import type { Bike, DealerAdapter } from "./types";
+import type { Bike } from "./types";
+import { BaseAdapter } from "./base-adapter";
 
-const demoBikes: Bike[] = [
+const demoBikes: Omit<Bike, "lastSeenAt" | "sourceType">[] = [
   {
     name: "Cube Touring Hybrid ONE 625",
     brand: "Cube",
     category: "E-Bike",
     price: 2799,
+    listPrice: 2999,
+    offerPrice: 2799,
     dealer: "Fahrrad XXL",
     dealerUrl: "https://www.fahrrad-xxl.de/cube-touring-hybrid-one-625",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Cube+E-Bike",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "cube-touring-hybrid-one-625",
   },
   {
     name: "Canyon Roadlite CF 7",
@@ -20,6 +24,7 @@ const demoBikes: Bike[] = [
     dealerUrl: "https://www.canyon.com/de-de/roadlite-cf-7",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Canyon+Rennrad",
     availability: "2-3 Wochen",
+    sourceId: "roadlite-cf-7",
   },
   {
     name: "Kalkhoff Endeavour 5.B Move+",
@@ -29,7 +34,8 @@ const demoBikes: Bike[] = [
     dealer: "Lucky Bike",
     dealerUrl: "https://www.lucky-bike.de/kalkhoff-endeavour-5b-move-plus",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Kalkhoff+E-Bike",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "kalkhoff-endeavour-5b-move-plus",
   },
   {
     name: "Stevens Trekking E-14 Gent",
@@ -40,6 +46,7 @@ const demoBikes: Bike[] = [
     dealerUrl: "https://www.fahrrad-xxl.de/stevens-trekking-e-14",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Stevens+Trekking",
     availability: "4-6 Wochen",
+    sourceId: "stevens-trekking-e-14",
   },
   {
     name: "Bergamont Revox 3",
@@ -49,7 +56,8 @@ const demoBikes: Bike[] = [
     dealer: "Lucky Bike",
     dealerUrl: "https://www.lucky-bike.de/bergamont-revox-3",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Bergamont+MTB",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "bergamont-revox-3",
   },
   {
     name: "Specialized Diverge E5",
@@ -59,7 +67,8 @@ const demoBikes: Bike[] = [
     dealer: "Bike-Discount",
     dealerUrl: "https://www.bike-discount.de/specialized-diverge-e5",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Specialized+Gravel",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "specialized-diverge-e5",
   },
   {
     name: "Puky Cyke 20-3",
@@ -69,7 +78,8 @@ const demoBikes: Bike[] = [
     dealer: "Lucky Bike",
     dealerUrl: "https://www.lucky-bike.de/puky-cyke-20-3",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Puky+Kinder",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "puky-cyke-20-3",
   },
   {
     name: "Giant Explore E+ 1 Pro GTS",
@@ -79,7 +89,8 @@ const demoBikes: Bike[] = [
     dealer: "Fahrrad XXL",
     dealerUrl: "https://www.fahrrad-xxl.de/giant-explore-e-plus-1",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Giant+E-Bike",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "giant-explore-e-plus-1",
   },
   {
     name: "Scott Scale 970",
@@ -90,6 +101,7 @@ const demoBikes: Bike[] = [
     dealerUrl: "https://www.bike-discount.de/scott-scale-970",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Scott+MTB",
     availability: "2-3 Werktage",
+    sourceId: "scott-scale-970",
   },
   {
     name: "Trek Domane SL 5",
@@ -99,7 +111,8 @@ const demoBikes: Bike[] = [
     dealer: "Fahrrad XXL",
     dealerUrl: "https://www.fahrrad-xxl.de/trek-domane-sl-5",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Trek+Rennrad",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "trek-domane-sl-5",
   },
   {
     name: "Gazelle Chamonix C7 HMS",
@@ -109,7 +122,8 @@ const demoBikes: Bike[] = [
     dealer: "Lucky Bike",
     dealerUrl: "https://www.lucky-bike.de/gazelle-chamonix-c7",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Gazelle+City",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "gazelle-chamonix-c7",
   },
   {
     name: "Haibike AllMtn 6",
@@ -120,6 +134,7 @@ const demoBikes: Bike[] = [
     dealerUrl: "https://www.bike-discount.de/haibike-allmtn-6",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Haibike+E-MTB",
     availability: "4-5 Werktage",
+    sourceId: "haibike-allmtn-6",
   },
   {
     name: "Tern GSD S10 LR",
@@ -130,6 +145,7 @@ const demoBikes: Bike[] = [
     dealerUrl: "https://www.fahrrad-xxl.de/tern-gsd-s10",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Tern+Cargo",
     availability: "6-8 Wochen",
+    sourceId: "tern-gsd-s10",
   },
   {
     name: "Merida Scultura 4000",
@@ -139,7 +155,8 @@ const demoBikes: Bike[] = [
     dealer: "Bike-Discount",
     dealerUrl: "https://www.bike-discount.de/merida-scultura-4000",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=Merida+Rennrad",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "merida-scultura-4000",
   },
   {
     name: "KTM Macina Gran 710",
@@ -149,10 +166,11 @@ const demoBikes: Bike[] = [
     dealer: "Lucky Bike",
     dealerUrl: "https://www.lucky-bike.de/ktm-macina-gran-710",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=KTM+E-Bike",
-    availability: "Sofort verfuegbar",
+    availability: "Sofort verfügbar",
+    sourceId: "ktm-macina-gran-710",
   },
   {
-    name: "Riese und Mueller Load 75",
+    name: "Riese und Müller Load 75",
     brand: "Riese",
     category: "Cargo",
     price: 5999,
@@ -160,14 +178,18 @@ const demoBikes: Bike[] = [
     dealerUrl: "https://www.radwelt-shop.de/riese-mueller-load-75",
     imageUrl: "https://placehold.co/400x300/e2e8f0/64748b?text=RM+Cargo",
     availability: "Auf Anfrage",
+    sourceId: "riese-mueller-load-75",
   },
 ];
 
-export class DemoAdapter implements DealerAdapter {
-  name = "Demo";
+export class DemoAdapter extends BaseAdapter {
+  readonly name = "Demo";
+  readonly cacheTtlMs = 60 * 60 * 1000; // 1 hour (demo data is stable)
 
   async fetchBikes(): Promise<Bike[]> {
     await new Promise((resolve) => setTimeout(resolve, 200));
-    return demoBikes;
+    return this.stampAndRecord(
+      demoBikes.map((b) => ({ ...b, sourceType: "manual" as const }))
+    );
   }
 }

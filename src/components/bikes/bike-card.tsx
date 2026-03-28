@@ -93,11 +93,16 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }
           {bike.name}
         </h3>
 
-        <div className="mt-3 flex items-baseline gap-1">
+        <div className="mt-3 flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl font-bold tabular-nums">
             {bike.price.toLocaleString("de-DE", { minimumFractionDigits: 0 })}
           </span>
           <span className="text-base font-medium text-muted-foreground">&euro;</span>
+          {bike.listPrice && bike.listPrice > bike.price && (
+            <span className="text-sm text-muted-foreground line-through tabular-nums">
+              {bike.listPrice.toLocaleString("de-DE", { minimumFractionDigits: 0 })} €
+            </span>
+          )}
         </div>
 
         <p className="mt-1 text-xs text-muted-foreground truncate">{bike.dealer}</p>

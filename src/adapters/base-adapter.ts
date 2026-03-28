@@ -1,8 +1,36 @@
-import type { Bike, BikeCategory } from "./types";
+import type { Bike, BikeCategory, AdapterHealth } from "./types";
 
 export abstract class BaseAdapter {
-  abstract name: string;
+  abstract readonly name: string;
   abstract fetchBikes(): Promise<Bike[]>;
+
+  /** Cache TTL in milliseconds. Override in subclasses for per-adapter control. */
+  readonly cacheTtlMs: number = 15 * 60 * 1000; // 15 min default
+
+  private _lastFetchAt: Date | null = null;
+  private _lastError: string | null = null;
+  private _listingCount: number = 0;
+
+  getHealth(): AdapterHealth {
+    return {
+      name: this.name,
+      isHealthy: this._lastError === null && this._lastFetchAt !== null,
+      lastFetchAt: this._lastFetchAt,
+      lastError: this._lastError,
+      listingCount: this._listingCount,
+      cacheTtlMs: this.cacheTtlMs,
+    };
+  }
+
+  protected recordSuccess(count: number): void {
+    this._lastFetchAt = new Date();
+    this._lastError = null;
+    this._listingCount = count;
+  }
+
+  protected recordError(error: string): void {
+    this._lastError = error;
+  }
 
   protected async fetchPage(url: string): Promise<string> {
     const controller = new AbortController();
@@ -50,10 +78,19 @@ export abstract class BaseAdapter {
       "Centurion", "Ghost", "Orbea", "Cannondale", "Bianchi", "BMC",
       "Lapierre", "Koga", "Batavus", "Victoria", "Diamant", "Tern",
       "Brompton", "Kettler", "Prophete", "Fischer", "NCM", "Coboc",
+      "Riese", "Flyer", "Stromer", "Brose", "Bosch",
     ];
     for (const brand of knownBrands) {
       if (productName.toLowerCase().startsWith(brand.toLowerCase())) return brand;
     }
     return productName.split(/\s+/)[0] || "Unbekannt";
+  }
+
+  /** Stamp lastSeenAt onto all bikes and handle health recording */
+  protected stampAndRecord(bikes: Bike[]): Bike[] {
+    const lastSeenAt = new Date().toISOString();
+    const stamped = bikes.map((b) => ({ ...b, lastSeenAt }));
+    this.recordSuccess(stamped.length);
+    return stamped;
   }
 }
