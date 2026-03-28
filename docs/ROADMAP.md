@@ -8,7 +8,7 @@
 
 | Phase | Fokus | Stories | Status |
 |-------|-------|---------|--------|
-| **Phase 0** | Projekt-Setup & Architektur | – | Ausstehend |
+| **Phase 0** | Next.js-Projekt aufsetzen | – | Ausstehend |
 | **Phase 1** | Profil & Einzelberechnung (MVP-Kern) | US-1.1, US-1.2 | Ausstehend |
 | **Phase 2** | Berechnungslogik verfeinern | US-2.1, US-2.2 | Ausstehend |
 | **Phase 3** | Mehrere Räder verwalten | US-3.1, US-3.2 | Ausstehend |
@@ -18,17 +18,17 @@
 
 ---
 
-## Phase 0 – Projekt-Setup & Architektur
+## Phase 0 – Next.js-Projekt aufsetzen
 
-> Kein User-Feature, aber Voraussetzung für alles Weitere.
+> Tech-Stack steht fest: **Next.js + TypeScript**. Diese Phase setzt das Fundament um.
 
 ### Technische Aufgaben
 
-- [ ] **Tech-Stack festlegen**: Framework (z.B. Next.js/Vite + React), TypeScript, CSS-Lösung
-- [ ] **Projekt initialisieren**: Package.json, tsconfig, ESLint, Prettier
+- [ ] **Next.js-Projekt initialisieren**: `create-next-app` mit TypeScript, App Router
+- [ ] **Linting & Formatting**: ESLint, Prettier konfigurieren
 - [ ] **Design-System Grundlagen**: Farbpalette, Typografie, Spacing (4px/8px), Design-Tokens als CSS-Variablen
 - [ ] **CI/CD-Pipeline**: GitHub Actions für Lint, Type-Check, Tests, Build bei jedem Push
-- [ ] **Deployment**: Preview-Deployments (z.B. Vercel/Netlify), Staging, Production
+- [ ] **Deployment**: Vercel-Anbindung mit Preview-Deployments
 - [ ] **Berechnungslogik-Modul**: Steuerberechnung als isoliertes, testbares Modul vorbereiten
 - [ ] **Datenmodelle definieren**: TypeScript-Interfaces für Profil, Rad, Berechnung
 - [ ] **localStorage-Abstraktion**: Speichern/Laden von Profil und Rädern
@@ -36,12 +36,12 @@
 ### Beteiligte Rollen
 | Rolle | Aufgabe |
 |-------|---------|
-| Engineer | Projekt-Setup, Architektur, Datenmodelle |
+| Engineer | Next.js-Setup, Architektur, Datenmodelle |
 | Designer | Design-System, Tokens, Farbpalette |
 | DevOps | CI/CD, Deployment, Performance-Budgets |
 
 ### Definition of Done
-- Projekt baut erfolgreich, CI-Pipeline läuft, Preview-Deployment funktioniert
+- Next.js-Projekt baut erfolgreich, CI-Pipeline läuft, Preview-Deployment funktioniert
 - Design-Tokens definiert, Basis-Layout steht
 
 ---
@@ -265,11 +265,11 @@
 
 ## Nächster Schritt
 
-**→ Phase 0: Projekt-Setup & Architektur starten**
+**→ Phase 0: Next.js-Projekt aufsetzen**
 
-1. Tech-Stack entscheiden (Empfehlung: Vite + React + TypeScript)
-2. Projekt initialisieren mit Linting, Formatting, TypeScript
+1. `create-next-app` mit TypeScript + App Router ausführen
+2. ESLint & Prettier konfigurieren
 3. Design-Tokens definieren (CSS-Variablen)
 4. CI/CD-Pipeline aufsetzen (GitHub Actions)
-5. Datenmodelle als TypeScript-Interfaces anlegen
+5. TypeScript-Interfaces für Profil, Rad, Berechnung anlegen
 6. Berechnungsmodul-Grundstruktur + erste Tests
