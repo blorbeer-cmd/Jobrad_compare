@@ -11,8 +11,9 @@ import { StatsBar } from "@/components/bikes/stats-bar";
 import { SavedBikeCard } from "@/components/bikes/saved-bike-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search } from "lucide-react";
+import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDataAge } from "@/lib/freshness";
 
 interface FetchState {
   bikes: Bike[];
@@ -213,14 +214,18 @@ export function BikeExplorer() {
 
         {/* Cache info + refresh on desktop */}
         <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-          {fetchState.fromCache && fetchState.fetchedAt && (
-            <span>
-              Stand: {new Date(fetchState.fetchedAt).toLocaleString("de-DE", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}
+          {fetchState.fetchedAt && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              Daten {formatDataAge(fetchState.fetchedAt)}
+              {fetchState.fromCache && (
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px]">Cache</span>
+              )}
             </span>
           )}
           {fetchState.errors.length > 0 && (
             <span
-              className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+              className="flex items-center gap-1 text-amber-600 dark:text-amber-400 cursor-help"
               title={fetchState.errors.map((e) => `${e.dealer}: ${e.error}`).join("\n")}
             >
               <AlertTriangle className="h-3 w-3" />

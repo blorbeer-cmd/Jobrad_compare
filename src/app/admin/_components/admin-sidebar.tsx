@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Mail, Settings, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Mail, Shield, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/adapters", label: "Adapter-Status", icon: Activity },
   { href: "/admin/invites", label: "Einladungen", icon: Mail },
   { href: "/admin/users", label: "Benutzer", icon: Users },
 ];

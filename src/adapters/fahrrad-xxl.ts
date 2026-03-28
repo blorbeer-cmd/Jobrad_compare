@@ -4,9 +4,18 @@ import { BikeSchema } from "./types";
 import { BaseAdapter } from "./base-adapter";
 
 export class FahrradXXLAdapter extends BaseAdapter {
-  name = "Fahrrad XXL";
+  readonly name = "Fahrrad XXL";
+  readonly cacheTtlMs = 6 * 60 * 60 * 1000; // 6 hours
+
   private baseUrl = "https://www.fahrrad-xxl.de";
-  private searchUrls = ["/fahrraeder/e-bikes","/fahrraeder/trekkingbikes","/fahrraeder/citybikes","/fahrraeder/mountainbikes","/fahrraeder/rennraeder","/fahrraeder/gravelbikes"];
+  private searchUrls = [
+    "/fahrraeder/e-bikes",
+    "/fahrraeder/trekkingbikes",
+    "/fahrraeder/citybikes",
+    "/fahrraeder/mountainbikes",
+    "/fahrraeder/rennraeder",
+    "/fahrraeder/gravelbikes",
+  ];
 
   async fetchBikes(): Promise<Bike[]> {
     const allBikes: Bike[] = [];
@@ -14,29 +23,55 @@ export class FahrradXXLAdapter extends BaseAdapter {
       try {
         const html = await this.fetchPage(`${this.baseUrl}${path}?jobrad=1`);
         allBikes.push(...this.parseListing(html, path));
-      } catch (error) { console.error(`[FahrradXXL] Error fetching ${path}:`, error); }
+      } catch (error) {
+        console.error(`[FahrradXXL] Error fetching ${path}:`, error);
+        this.recordError(error instanceof Error ? error.message : String(error));
+      }
     }
-    return allBikes;
+    return this.stampAndRecord(allBikes);
   }
 
-  private parseListing(html: string, categoryPath: string): Bike[] {
+  protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
     $(".product-card, .product-item, [data-product-id]").each((_, el) => {
       try {
         const $el = $(el);
-        const name = $el.find(".product-title, .product-name, h3 a, h2 a").first().text().trim() || $el.find("a[title]").first().attr("title")?.trim();
+        const name = $el.find(".product-title, .product-name, h3 a, h2 a").first().text().trim()
+          || $el.find("a[title]").first().attr("title")?.trim();
         if (!name) return;
-        const price = this.parsePrice($el.find(".price, .product-price, .current-price").first().text().trim());
+
+        const priceText = $el.find(".price, .product-price, .current-price").first().text().trim();
+        const price = this.parsePrice(priceText);
         if (!price) return;
+
+        // Try to find original list price (crossed-out)
+        const listPriceText = $el.find(".price-old, .original-price, del").first().text().trim();
+        const listPrice = listPriceText ? this.parsePrice(listPriceText) ?? undefined : undefined;
+
         const href = $el.find("a[href]").first().attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-        const imageUrl = $el.find("img").first().attr("data-src") || $el.find("img").first().attr("src") || undefined;
+        const imageUrl = $el.find("img").first().attr("data-src") || $el.find("img").first().attr("src");
         const category = this.mapCategory(categoryPath.replace("/fahrraeder/", ""));
         const availability = $el.find(".availability, .delivery-info, .stock-info").first().text().trim() || undefined;
-        const result = BikeSchema.safeParse({ name, brand: this.extractBrand(name), category, price, dealer: this.name, dealerUrl, imageUrl: imageUrl || undefined, availability });
+        const sourceId = $el.attr("data-product-id") || undefined;
+
+        const result = BikeSchema.safeParse({
+          name,
+          brand: this.extractBrand(name),
+          category,
+          price: listPrice && price < listPrice ? price : price,
+          listPrice: listPrice && listPrice > price ? listPrice : undefined,
+          offerPrice: listPrice && price < listPrice ? price : undefined,
+          dealer: this.name,
+          dealerUrl,
+          imageUrl: imageUrl || undefined,
+          availability,
+          sourceId,
+          sourceType: "scrape" as const,
+        });
         if (result.success) bikes.push(result.data);
-      } catch { /* skip */ }
+      } catch { /* skip malformed entries */ }
     });
     return bikes;
   }
