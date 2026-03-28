@@ -13,6 +13,7 @@ function LoginContent() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [devLoginEnabled, setDevLoginEnabled] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const error = searchParams.get("error");
@@ -42,15 +43,21 @@ function LoginContent() {
   async function handleDevLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const result = await signIn("dev-login", {
-      email,
-      redirect: false,
-      callbackUrl: "/",
-    });
-    if (result?.error) {
+    try {
+      const result = await signIn("dev-login", {
+        email,
+        redirect: false,
+        callbackUrl: "/",
+      });
+      if (result?.error) {
+        setLoginError(`Login-Fehler: ${result.error}`);
+        setLoading(false);
+      } else {
+        window.location.href = result?.url || "/";
+      }
+    } catch (err) {
+      setLoginError(`Unerwarteter Fehler: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
-    } else {
-      window.location.href = result?.url || "/";
     }
   }
 
@@ -95,9 +102,9 @@ function LoginContent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
+          {(error || loginError) && (
             <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-              {errorMessages[error] || errorMessages.Default}
+              {loginError || errorMessages[error!] || errorMessages.Default}
             </div>
           )}
 
