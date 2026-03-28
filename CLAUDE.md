@@ -14,36 +14,49 @@ You are a pragmatic full-stack developer building a comparison tool for JobRad b
 
 ## Project Status
 
-### Completed (Phases 1–3)
-- **Project Setup**: Next.js 15 with TypeScript strict, Prisma + PostgreSQL, Tailwind CSS + shadcn/ui, Zod validation, Vitest, security headers, environment validation
-- **Authentication & Authorization**: NextAuth.js with Magic Link, invite system (7-day expiry), admin role (ADMIN_EMAIL auto-promotion), GDPR consent fields on User model
-- **UI Components**: 13 shadcn/ui base components, BikeExplorer with grid/filter/comparison views, admin dashboard (users, invites, stats), login page, user navigation
+### Completed (Phases 1–3 + Phase 0)
+- **Project Setup**: Next.js 16 with TypeScript strict, Prisma 7 + PostgreSQL (Neon), Tailwind CSS + shadcn/ui, Zod validation, Vitest, security headers, environment validation
+- **Authentication & Authorization**: NextAuth.js v4 with Magic Link (EmailProvider + Resend ready), CredentialsProvider dev-login (behind `ALLOW_DEV_LOGIN=true`), invite system (7-day expiry), admin role (ADMIN_EMAIL auto-promotion), GDPR consent fields on User model, JWT strategy for dev login
+- **UI Components**: 13 shadcn/ui base components, BikeExplorer with grid/filter/comparison views (Browse/Favoriten/Vergleich tabs), admin dashboard (users, invites, stats), login page with dev-login support, user navigation
 - **Adapter Infrastructure**: Base adapter class, adapter registry with caching, demo adapter (8 fake bikes), API route `/api/bikes`
-- **DevOps**: Dockerfile, docker-compose (dev + prod), GitHub Actions CI/CD, Vercel config
+- **BikeExplorer wired to API**: Fetches from `/api/bikes` and `/api/saved-bikes`, no more hardcoded demo data
+- **Favorites with persistence**: Save/unsave via API (`/api/saved-bikes`), optimistic UI, inline note editor, Zod-validated
+- **GDPR Features**: Account deletion (`/api/account` DELETE, Art. 17), data export (`/api/account/export` GET, Art. 20), privacy policy page (`/datenschutz`), user profile page (`/profil`)
+- **Filter Logic**: Extracted to `src/lib/bike-filters.ts` for testability, `FilterValues` as single source of truth
+- **Test Suite**: 95 tests across 5 files (utils, adapter types, base adapter, bike filters, saved-bikes API)
+- **DevOps**: Dockerfile, docker-compose (dev + prod), GitHub Actions CI/CD (lint, typecheck with prisma generate, test, build), Vercel config with `prisma db push` in build command
+- **Health Check**: `/api/health` endpoint showing DB connectivity and env var status
+- **Long-term Vision**: Concept document for flexible product comparison platform (`docs/konzept-flexible-produktvergleiche.md`) — bike tool first, then abstract to support graphics cards, motherboards, etc.
+
+### Deployment Status
+- **Vercel**: Configured, builds run `prisma generate && prisma db push && next build`
+- **Neon DB**: Connection string set in Vercel env vars
+- **CRITICAL**: Verify that `prisma db push` succeeds on next deploy — previous deploys had `--skip-generate` flag (invalid in Prisma 7) which was silently failing. Fixed in commit `1b9aaac`. If tables still don't exist after deploy, check Vercel build logs for the `prisma db push` output.
+- **Dev Login**: Works when `ALLOW_DEV_LOGIN=true` is set in Vercel env vars and DB tables exist. Any email address works, no invite needed.
+- **Magic Link (Resend)**: EmailProvider configured but Resend not yet set up. Needs: Resend API key, verified domain, `EMAIL_FROM` env var.
 
 ### In Progress (Phase 4)
 - Real dealer adapter implementations (Fahrrad XXL, Lucky Bike, Bike Discount) — scaffolded but parsing logic not implemented
-- BikeExplorer still uses hardcoded demo data, not wired to `/api/bikes` API
 - Bike schema needs extension (sourceId, sourceType, lastSeenAt, listPrice/offerPrice)
 - Adapter interface needs health status reporting and per-adapter cache TTL
-- SavedBike favorites: UI toggle exists (heart icon) but only in-memory, no API persistence
+- Per-adapter cache TTL (currently hardcoded 15min global, target 6–24h configurable)
+- Freshness indicator in UI (cache infrastructure exists, UI doesn't show it)
+- Port comparison logic from Python reference to TypeScript (see below)
 
 ### Not Started (Phase 5+)
 - Database normalization (Dealer, BikeModel, BikeListing, PriceSnapshot tables)
 - Entity Resolution / Matching layer
 - Content-Security-Policy header (other security headers are in place)
 - Rate limiting on any endpoint
-- SavedBike API endpoints (persist favorites to DB)
-- User profile page, account deletion (GDPR Art. 17), data export (Art. 20)
-- Privacy policy page
 - API pagination
-- Freshness indicator in UI (cache infrastructure exists, UI doesn't show it)
 - Error boundary components
 - Monitoring/alerting (Sentry etc.)
-- Port comparison logic from Python reference to TypeScript (see below)
+- Adapter contract tests / HTML fixtures
+- E2E tests (Playwright)
+- Resend email setup (domain verification, API key)
+- Product category abstraction (see `docs/konzept-flexible-produktvergleiche.md`)
 
 ### Known Compliance Gaps (CLAUDE.md vs. Code)
-These are documented requirements that are not yet implemented:
 
 | Requirement | Status | Blocked by |
 |-------------|--------|------------|
@@ -52,13 +65,9 @@ These are documented requirements that are not yet implemented:
 | Bike schema fields (sourceId, sourceType, lastSeenAt) | ❌ Missing | Phase 4 |
 | Adapter health/status reporting | ❌ Missing | Phase 4 |
 | Per-adapter cache TTL (6–24h) | ❌ Hardcoded 15min global | Phase 4 |
-| BikeExplorer wired to /api/bikes | ❌ Uses hardcoded demo data | Phase 4 |
 | Freshness indicator in UI | ❌ Infra exists, UI missing | Phase 4 |
-| SavedBike persistence via API | ❌ In-memory only | Phase 5 |
 | Normalized data model | ❌ SavedBike uses JSON blob | Phase 5 |
 | Entity matching / deduplication | ❌ Not started | Phase 5 |
-| Privacy policy page | ❌ Not started | Phase 5 |
-| User profile / GDPR Art. 15/17/20 | ❌ Not started | Phase 5 |
 | Adapter contract tests / HTML fixtures | ❌ Not started | Phase 4 |
 | E2E tests (Playwright) | ❌ Not started | Phase 5 |
 
@@ -85,9 +94,9 @@ This logic should be **ported to TypeScript** as part of the comparison engine i
 | Testing | Vitest (unit), Playwright (E2E when needed) |
 | Deployment | Vercel + Neon (PostgreSQL) / Docker |
 
-**Actual versions in use**: Next.js 15.5.14, React 18.3.1, Prisma 6.5.0, next-auth 4.24.11, TypeScript 5.7
+**Actual versions in use**: Next.js 16.2.1, React 19.2.4, Prisma 7.6.0, next-auth 4.24.13, TypeScript 6.0.2
 
-**Note**: A previous `frontend/` directory contained a separate Vite + React 19 prototype (built by a UI agent). It has been removed. The Next.js app in `src/` is the single canonical frontend. Useful patterns from the prototype (grid/table view toggle, best-offer highlighting, price display with monthly rate vs. total price) should be adopted in the Next.js components.
+**Note**: The Next.js app in `src/` is the single canonical frontend. Useful patterns from the former Vite prototype (grid/table view toggle, best-offer highlighting, price display with monthly rate vs. total price) should be adopted in the Next.js components.
 
 ## Architecture Overview
 
@@ -182,10 +191,12 @@ Each dealer adapter is a separate module implementing a common interface:
 ## Authentication & User Management
 
 ### Authentication
-- Auth.js / next-auth with email-based Magic Link login
+- Auth.js / next-auth v4 with email-based Magic Link login (EmailProvider, Resend ready but not active)
+- CredentialsProvider "dev-login" behind `ALLOW_DEV_LOGIN=true` — any email works, auto-creates user, no invite needed
+- JWT session strategy when dev login is active, database strategy otherwise
 - Secure, HttpOnly, SameSite=Strict session cookies
 - Session timeout: configurable (default: 7 days)
-- Invite-only registration (admin sends invite links)
+- Invite-only registration for production (admin sends invite links); bypassed in dev-login mode
 
 ### User Features
 - **Saved Bikes / Favorites**: Users can save bikes to a personal list
@@ -337,7 +348,12 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 ## Testing Strategy
 
 ### Current Test Coverage
-- **TypeScript (Vitest)**: 3 unit tests for `cn()` utility function (`src/lib/utils.test.ts`)
+- **TypeScript (Vitest)**: 95 tests across 5 files:
+  - `src/lib/utils.test.ts` — `cn()` utility
+  - `src/adapters/types.test.ts` — Bike type/schema validation
+  - `src/adapters/base-adapter.test.ts` — Base adapter class
+  - `src/lib/bike-filters.test.ts` — Filter/sort logic
+  - `src/app/api/saved-bikes/saved-bikes.test.ts` — SavedBike API routes
 - **Python (pytest)**: 24 tests for offer comparison logic (`tests/test_shop_offer_comparisons.py`) — reference implementation, to be ported
 
 ### Target Test Coverage
@@ -377,6 +393,35 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 - When writing documentation or config that references a framework/tool version: verify it first
 - When a user asks about a version or compatibility: look it up, don't guess
 - If a version cannot be verified (e.g. no internet access): state clearly that the version was not verified and recommend the user check manually
+
+## Development Workflow
+
+### Pre-Push Validation (REQUIRED before every push)
+Run these steps before pushing to avoid deployment failures:
+1. `git fetch origin main && git merge origin/main --no-edit` — check for conflicts
+2. `npx prisma generate` — generate Prisma client
+3. `npx tsc --noEmit` — type check
+4. `npx next build` — full build check
+5. `npx vitest run` — run all tests
+
+### Prisma 7 Specifics
+- **No `url` in schema.prisma**: Prisma 7 requires datasource URL in `prisma.config.ts`, NOT in `schema.prisma`. Adding `url = env("DATABASE_URL")` to the schema will cause a validation error.
+- **`prisma.config.ts`**: Defines `datasource.url` from `process.env.DATABASE_URL`
+- **`--skip-generate` removed**: This flag does not exist in Prisma 7. Use plain `prisma db push`.
+- **PrismaPg adapter**: Runtime uses `@prisma/adapter-pg` with `PrismaPg` in `src/lib/db.ts`
+- **Generated client**: Output to `src/generated/prisma` (configured in schema.prisma generator block)
+- **Imports**: Use `@/generated/prisma/client` for PrismaClient, `@/generated/prisma/enums` for Role etc.
+
+### Environment Variables (Vercel)
+- `DATABASE_URL` — Neon PostgreSQL connection string (required)
+- `NEXTAUTH_URL` — App URL (required)
+- `NEXTAUTH_SECRET` — Auth secret (required)
+- `ADMIN_EMAIL` — Auto-promoted to ADMIN role (required)
+- `ALLOW_DEV_LOGIN` — Set to `true` to enable CredentialsProvider dev login (optional, for testing)
+- `EMAIL_SERVER_HOST`, `EMAIL_SERVER_PORT`, `EMAIL_SERVER_USER`, `EMAIL_SERVER_PASSWORD`, `EMAIL_FROM` — For Resend magic link (not yet active)
+
+### The user does not work locally
+All development goes through Vercel deployments. There is no local dev environment. Database operations (like `prisma db push`) must happen during the Vercel build.
 
 ## Secrets Management
 
