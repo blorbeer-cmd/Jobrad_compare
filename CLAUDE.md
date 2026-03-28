@@ -24,16 +24,52 @@ You are a pragmatic full-stack developer building a comparison tool for JobRad b
 ### In Progress (Phase 4)
 - Real dealer adapter implementations (Fahrrad XXL, Lucky Bike, Bike Discount) — scaffolded but parsing logic not implemented
 - BikeExplorer still uses hardcoded demo data, not wired to `/api/bikes` API
+- Bike schema needs extension (sourceId, sourceType, lastSeenAt, listPrice/offerPrice)
+- Adapter interface needs health status reporting and per-adapter cache TTL
+- SavedBike favorites: UI toggle exists (heart icon) but only in-memory, no API persistence
 
 ### Not Started (Phase 5+)
-- SavedBike feature (model exists, UI not connected)
+- Database normalization (Dealer, BikeModel, BikeListing, PriceSnapshot tables)
+- Entity Resolution / Matching layer
+- Content-Security-Policy header (other security headers are in place)
+- Rate limiting on any endpoint
+- SavedBike API endpoints (persist favorites to DB)
 - User profile page, account deletion (GDPR Art. 17), data export (Art. 20)
 - Privacy policy page
-- Rate limiting on auth and API endpoints
 - API pagination
+- Freshness indicator in UI (cache infrastructure exists, UI doesn't show it)
 - Error boundary components
 - Monitoring/alerting (Sentry etc.)
-- Comprehensive test coverage (currently 1 unit test)
+- Port comparison logic from Python reference to TypeScript (see below)
+
+### Known Compliance Gaps (CLAUDE.md vs. Code)
+These are documented requirements that are not yet implemented:
+
+| Requirement | Status | Blocked by |
+|-------------|--------|------------|
+| Content-Security-Policy header | ❌ Missing | — |
+| Rate limiting (auth + API) | ❌ Missing | — |
+| Bike schema fields (sourceId, sourceType, lastSeenAt) | ❌ Missing | Phase 4 |
+| Adapter health/status reporting | ❌ Missing | Phase 4 |
+| Per-adapter cache TTL (6–24h) | ❌ Hardcoded 15min global | Phase 4 |
+| BikeExplorer wired to /api/bikes | ❌ Uses hardcoded demo data | Phase 4 |
+| Freshness indicator in UI | ❌ Infra exists, UI missing | Phase 4 |
+| SavedBike persistence via API | ❌ In-memory only | Phase 5 |
+| Normalized data model | ❌ SavedBike uses JSON blob | Phase 5 |
+| Entity matching / deduplication | ❌ Not started | Phase 5 |
+| Privacy policy page | ❌ Not started | Phase 5 |
+| User profile / GDPR Art. 15/17/20 | ❌ Not started | Phase 5 |
+| Adapter contract tests / HTML fixtures | ❌ Not started | Phase 4 |
+| E2E tests (Playwright) | ❌ Not started | Phase 5 |
+
+### Reference Code (Python)
+The files `models.py`, `compare.py`, and `tests/test_shop_offer_comparisons.py` contain a **Python prototype** of the offer comparison logic, built by a separate agent. This includes:
+- Offer validity checks (active, date range, expiry)
+- Per-shop deduplication (latest valid offer wins)
+- Cheapest offer identification
+- 24 pytest tests covering edge cases
+
+This logic should be **ported to TypeScript** as part of the comparison engine in Phase 4/5. The Python files are kept as reference until the port is complete, then removed.
 
 ## Tech Stack
 
@@ -50,6 +86,8 @@ You are a pragmatic full-stack developer building a comparison tool for JobRad b
 | Deployment | Vercel + Neon (PostgreSQL) / Docker |
 
 **Actual versions in use**: Next.js 15.5.14, React 18.3.1, Prisma 6.5.0, next-auth 4.24.11, TypeScript 5.7
+
+**Note**: A previous `frontend/` directory contained a separate Vite + React 19 prototype (built by a UI agent). It has been removed. The Next.js app in `src/` is the single canonical frontend. Useful patterns from the prototype (grid/table view toggle, best-offer highlighting, price display with monthly rate vs. total price) should be adopted in the Next.js components.
 
 ## Architecture Overview
 
@@ -232,6 +270,8 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 - **Favorites**: Save bikes with one click (heart icon), view saved list
 - **Detail View**: Link to original offer at the dealer
 - **Freshness Indicator**: Show when dealer data was last updated
+- **View Toggle**: Grid view and table view for comparison results
+- **Best Offer Highlight**: Visually mark the cheapest offer across dealers
 
 ### Responsive Design
 - Desktop-first, but usable on mobile
@@ -296,18 +336,25 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 
 ## Testing Strategy
 
-### Unit Tests (Vitest)
+### Current Test Coverage
+- **TypeScript (Vitest)**: 3 unit tests for `cn()` utility function (`src/lib/utils.test.ts`)
+- **Python (pytest)**: 24 tests for offer comparison logic (`tests/test_shop_offer_comparisons.py`) — reference implementation, to be ported
+
+### Target Test Coverage
+
+#### Unit Tests (Vitest)
 - Data normalization / adapter logic
 - Filter / search logic
 - API route authorization (user can only access own data)
 - Entity matching / deduplication logic
+- Comparison logic (port from Python tests)
 
-### Adapter Contract Tests
+#### Adapter Contract Tests
 - Each adapter returns data conforming to the unified bike schema
 - HTML fixture tests against saved example pages (detect when site structure changes)
 - Graceful handling of malformed or missing data
 
-### E2E Tests (Playwright)
+#### E2E Tests (Playwright)
 - Login flow (magic link)
 - Search and filter
 - Save/unsave favorites
