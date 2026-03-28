@@ -45,6 +45,7 @@ export async function fetchAllBikes(forceRefresh = false): Promise<FetchResult> 
         const bikes = await adapter.fetchBikes();
         if (bikes.length === 0) {
           console.warn(`[registry] WARNING: ${adapter.name} returned 0 bikes`);
+          errors.push({ dealer: adapter.name, error: "0 bikes parsed — selectors may not match current HTML" });
         } else {
           console.log(`[registry] ${adapter.name}: ${bikes.length} bikes fetched`);
         }
