@@ -45,11 +45,12 @@ function LoginContent() {
     const result = await signIn("dev-login", {
       email,
       redirect: false,
+      callbackUrl: "/",
     });
-    if (result?.ok) {
-      router.push("/");
-    } else {
+    if (result?.error) {
       setLoading(false);
+    } else {
+      window.location.href = result?.url || "/";
     }
   }
 

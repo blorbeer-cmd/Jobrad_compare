@@ -35,33 +35,26 @@ if (process.env.ALLOW_DEV_LOGIN === "true") {
 
         const email = credentials.email.toLowerCase().trim();
 
-        // Find or create user
-        let user = await db.user.findUnique({ where: { email } });
-        if (!user) {
-          // Check invite or admin email
-          const isAdmin = email === process.env.ADMIN_EMAIL;
-          const invite = await db.invite.findUnique({ where: { email } });
-
-          if (!isAdmin && !invite) return null;
-
-          user = await db.user.create({
-            data: {
-              email,
-              role: isAdmin ? "ADMIN" : "USER",
-              consentGiven: true,
-              consentAt: new Date(),
-            },
-          });
-
-          if (invite && !invite.usedAt) {
-            await db.invite.update({
-              where: { id: invite.id },
-              data: { usedAt: new Date() },
+        try {
+          // Find or create user — dev login allows any email
+          let user = await db.user.findUnique({ where: { email } });
+          if (!user) {
+            const isAdmin = email === process.env.ADMIN_EMAIL?.toLowerCase();
+            user = await db.user.create({
+              data: {
+                email,
+                role: isAdmin ? "ADMIN" : "USER",
+                consentGiven: true,
+                consentAt: new Date(),
+              },
             });
           }
-        }
 
-        return { id: user.id, email: user.email, name: user.name, role: user.role };
+          return { id: user.id, email: user.email, name: user.name, role: user.role };
+        } catch (error) {
+          console.error("Dev login error:", error);
+          return null;
+        }
       },
     })
   );
@@ -80,8 +73,8 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      // Skip invite check for dev login (already checked in authorize)
-      if (account?.provider === "dev-login") return true;
+      // Skip invite check for dev login and credentials
+      if (account?.provider === "dev-login" || account?.type === "credentials") return true;
 
       if (!user.email) return false;
 
