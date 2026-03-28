@@ -61,6 +61,12 @@ export function UserNav() {
             Fahrr\u00e4der
           </DropdownMenuItem>
         </Link>
+        <Link href="/profil">
+          <DropdownMenuItem>
+            <User className="mr-2 h-4 w-4" />
+            Mein Profil
+          </DropdownMenuItem>
+        </Link>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" />

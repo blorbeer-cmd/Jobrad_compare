@@ -29,8 +29,9 @@ export default function RootLayout({
             </header>
             <main className="container flex-1 py-8">{children}</main>
             <footer className="border-t py-4">
-              <div className="container text-sm text-muted-foreground">
-                JobRad Fahrrad-Vergleichstool &middot; Internes Werkzeug
+              <div className="container flex items-center justify-between text-sm text-muted-foreground">
+                <span>JobRad Fahrrad-Vergleichstool &middot; Internes Werkzeug</span>
+                <a href="/datenschutz" className="hover:underline">Datenschutz</a>
               </div>
             </footer>
           </div>
