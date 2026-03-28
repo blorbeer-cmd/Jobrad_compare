@@ -14,71 +14,41 @@ You are a pragmatic full-stack developer building a comparison tool for JobRad b
 
 ## Project Status
 
-### Completed (Phases 1–3 + Phase 0)
+### Completed (All Infrastructure Phases)
 - **Project Setup**: Next.js 16 with TypeScript strict, Prisma 7 + PostgreSQL (Neon), Tailwind CSS + shadcn/ui, Zod validation, Vitest, security headers, environment validation
 - **Authentication & Authorization**: NextAuth.js v4 with Magic Link (EmailProvider + Resend ready), CredentialsProvider dev-login (behind `ALLOW_DEV_LOGIN=true`), invite system (7-day expiry), admin role (ADMIN_EMAIL auto-promotion), GDPR consent fields on User model, JWT strategy for dev login
-- **UI Components**: 13 shadcn/ui base components, BikeExplorer with grid/filter/comparison views (Browse/Favoriten/Vergleich tabs), admin dashboard (users, invites, stats), login page with dev-login support, user navigation
-- **Adapter Infrastructure**: Base adapter class, adapter registry with caching, demo adapter (8 fake bikes), API route `/api/bikes`
-- **BikeExplorer wired to API**: Fetches from `/api/bikes` and `/api/saved-bikes`, no more hardcoded demo data
-- **Favorites with persistence**: Save/unsave via API (`/api/saved-bikes`), optimistic UI, inline note editor, Zod-validated
+- **UI Components**: 13 shadcn/ui base components, BikeExplorer with grid/filter/comparison views (Browse/Favoriten/Vergleich/Modelle tabs), admin dashboard (users, invites, stats, adapter health), login page with dev-login support, user navigation, dark mode, mobile optimization
+- **Real Dealer Adapters**: 3 adapters (Fahrrad XXL, Lucky Bike, Bike Discount) + demo adapter, each with 6hr cache TTL, health reporting, HTML parsing with contract tests and static fixtures
+- **Normalized Database**: Dealer, BikeModel, BikeListing, PriceSnapshot tables with upsert-based persistence, price change tracking
+- **Entity Resolution**: Fuzzy matching via Levenshtein distance + union-find, canonical key grouping, confidence scores, multi-dealer group detection with savings calculation
+- **Comparison Engine**: TypeScript port of Python prototype — offer validity, per-shop deduplication, cheapest offer identification (Python reference files kept for validation)
+- **Bike Schema**: Full unified schema with sourceId, sourceType, lastSeenAt, listPrice/offerPrice, availability
+- **Favorites with Persistence**: Save/unsave via API (`/api/saved-bikes`), optimistic UI, inline note editor, Zod-validated
 - **GDPR Features**: Account deletion (`/api/account` DELETE, Art. 17), data export (`/api/account/export` GET, Art. 20), privacy policy page (`/datenschutz`), user profile page (`/profil`)
-- **Filter Logic**: Extracted to `src/lib/bike-filters.ts` for testability, `FilterValues` as single source of truth
-- **Test Suite**: 95 tests across 5 files (utils, adapter types, base adapter, bike filters, saved-bikes API)
-- **DevOps**: Dockerfile, docker-compose (dev + prod), GitHub Actions CI/CD (lint, typecheck with prisma generate, test, build), Vercel config with `prisma db push` in build command
+- **Filter Logic**: Extracted to `src/lib/bike-filters.ts` — text search, category, price range, dealer, brand, sorting
+- **Security**: Content-Security-Policy in `next.config.js`, rate limiting in `src/middleware.ts` (auth: 10/15min, API: 60/min, mutations: 30/min), all other security headers
+- **API Pagination**: `/api/bikes` supports `?page=N&limit=N` (default 50, max 200) with totalItems/totalPages/hasNextPage metadata
+- **Error Boundaries**: `error.tsx` (app-level), `global-error.tsx` (root), `admin/error.tsx` — German error messages with retry
+- **Freshness Indicator**: "Daten vor X Stunden" display with cache badge in BikeExplorer header
+- **Test Suite**: 8 Vitest test files (utils, types, base adapter, bike filters, saved-bikes API, entity resolution, comparison, adapter contract tests with HTML fixtures) + 24 Python pytest tests (reference)
+- **E2E Tests**: Playwright setup with 4 spec files (auth, bike-explorer, admin, privacy)
+- **DevOps**: Dockerfile, docker-compose (dev + prod), GitHub Actions CI/CD (lint, typecheck, test, build), Vercel config
 - **Health Check**: `/api/health` endpoint showing DB connectivity and env var status
-- **Long-term Vision**: Concept document for flexible product comparison platform (`docs/konzept-flexible-produktvergleiche.md`) — bike tool first, then abstract to support graphics cards, motherboards, etc.
+- **Long-term Vision**: Concept document (`docs/konzept-flexible-produktvergleiche.md`) — bike tool first, then abstract to support other product categories
 
 ### Deployment Status
 - **Vercel**: Configured, builds run `prisma generate && prisma db push && next build`
 - **Neon DB**: Connection string set in Vercel env vars
-- **CRITICAL**: Verify that `prisma db push` succeeds on next deploy — previous deploys had `--skip-generate` flag (invalid in Prisma 7) which was silently failing. Fixed in commit `1b9aaac`. If tables still don't exist after deploy, check Vercel build logs for the `prisma db push` output.
-- **Dev Login**: Works when `ALLOW_DEV_LOGIN=true` is set in Vercel env vars and DB tables exist. Any email address works, no invite needed.
+- **Dev Login**: Works when `ALLOW_DEV_LOGIN=true` is set in Vercel env vars. Any email address works, no invite needed.
 - **Magic Link (Resend)**: EmailProvider configured but Resend not yet set up. Needs: Resend API key, verified domain, `EMAIL_FROM` env var.
 
-### In Progress (Phase 4)
-- Real dealer adapter implementations (Fahrrad XXL, Lucky Bike, Bike Discount) — scaffolded but parsing logic not implemented
-- Bike schema needs extension (sourceId, sourceType, lastSeenAt, listPrice/offerPrice)
-- Adapter interface needs health status reporting and per-adapter cache TTL
-- Per-adapter cache TTL (currently hardcoded 15min global, target 6–24h configurable)
-- Freshness indicator in UI (cache infrastructure exists, UI doesn't show it)
-- Port comparison logic from Python reference to TypeScript (see below)
-
-### Not Started (Phase 5+)
-- Database normalization (Dealer, BikeModel, BikeListing, PriceSnapshot tables)
-- Entity Resolution / Matching layer
-- Content-Security-Policy header (other security headers are in place)
-- Rate limiting on any endpoint
-- API pagination
-- Error boundary components
+### Not Started
 - Monitoring/alerting (Sentry etc.)
-- Adapter contract tests / HTML fixtures
-- E2E tests (Playwright)
-- Resend email setup (domain verification, API key)
+- Resend email setup (domain verification, API key) — requires external service configuration
 - Product category abstraction (see `docs/konzept-flexible-produktvergleiche.md`)
 
-### Known Compliance Gaps (CLAUDE.md vs. Code)
-
-| Requirement | Status | Blocked by |
-|-------------|--------|------------|
-| Content-Security-Policy header | ❌ Missing | — |
-| Rate limiting (auth + API) | ❌ Missing | — |
-| Bike schema fields (sourceId, sourceType, lastSeenAt) | ❌ Missing | Phase 4 |
-| Adapter health/status reporting | ❌ Missing | Phase 4 |
-| Per-adapter cache TTL (6–24h) | ❌ Hardcoded 15min global | Phase 4 |
-| Freshness indicator in UI | ❌ Infra exists, UI missing | Phase 4 |
-| Normalized data model | ❌ SavedBike uses JSON blob | Phase 5 |
-| Entity matching / deduplication | ❌ Not started | Phase 5 |
-| Adapter contract tests / HTML fixtures | ❌ Not started | Phase 4 |
-| E2E tests (Playwright) | ❌ Not started | Phase 5 |
-
 ### Reference Code (Python)
-The files `models.py`, `compare.py`, and `tests/test_shop_offer_comparisons.py` contain a **Python prototype** of the offer comparison logic, built by a separate agent. This includes:
-- Offer validity checks (active, date range, expiry)
-- Per-shop deduplication (latest valid offer wins)
-- Cheapest offer identification
-- 24 pytest tests covering edge cases
-
-This logic should be **ported to TypeScript** as part of the comparison engine in Phase 4/5. The Python files are kept as reference until the port is complete, then removed.
+The files `models.py`, `compare.py`, and `tests/test_shop_offer_comparisons.py` contain the **Python prototype** of the offer comparison logic. The TypeScript port is complete (`src/lib/comparison.ts`, `src/lib/comparison.test.ts`). Python files are kept for cross-validation until confidence in the TS implementation is high, then can be removed.
 
 ## Tech Stack
 
@@ -116,21 +86,21 @@ This is the core logic that makes the tool a real comparison tool rather than ju
 - Use matching confidence scores to flag uncertain matches for review
 - Key matching fields: brand + model name + model year + category + frame type
 
-### Data Model (Target)
+### Data Model (Implemented)
 
-The data model should be normalized to support proper comparison:
+The data model is fully normalized:
 
 | Table | Purpose |
 |-------|---------|
 | **Dealer** | Known dealer/shop with name, URL, adapter config |
 | **BikeModel** | Canonical bike entity (brand, model, category, year) |
 | **BikeListing** | Concrete offer from a dealer for a BikeModel |
-| **PriceSnapshot** | Price history per listing (enables tracking changes) |
+| **PriceSnapshot** | Price history per listing (tracks changes over time) |
 | **SavedBike** | User's saved/favorited listing with optional note |
 | **User** | Auth user with GDPR fields |
 | **Invite** | Invite-only registration |
 
-**Current state**: SavedBike stores `bikeData` as JSON blob. Normalize to BikeListing/BikeModel/Dealer when implementing real adapters.
+Persistence is handled by `src/lib/bike-persistence.ts` — upsert-based, non-blocking, with automatic price snapshot creation on price changes.
 
 ### Unified Bike Schema
 
@@ -246,19 +216,21 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 
 ## Database Design
 
-### Core Tables (Current)
+### Auth Tables (NextAuth.js managed)
 - **User**: id, email, name, role (USER/ADMIN), consentGiven, consentAt, createdAt, updatedAt
-- **Account**: NextAuth.js managed (OAuth/credentials)
-- **Session**: NextAuth.js managed (sessionToken, userId, expires)
+- **Account**: OAuth/credentials provider links
+- **Session**: Session tokens with expiry
+- **VerificationToken**: Email verification tokens
 - **Invite**: id, email, invitedBy, usedAt, expiresAt
-- **SavedBike**: id, userId, bikeData (JSON), dealer, note, createdAt, updatedAt
-- **VerificationToken**: NextAuth.js managed
 
-### Target Tables (when normalizing for real adapters)
-- **Dealer**: id, name, url, adapterKey, isActive, lastFetchedAt
-- **BikeModel**: id, brand, modelName, category, canonicalKey, modelYear
-- **BikeListing**: id, bikeModelId, dealerId, sourceId, listPrice, offerPrice, url, imageUrl, availability, lastSeenAt
-- **PriceSnapshot**: id, bikeListingId, price, recordedAt
+### Bike Data Tables (Normalized)
+- **Dealer**: id, name, url, adapterKey (unique), isActive, lastFetchedAt
+- **BikeModel**: id, brand, modelName, category, canonicalKey (unique), modelYear
+- **BikeListing**: id, bikeModelId, dealerId, sourceId, sourceType, price, listPrice, offerPrice, url, imageUrl, availability, lastSeenAt (unique: dealerId+sourceId)
+- **PriceSnapshot**: id, bikeListingId, price, listPrice, offerPrice, recordedAt
+
+### User Feature Tables
+- **SavedBike**: id, userId, bikeData (JSON denormalized backup), dealer, note, createdAt, updatedAt
 
 ### Principles
 - All user-scoped tables include `userId` foreign key
@@ -347,35 +319,24 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 
 ## Testing Strategy
 
-### Current Test Coverage
-- **TypeScript (Vitest)**: 95 tests across 5 files:
-  - `src/lib/utils.test.ts` — `cn()` utility
-  - `src/adapters/types.test.ts` — Bike type/schema validation
-  - `src/adapters/base-adapter.test.ts` — Base adapter class
-  - `src/lib/bike-filters.test.ts` — Filter/sort logic
-  - `src/app/api/saved-bikes/saved-bikes.test.ts` — SavedBike API routes
-- **Python (pytest)**: 24 tests for offer comparison logic (`tests/test_shop_offer_comparisons.py`) — reference implementation, to be ported
+### Unit Tests (Vitest)
+- `src/lib/utils.test.ts` — `cn()` utility
+- `src/adapters/types.test.ts` — Bike type/schema validation
+- `src/adapters/base-adapter.test.ts` — Base adapter class (parsePrice, mapCategory, extractBrand)
+- `src/adapters/adapters.test.ts` — Adapter contract tests with static HTML fixtures
+- `src/lib/bike-filters.test.ts` — Filter/sort logic
+- `src/lib/entity-resolution.test.ts` — Entity matching, fuzzy tolerance, canonical keys, group building
+- `src/lib/comparison.test.ts` — Offer comparison (validity, deduplication, cheapest offer)
+- `src/app/api/saved-bikes/saved-bikes.test.ts` — SavedBike API routes
 
-### Target Test Coverage
+### Python Reference Tests
+- `tests/test_shop_offer_comparisons.py` — 24 pytest tests for cross-validation with TypeScript port
 
-#### Unit Tests (Vitest)
-- Data normalization / adapter logic
-- Filter / search logic
-- API route authorization (user can only access own data)
-- Entity matching / deduplication logic
-- Comparison logic (port from Python tests)
-
-#### Adapter Contract Tests
-- Each adapter returns data conforming to the unified bike schema
-- HTML fixture tests against saved example pages (detect when site structure changes)
-- Graceful handling of malformed or missing data
-
-#### E2E Tests (Playwright)
-- Login flow (magic link)
-- Search and filter
-- Save/unsave favorites
-- Comparison view
-- Admin dashboard access
+### E2E Tests (Playwright)
+- `e2e/auth.spec.ts` — Login flow, redirect, dev login
+- `e2e/bike-explorer.spec.ts` — Tab switching, filters, favorites, comparison
+- `e2e/admin.spec.ts` — Admin page access control
+- `e2e/privacy.spec.ts` — Privacy policy, footer link, profile auth
 
 ## Code Style
 
