@@ -1,11 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/auth/session-provider";
 import { UserNav } from "@/components/auth/user-nav";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Bike } from "lucide-react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "JobRad Vergleich",
   description: "Fahrrad-Angebote von JobRad-Partnern vergleichen",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -14,25 +23,49 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <SessionProvider>
-          <div className="min-h-screen flex flex-col">
-            <header className="border-b">
-              <div className="container flex h-16 items-center justify-between">
-                <h1 className="text-xl font-bold">JobRad Vergleich</h1>
-                <UserNav />
-              </div>
-            </header>
-            <main className="container flex-1 py-8">{children}</main>
-            <footer className="border-t py-4">
-              <div className="container flex items-center justify-between text-sm text-muted-foreground">
-                <span>JobRad Fahrrad-Vergleichstool &middot; Internes Werkzeug</span>
-                <a href="/datenschutz" className="hover:underline">Datenschutz</a>
-              </div>
-            </footer>
-          </div>
-        </SessionProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
+            <div className="min-h-screen flex flex-col">
+              <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                <div className="container flex h-14 items-center gap-4">
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 font-bold text-foreground hover:text-primary transition-colors"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                      <Bike className="h-4 w-4" />
+                    </div>
+                    <span className="hidden sm:inline">JobRad Vergleich</span>
+                    <span className="sm:hidden">JobRad</span>
+                  </Link>
+
+                  <div className="flex flex-1 items-center justify-end gap-2">
+                    <ThemeToggle />
+                    <UserNav />
+                  </div>
+                </div>
+              </header>
+
+              <main className="container flex-1 py-6">{children}</main>
+
+              <footer className="border-t bg-card">
+                <div className="container flex items-center justify-between py-4 text-xs text-muted-foreground">
+                  <span>JobRad Fahrrad-Vergleichstool &middot; Internes Werkzeug</span>
+                  <Link href="/datenschutz" className="hover:text-foreground transition-colors">
+                    Datenschutz
+                  </Link>
+                </div>
+              </footer>
+            </div>
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

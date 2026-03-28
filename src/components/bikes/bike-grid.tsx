@@ -1,6 +1,7 @@
 import type { Bike } from "@/adapters/types";
 import { BikeCard } from "./bike-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Search } from "lucide-react";
 
 interface BikeGridProps {
   bikes: Bike[];
@@ -25,12 +26,15 @@ export function BikeGrid({
 }: BikeGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="space-y-3">
-            <Skeleton className="aspect-[4/3] w-full rounded-lg" />
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="aspect-[4/3] w-full rounded-xl" />
+            <div className="space-y-2 px-1">
+              <Skeleton className="h-3 w-1/3" />
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-6 w-1/4" />
+            </div>
           </div>
         ))}
       </div>
@@ -39,20 +43,20 @@ export function BikeGrid({
 
   if (bikes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-        <svg className="h-12 w-12 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
-        <p className="mt-4 text-lg font-medium">Keine Fahrr\u00e4der gefunden</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Passe deine Filter an oder versuche es sp\u00e4ter erneut.
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center px-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+          <Search className="h-7 w-7 text-muted-foreground/50" />
+        </div>
+        <p className="mt-4 font-semibold">Keine Fahrräder gefunden</p>
+        <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+          Passe deine Filter an oder versuche es später erneut.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {bikes.map((bike) => {
         const key = bikeKey(bike);
         return (
