@@ -1,8 +1,8 @@
-import type { Bike } from "@/adapters/types";
+import type { Bike, BikeCategory } from "@/adapters/types";
 
 export interface FilterValues {
   search: string;
-  categories: string[];
+  categories: BikeCategory[];
   priceMin: string;
   priceMax: string;
   dealer: string;

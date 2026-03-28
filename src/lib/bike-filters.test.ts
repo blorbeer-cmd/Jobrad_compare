@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { filterAndSortBikes, type FilterValues } from "./bike-filters";
-import type { Bike } from "@/adapters/types";
+import type { Bike, BikeCategory } from "@/adapters/types";
 
 const bikes: Bike[] = [
   { name: "Cube Touring Hybrid", brand: "Cube", category: "E-Bike", price: 2799, dealer: "Fahrrad XXL", dealerUrl: "https://example.com/1" },
@@ -12,7 +12,7 @@ const bikes: Bike[] = [
 
 const emptyFilters: FilterValues = {
   search: "",
-  categories: [],
+  categories: [] as BikeCategory[],
   priceMin: "",
   priceMax: "",
   dealer: "",
@@ -52,13 +52,13 @@ describe("filterAndSortBikes", () => {
 
   describe("category filter", () => {
     it("filters by single category", () => {
-      const result = filterAndSortBikes(bikes, { ...emptyFilters, categories: ["E-Bike"] });
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, categories: ["E-Bike" as BikeCategory] });
       expect(result).toHaveLength(1);
       expect(result[0].category).toBe("E-Bike");
     });
 
     it("filters by multiple categories", () => {
-      const result = filterAndSortBikes(bikes, { ...emptyFilters, categories: ["E-Bike", "Rennrad"] });
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, categories: ["E-Bike", "Rennrad"] as BikeCategory[] });
       expect(result).toHaveLength(2);
     });
 
@@ -129,7 +129,7 @@ describe("filterAndSortBikes", () => {
     it("applies search + category + price together", () => {
       const result = filterAndSortBikes(bikes, {
         ...emptyFilters,
-        categories: ["E-Bike", "Rennrad", "Gravel"],
+        categories: ["E-Bike", "Rennrad", "Gravel"] as BikeCategory[],
         priceMin: "1000",
         priceMax: "2000",
       });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { BikeCategory } from "@/adapters/types";
+import { type FilterValues } from "@/lib/bike-filters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,15 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select } from "@/components/ui/select";
 import { X, SlidersHorizontal } from "lucide-react";
 
-export interface FilterValues {
-  search: string;
-  categories: BikeCategory[];
-  priceMin: string;
-  priceMax: string;
-  dealer: string;
-  brand: string;
-  sortBy: string;
-}
+export type { FilterValues };
 
 const defaultFilters: FilterValues = {
   search: "",
