@@ -11,6 +11,8 @@ import { StatsBar } from "@/components/bikes/stats-bar";
 import { SavedBikeCard } from "@/components/bikes/saved-bike-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FetchState {
   bikes: Bike[];
@@ -47,9 +49,8 @@ export function BikeExplorer() {
   const [savedLoading, setSavedLoading] = useState(true);
   const [compareBikes, setCompareBikes] = useState<Bike[]>([]);
 
-  // Derive savedKeys from savedBikes for quick lookup
   const savedKeys = useMemo(() => {
-    const keys = new Map<string, string>(); // bikeKey -> savedBike.id
+    const keys = new Map<string, string>();
     for (const sb of savedBikes) {
       keys.set(bikeKey(sb.bikeData), sb.id);
     }
@@ -63,7 +64,7 @@ export function BikeExplorer() {
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 401) {
-          throw new Error("Bitte melde dich an, um Fahrraeder zu durchsuchen.");
+          throw new Error("Bitte melde dich an, um Fahrräder zu durchsuchen.");
         }
         throw new Error(`Fehler beim Laden der Daten (${res.status})`);
       }
@@ -105,10 +106,8 @@ export function BikeExplorer() {
   }, [loadBikes, loadSavedBikes]);
 
   const allBikes = fetchState.bikes;
-
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
-
   const filteredBikes = useMemo(() => filterAndSortBikes(allBikes, filters), [allBikes, filters]);
 
   async function toggleSave(bike: Bike) {
@@ -116,19 +115,14 @@ export function BikeExplorer() {
     const existingId = savedKeys.get(key);
 
     if (existingId) {
-      // Optimistic remove
       setSavedBikes((prev) => prev.filter((sb) => sb.id !== existingId));
       try {
         const res = await fetch(`/api/saved-bikes/${existingId}`, { method: "DELETE" });
-        if (!res.ok) {
-          // Revert on failure
-          loadSavedBikes();
-        }
+        if (!res.ok) loadSavedBikes();
       } catch {
         loadSavedBikes();
       }
     } else {
-      // Optimistic add with temp ID
       const tempRecord: SavedBikeRecord = {
         id: `temp-${Date.now()}`,
         bikeData: bike,
@@ -145,15 +139,12 @@ export function BikeExplorer() {
         });
         if (res.ok) {
           const data = await res.json();
-          // Replace temp record with real one
           setSavedBikes((prev) =>
             prev.map((sb) => (sb.id === tempRecord.id ? data.savedBike : sb))
           );
         } else if (res.status === 409) {
-          // Already saved — reload to sync
           loadSavedBikes();
         } else {
-          // Revert
           setSavedBikes((prev) => prev.filter((sb) => sb.id !== tempRecord.id));
         }
       } catch {
@@ -163,7 +154,6 @@ export function BikeExplorer() {
   }
 
   async function updateNote(savedBikeId: string, note: string | null) {
-    // Optimistic update
     setSavedBikes((prev) =>
       prev.map((sb) => (sb.id === savedBikeId ? { ...sb, note } : sb))
     );
@@ -173,9 +163,7 @@ export function BikeExplorer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note }),
       });
-      if (!res.ok) {
-        loadSavedBikes();
-      }
+      if (!res.ok) loadSavedBikes();
     } catch {
       loadSavedBikes();
     }
@@ -196,60 +184,109 @@ export function BikeExplorer() {
   const savedKeySet = new Set(savedKeys.keys());
 
   return (
-    <Tabs defaultValue="browse">
-      <TabsList>
-        <TabsTrigger value="browse">Durchsuchen</TabsTrigger>
-        <TabsTrigger value="favorites">
-          Favoriten{savedBikes.length > 0 && ` (${savedBikes.length})`}
-        </TabsTrigger>
-        <TabsTrigger value="compare">
-          Vergleich{compareBikes.length > 0 && ` (${compareBikes.length})`}
-        </TabsTrigger>
-      </TabsList>
+    <Tabs defaultValue="browse" className="space-y-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <TabsList className="h-10 rounded-lg p-1">
+          <TabsTrigger value="browse" className="gap-1.5 text-sm rounded-md">
+            <Search className="h-3.5 w-3.5" />
+            Durchsuchen
+          </TabsTrigger>
+          <TabsTrigger value="favorites" className="gap-1.5 text-sm rounded-md">
+            <Heart className="h-3.5 w-3.5" />
+            Favoriten
+            {savedBikes.length > 0 && (
+              <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">
+                {savedBikes.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="compare" className="gap-1.5 text-sm rounded-md">
+            <GitCompareArrows className="h-3.5 w-3.5" />
+            Vergleich
+            {compareBikes.length > 0 && (
+              <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">
+                {compareBikes.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="browse" className="space-y-6">
+        {/* Cache info + refresh on desktop */}
+        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+          {fetchState.fromCache && fetchState.fetchedAt && (
+            <span>
+              Stand: {new Date(fetchState.fetchedAt).toLocaleString("de-DE", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}
+            </span>
+          )}
+          {fetchState.errors.length > 0 && (
+            <span
+              className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+              title={fetchState.errors.map((e) => `${e.dealer}: ${e.error}`).join("\n")}
+            >
+              <AlertTriangle className="h-3 w-3" />
+              {fetchState.errors.length} Quelle(n) nicht erreichbar
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => loadBikes(true)}
+            disabled={fetchState.loading}
+            className="h-7 gap-1.5 text-xs"
+          >
+            <RefreshCw className={cn("h-3 w-3", fetchState.loading && "animate-spin")} />
+            Aktualisieren
+          </Button>
+        </div>
+      </div>
+
+      <TabsContent value="browse" className="space-y-4 mt-0">
         {fetchState.error ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-destructive/50 bg-destructive/5 py-16">
-            <svg className="h-12 w-12 text-destructive/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-            <p className="mt-4 text-lg font-medium">{fetchState.error}</p>
+          <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/5 py-16 text-center px-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
+            </div>
+            <p className="mt-4 font-medium">{fetchState.error}</p>
             <Button variant="outline" className="mt-4" onClick={() => loadBikes()}>
               Erneut versuchen
             </Button>
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between">
-              <StatsBar bikes={filteredBikes} totalCount={allBikes.length} />
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                {fetchState.fromCache && fetchState.fetchedAt && (
-                  <span>Daten vom {new Date(fetchState.fetchedAt).toLocaleString("de-DE")}</span>
-                )}
-                {fetchState.errors.length > 0 && (
-                  <span className="text-amber-600" title={fetchState.errors.map((e) => `${e.dealer}: ${e.error}`).join("\n")}>
-                    {fetchState.errors.length} Quelle(n) nicht erreichbar
-                  </span>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => loadBikes(true)}
-                  disabled={fetchState.loading}
-                >
-                  Aktualisieren
-                </Button>
-              </div>
-            </div>
+            <StatsBar bikes={filteredBikes} totalCount={allBikes.length} loading={fetchState.loading} />
 
-            <div className="flex gap-8">
+            {/* Mobile filter + refresh row */}
+            <div className="flex items-center gap-2 lg:hidden">
               <FilterSidebar
                 filters={filters}
                 onFiltersChange={setFilters}
                 availableDealers={availableDealers}
                 availableBrands={availableBrands}
               />
-              <div className="flex-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => loadBikes(true)}
+                disabled={fetchState.loading}
+                className="ml-auto gap-1.5 text-xs sm:hidden"
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", fetchState.loading && "animate-spin")} />
+                Aktualisieren
+              </Button>
+            </div>
+
+            <div className="flex gap-6">
+              {/* Desktop filter sidebar */}
+              <div className="hidden lg:block">
+                <FilterSidebar
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  availableDealers={availableDealers}
+                  availableBrands={availableBrands}
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
                 <BikeGrid
                   bikes={filteredBikes}
                   savedBikeKeys={savedKeySet}
@@ -273,23 +310,23 @@ export function BikeExplorer() {
         )}
       </TabsContent>
 
-      <TabsContent value="favorites" className="space-y-6">
+      <TabsContent value="favorites" className="mt-0">
         {savedLoading ? (
-          <div className="flex items-center justify-center py-16">
+          <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
           </div>
         ) : savedBikes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-            <svg className="h-12 w-12 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-            </svg>
-            <p className="mt-4 text-lg font-medium">Keine Favoriten gespeichert</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center px-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <Heart className="h-7 w-7 text-muted-foreground/50" />
+            </div>
+            <p className="mt-4 font-semibold">Keine Favoriten gespeichert</p>
+            <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
               Klicke auf das Herz-Symbol bei einem Fahrrad, um es hier zu speichern.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {savedBikes.map((sb) => (
               <SavedBikeCard
                 key={sb.id}
@@ -304,7 +341,7 @@ export function BikeExplorer() {
         )}
       </TabsContent>
 
-      <TabsContent value="compare">
+      <TabsContent value="compare" className="mt-0">
         <ComparisonView
           bikes={compareBikes}
           onRemove={(bike) => toggleCompare(bike)}
