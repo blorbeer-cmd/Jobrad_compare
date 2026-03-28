@@ -33,7 +33,6 @@ services:
       EMAIL_SERVER_PASSWORD: ${EMAIL_SERVER_PASSWORD:-password}
       EMAIL_FROM: ${EMAIL_FROM:-noreply@example.com}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
-      USE_DEMO_ADAPTERS: ${USE_DEMO_ADAPTERS:-true}
     depends_on:
       db:
         condition: service_healthy
