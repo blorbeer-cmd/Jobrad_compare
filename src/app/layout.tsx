@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body className="font-sans">
+      <body className="font-sans antialiased">
         <SessionProvider>
           <div className="min-h-screen flex flex-col">
             <header className="border-b">
