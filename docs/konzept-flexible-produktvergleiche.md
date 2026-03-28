@@ -160,6 +160,34 @@ SavedProduct (ersetzt SavedBike)
 
 ## Migrationsstrategie
 
+### Phase 0: Bike-Vergleichstool fertigstellen (Voraussetzung)
+
+Bevor die Plattform generalisiert wird, muss das bestehende Fahrrad-Tool vollstaendig funktionsfaehig sein. Erst ein fertiges Produkt zeigt, welche Teile wirklich generisch sein muessen.
+
+#### 0.1 Frontend an echte Daten anbinden
+- `BikeExplorer` von hardcoded Demo-Daten auf `/api/bikes` API-Fetch umstellen
+- Loading-States und Skeleton-Loader fuer das Bike-Grid
+- Fehlerbehandlung bei fehlgeschlagenen API-Calls (Fehlermeldung in der UI)
+- Scraper-Selektoren gegen echte Haendler-Websites testen und korrigieren
+
+#### 0.2 Favoriten-Feature komplett implementieren
+- API-Routen: `POST/GET /api/saved-bikes`, `DELETE/PATCH /api/saved-bikes/[id]`
+- Herz-Button an API anbinden mit optimistischem UI-Update
+- "Meine Favoriten"-Seite/Tab mit gespeicherten Raedern
+- Notiz-Funktion auf gespeicherten Raedern (Erstellen, Bearbeiten, Loeschen)
+
+#### 0.3 Testabdeckung aufbauen
+- Unit-Tests fuer Adapter-Logik (Parsing, Normalisierung, Kategorie-Mapping)
+- Unit-Tests fuer Filter- und Such-Logik
+- API-Route-Tests (Auth-Guards, CRUD-Operationen, User-Scoping)
+- Zod-Validierungs-Tests (gueltige und ungueltige Bike-Daten)
+
+#### 0.4 DSGVO-Features umsetzen
+- Konto-Loeschung mit Cascade Delete aller Nutzerdaten
+- Daten-Export: Alle Favoriten und Notizen als JSON (Art. 20)
+- Datenschutzerklaerung-Seite (erreichbar aus Footer und Registrierung)
+- Einwilligungs-Hinweis bei der Registrierung
+
 ### Phase 1: Abstraktion (intern)
 - Generisches `Product`-Interface einfuehren
 - Bestehende Bike-Adapter auf `ProductAdapter` migrieren
@@ -187,6 +215,116 @@ SavedProduct (ersetzt SavedBike)
 ---
 
 ## User Stories
+
+### Epic 0: Bike-Vergleichstool fertigstellen
+
+**US-0.1: Echte Daten im Frontend anzeigen**
+> Als Nutzer moechte ich echte Fahrrad-Angebote von verschiedenen Haendlern sehen,
+> damit ich tatsaechliche Preise vergleichen kann statt Demo-Daten.
+
+**Akzeptanzkriterien:**
+- BikeExplorer ruft `/api/bikes` auf statt hardcoded Demo-Daten zu verwenden
+- Waehrend des Ladens wird ein Skeleton-/Loading-State angezeigt
+- Bei Fehler wird eine verstaendliche Meldung auf Deutsch angezeigt
+- Filter und Suche funktionieren mit den echten Daten
+
+---
+
+**US-0.2: Scraper-Selektoren validieren**
+> Als Entwickler moechte ich sicherstellen, dass die Adapter echte Daten von den Haendler-Websites extrahieren,
+> damit das Tool zuverlaessig aktuelle Angebote anzeigt.
+
+**Akzeptanzkriterien:**
+- Jeder Adapter (FahrradXXL, BikeDiscount, LuckyBike) liefert mindestens 1 Ergebnis von der echten Website
+- Selektoren sind an die aktuelle DOM-Struktur der Haendler-Seiten angepasst
+- Bei fehlgeschlagenem Scraping wird ein Fehler geloggt und der Adapter uebersprungen
+- Unit-Tests pruefen das Parsing mit gespeicherten HTML-Snippets
+
+---
+
+**US-0.3: Fahrrad speichern (Favorit)**
+> Als angemeldeter Nutzer moechte ich ein Fahrrad als Favorit speichern koennen,
+> damit ich es spaeter wiederfinde, ohne erneut suchen zu muessen.
+
+**Akzeptanzkriterien:**
+- Klick auf Herz-Icon speichert das Fahrrad in der Datenbank (`SavedBike`)
+- Optimistisches UI-Update: Herz wird sofort gefuellt, API-Call im Hintergrund
+- Erneuter Klick entfernt den Favoriten (Toggle)
+- Gespeicherte Favoriten bleiben ueber Sessions hinweg erhalten
+
+---
+
+**US-0.4: Gespeicherte Fahrraeder anzeigen**
+> Als angemeldeter Nutzer moechte ich eine Uebersicht meiner gespeicherten Fahrraeder sehen,
+> damit ich meine Favoriten schnell vergleichen kann.
+
+**Akzeptanzkriterien:**
+- Eigener Tab/Seite "Meine Favoriten" zeigt alle gespeicherten Raeder
+- Raeder koennen aus der Favoritenliste entfernt werden
+- Leerer Zustand mit hilfreicher Meldung, wenn keine Favoriten vorhanden
+- Gespeicherte Raeder koennen in die Vergleichsansicht uebernommen werden
+
+---
+
+**US-0.5: Notizen zu gespeicherten Raedern**
+> Als angemeldeter Nutzer moechte ich Notizen zu meinen gespeicherten Raedern hinzufuegen,
+> damit ich mir Gedanken oder Bewertungen merken kann.
+
+**Akzeptanzkriterien:**
+- Jeder gespeicherte Favorit hat ein optionales Notiz-Feld
+- Notiz kann erstellt, bearbeitet und geloescht werden
+- Notizen sind nur fuer den jeweiligen Nutzer sichtbar
+
+---
+
+**US-0.6: Konto loeschen (DSGVO Art. 17)**
+> Als angemeldeter Nutzer moechte ich mein Konto und alle meine Daten loeschen koennen,
+> damit ich mein Recht auf Vergessenwerden ausueben kann.
+
+**Akzeptanzkriterien:**
+- Button "Konto loeschen" in den Profil-Einstellungen
+- Sicherheitsabfrage vor der Loeschung ("Bist du sicher?")
+- Cascade Delete: Alle Favoriten, Notizen und Session-Daten werden entfernt
+- Nutzer wird nach Loeschung ausgeloggt und auf die Startseite weitergeleitet
+
+---
+
+**US-0.7: Daten-Export (DSGVO Art. 20)**
+> Als angemeldeter Nutzer moechte ich alle meine gespeicherten Daten als JSON exportieren koennen,
+> damit ich mein Recht auf Datenportabilitaet wahrnehmen kann.
+
+**Akzeptanzkriterien:**
+- Button "Meine Daten exportieren" in den Profil-Einstellungen
+- Export enthaelt: Profildaten, alle gespeicherten Fahrraeder, alle Notizen
+- Download als `.json`-Datei
+- Keine Daten anderer Nutzer im Export enthalten
+
+---
+
+**US-0.8: Datenschutzerklaerung**
+> Als Nutzer moechte ich eine Datenschutzerklaerung einsehen koennen,
+> damit ich weiss, wie meine Daten verarbeitet werden.
+
+**Akzeptanzkriterien:**
+- Seite `/datenschutz` mit verstaendlicher Datenschutzerklaerung auf Deutsch
+- Erreichbar aus dem Footer und von der Registrierungsseite
+- Beschreibt: Welche Daten gespeichert werden, warum, wie lange, und Nutzerrechte
+- Hinweis auf Einwilligung bei der Registrierung
+
+---
+
+**US-0.9: Testabdeckung Kernfunktionen**
+> Als Entwickler moechte ich automatisierte Tests fuer die Kernfunktionen haben,
+> damit ich Aenderungen zuverlaessig durchfuehren kann, ohne bestehende Features zu brechen.
+
+**Akzeptanzkriterien:**
+- Unit-Tests fuer Adapter-Parsing-Logik (mindestens 1 Test pro Adapter)
+- Unit-Tests fuer Filter- und Such-Logik
+- API-Route-Tests: Auth-Guard prueft, dass unauthentifizierte Requests abgelehnt werden
+- API-Route-Tests: Nutzer kann nur eigene Favoriten sehen/loeschen
+- Alle Tests laufen im CI (Vitest)
+
+---
 
 ### Epic 1: Generisches Produktmodell
 
