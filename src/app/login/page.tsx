@@ -1,32 +1,56 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, ArrowRight, CheckCircle } from "lucide-react";
+import { Mail, ArrowRight, CheckCircle, Zap } from "lucide-react";
 
 function LoginContent() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [devLoginEnabled, setDevLoginEnabled] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const error = searchParams.get("error");
+
+  useEffect(() => {
+    fetch("/api/auth/dev-login-enabled")
+      .then((r) => r.json())
+      .then((d) => setDevLoginEnabled(d.enabled))
+      .catch(() => {});
+  }, []);
 
   const errorMessages: Record<string, string> = {
     AccessDenied: "Zugang verweigert. Du brauchst eine Einladung, um dich anzumelden.",
     Verification: "Der Magic Link ist abgelaufen. Bitte fordere einen neuen an.",
+    CredentialsSignin: "Anmeldung fehlgeschlagen. Pruefe deine E-Mail-Adresse.",
     Default: "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
   };
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     await signIn("email", { email, redirect: false });
     setSubmitted(true);
     setLoading(false);
+  }
+
+  async function handleDevLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    const result = await signIn("dev-login", {
+      email,
+      redirect: false,
+    });
+    if (result?.ok) {
+      router.push("/");
+    } else {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -47,7 +71,7 @@ function LoginContent() {
           <CardContent className="text-center">
             <p className="text-sm text-muted-foreground">
               Klicke auf den Link in der E-Mail, um dich anzumelden.
-              Prüfe auch deinen Spam-Ordner.
+              Pruefe auch deinen Spam-Ordner.
             </p>
           </CardContent>
         </Card>
@@ -64,7 +88,9 @@ function LoginContent() {
           </div>
           <CardTitle>Anmelden</CardTitle>
           <CardDescription>
-            Gib deine E-Mail-Adresse ein, um einen Magic Link zu erhalten.
+            {devLoginEnabled
+              ? "Gib deine E-Mail-Adresse ein, um dich anzumelden."
+              : "Gib deine E-Mail-Adresse ein, um einen Magic Link zu erhalten."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -74,7 +100,10 @@ function LoginContent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={devLoginEnabled ? handleDevLogin : handleMagicLink}
+            className="space-y-4"
+          >
             <div>
               <label htmlFor="email" className="text-sm font-medium">
                 E-Mail-Adresse
@@ -89,16 +118,30 @@ function LoginContent() {
                 className="mt-1.5"
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? (
-                "Wird gesendet..."
-              ) : (
-                <>
-                  Magic Link senden
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
+
+            {devLoginEnabled ? (
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? (
+                  "Anmelden..."
+                ) : (
+                  <>
+                    <Zap className="mr-2 h-4 w-4" />
+                    Direkt anmelden
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? (
+                  "Wird gesendet..."
+                ) : (
+                  <>
+                    Magic Link senden
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
