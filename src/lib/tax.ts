@@ -8,8 +8,11 @@
  * - Sozialversicherung (KV, PV, RV, AV – Arbeitnehmeranteil)
  * - JobRad Netto-Rate aus Gehaltsumwandlung + Geldwertem Vorteil
  *
- * ⚠️  Tax constants are based on 2024 values.
- *     Verify at https://www.bundesfinanzministerium.de before each tax year.
+ * ⚠️  Tax constants are based on 2026 values. Update annually.
+ *     Quellen: BMF Lohnsteuer-Handbuch 2026 (§ 32a EStG),
+ *     SV-Rechengrößenverordnung 2026 (BGBl. 26.11.2025),
+ *     SolZG, § 24b EStG
+ *     https://www.bundesfinanzministerium.de
  *
  * Note: This module does not subtract Werbungskostenpauschale or Sonderausgaben.
  * Numbers will therefore be slightly higher than actual tax, but the comparison
@@ -21,54 +24,65 @@
 // ---------------------------------------------------------------------------
 
 /**
- * Tax and social insurance constants for 2024 Germany.
- * Source: § 32a EStG 2024, SGB IV, BMF-Schreiben
+ * Tax and social insurance constants for 2026 Germany.
+ * Sources:
+ * - § 32a EStG 2026 (Steuerfortentwicklungsgesetz, BGBl. 2024 I Nr. 449)
+ *   https://esth.bundesfinanzministerium.de/lsth/2026/A-Einkommensteuergesetz/IV-Tarif-31-34b/Paragraf-32a/inhalt.html
+ * - SV-Rechengrößenverordnung 2026, GKV-Spitzenverband
+ *   https://www.bundesregierung.de/breg-de/aktuelles/beitragsgemessungsgrenzen-2386514
+ * - Soli-Freigrenze 2026: BMF
+ *   https://www.bundesfinanzministerium.de/Content/DE/Standardartikel/Themen/Steuern/das-aendert-sich-2026.html
  */
-export const TAX_CONSTANTS_2024 = {
-  year: 2024,
+export const TAX_CONSTANTS_2026 = {
+  year: 2026,
 
-  // Income tax zones (§ 32a EStG 2024)
-  grundfreibetrag: 11_604,
-  zone2End: 17_005,
-  zone3End: 66_760,
+  // Income tax zones (§ 32a EStG 2026)
+  grundfreibetrag: 12_348,
+  zone2End: 17_799,
+  zone3End: 69_878,
   zone4End: 277_825,
 
   // Zone 2: tax = (a × y + b) × y   where y = (zvE - grundfreibetrag) / 10_000
-  zone2: { a: 979.18, b: 1_400 },
+  zone2: { a: 914.51, b: 1_400 },
   // Zone 3: tax = (a × z + b) × z + c   where z = (zvE - zone2End) / 10_000
-  zone3: { a: 192.59, b: 2_397, c: 966.53 },
+  zone3: { a: 173.10, b: 2_397, c: 1_034.87 },
   // Zone 4: tax = rate × zvE - offset
-  zone4: { rate: 0.42, offset: 9_972.98 },
+  zone4: { rate: 0.42, offset: 11_135.63 },
   // Zone 5 (Reichensteuer): tax = rate × zvE - offset
-  zone5: { rate: 0.45, offset: 18_307.73 },
+  zone5: { rate: 0.45, offset: 19_470.38 },
 
-  // Solidaritätszuschlag (§ 3 SolZG 2024)
-  soliFreibetrag: 18_130, // Freigrenze Einzelveranlagung
+  // Solidaritätszuschlag (§ 3 SolZG 2026)
+  soliFreibetrag: 20_350, // Freigrenze Einzelveranlagung
   soliRate: 0.055,
   soliMilderungsRate: 0.119, // Rate in der Milderungszone
 
-  // Entlastungsbetrag für Alleinerziehende (SK 2)
+  // Entlastungsbetrag für Alleinerziehende (SK 2, § 24b EStG 2026)
   entlastungsbetragSK2: 4_260,
 
-  // Social insurance (Arbeitnehmeranteil, 2024)
+  // Social insurance (Arbeitnehmeranteil, 2026)
+  // Beitragssätze: GKV-Spitzenverband / SV-Rechengrößenverordnung 2026
   sv: {
-    kv: 0.073, // KV Allgemeiner Beitrag AN-Anteil
-    kvZusatz: 0.0085, // KV durchschnittlicher Zusatzbeitrag AN-Anteil
-    pv: 0.017, // PV AN-Anteil (mit Kindern)
-    pvKinderlos: 0.006, // PV Kinderlosenzuschlag AN-Anteil
-    rv: 0.093, // RV AN-Anteil
-    av: 0.013, // AV AN-Anteil
+    kv: 0.073,    // KV Allgemeiner Beitrag AN-Anteil (14,6 % / 2)
+    kvZusatz: 0.0145, // KV durchschnittlicher Zusatzbeitrag AN-Anteil (2,9 % / 2)
+    pv: 0.018,    // PV AN-Anteil mit Kindern (3,6 % / 2)
+    pvKinderlos: 0.006, // PV Kinderlosenzuschlag AN-Anteil (0,6 %)
+    rv: 0.093,    // RV AN-Anteil (18,6 % / 2)
+    av: 0.013,    // AV AN-Anteil (2,6 % / 2)
   },
 
-  // Beitragsbemessungsgrenzen (annual, 2024)
+  // Beitragsbemessungsgrenzen (annual, 2026)
+  // Ab 2026: keine Rechtskreistrennung West/Ost mehr (SV-Rechengrößenverordnung 2026)
   bbg: {
-    kvPv: 62_100, // KV + PV
-    rvAv: 90_600, // RV + AV (West)
+    kvPv: 69_750,  // KV + PV
+    rvAv: 101_400, // RV + AV (bundeseinheitlich)
   },
 } as const;
 
-export type TaxConstants = typeof TAX_CONSTANTS_2024;
-export const DEFAULT_TAX_CONSTANTS: TaxConstants = TAX_CONSTANTS_2024;
+export type TaxConstants = typeof TAX_CONSTANTS_2026;
+export const DEFAULT_TAX_CONSTANTS: TaxConstants = TAX_CONSTANTS_2026;
+
+/** @deprecated Use TAX_CONSTANTS_2026 */
+export const TAX_CONSTANTS_2024 = TAX_CONSTANTS_2026;
 
 // ---------------------------------------------------------------------------
 // Types

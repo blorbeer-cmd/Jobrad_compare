@@ -8,8 +8,11 @@ import {
   calculateMonthlyBenefit,
   estimateMonthlyGrossRate,
   calculateBikeLease,
-  TAX_CONSTANTS_2024,
+  TAX_CONSTANTS_2026,
 } from "./tax";
+
+// Alias for readability in tests
+const C = TAX_CONSTANTS_2026;
 
 // ---------------------------------------------------------------------------
 // Grundtabelle
@@ -24,37 +27,37 @@ describe("calculateIncomeTaxGrundtabelle", () => {
     expect(calculateIncomeTaxGrundtabelle(-1000)).toBe(0);
   });
 
-  it("returns 0 within Grundfreibetrag (11,604 €)", () => {
-    expect(calculateIncomeTaxGrundtabelle(11_604)).toBe(0);
+  it("returns 0 within Grundfreibetrag (12,348 €)", () => {
+    expect(calculateIncomeTaxGrundtabelle(12_348)).toBe(0);
     expect(calculateIncomeTaxGrundtabelle(10_000)).toBe(0);
   });
 
-  it("calculates Zone 2 correctly (12,000 €)", () => {
-    // y = (12,000 - 11,604) / 10,000 = 0.0396
-    // tax = (979.18 * 0.0396 + 1400) * 0.0396
-    const tax = calculateIncomeTaxGrundtabelle(12_000);
+  it("calculates Zone 2 correctly (15,000 €)", () => {
+    // y = (15,000 - 12,348) / 10,000 = 0.2652
+    // tax = (914.51 * 0.2652 + 1400) * 0.2652
+    const tax = calculateIncomeTaxGrundtabelle(15_000);
     expect(tax).toBeGreaterThan(0);
-    expect(tax).toBeLessThan(500);
+    expect(tax).toBeLessThan(1_000);
     expect(Number.isInteger(tax)).toBe(true); // floored to whole euros
   });
 
   it("calculates Zone 3 correctly (40,000 €)", () => {
-    // z = (40,000 - 17,005) / 10,000 = 2.2995
-    // tax = (192.59 * 2.2995 + 2397) * 2.2995 + 966.53 ≈ 7,496
+    // z = (40,000 - 17,799) / 10,000 = 2.2201
+    // tax = (173.10 * 2.2201 + 2397) * 2.2201 + 1034.87 ≈ 7,209
     const tax = calculateIncomeTaxGrundtabelle(40_000);
-    expect(tax).toBe(7_496);
+    expect(tax).toBe(7_209);
   });
 
   it("calculates Zone 4 correctly (80,000 €)", () => {
-    // tax = 0.42 * 80,000 - 9,972.98 = 23,627.02 → floor = 23,627
+    // tax = 0.42 * 80,000 - 11,135.63 = 22,464.37 → floor = 22,464
     const tax = calculateIncomeTaxGrundtabelle(80_000);
-    expect(tax).toBe(23_627);
+    expect(tax).toBe(22_464);
   });
 
   it("calculates Zone 5 correctly (300,000 €)", () => {
-    // tax = 0.45 * 300,000 - 18,307.73 = 116,692.27 → floor = 116,692
+    // tax = 0.45 * 300,000 - 19,470.38 = 115,529.62 → floor = 115,529
     const tax = calculateIncomeTaxGrundtabelle(300_000);
-    expect(tax).toBe(116_692);
+    expect(tax).toBe(115_529);
   });
 
   it("is monotonically increasing", () => {
@@ -95,7 +98,7 @@ describe("calculateIncomeTax – Steuerklassen", () => {
   });
 
   it("SK 2 reduces zvE by Entlastungsbetrag (4,260 €)", () => {
-    const zvEReduced = 40_000 - TAX_CONSTANTS_2024.entlastungsbetragSK2;
+    const zvEReduced = 40_000 - C.entlastungsbetragSK2;
     expect(calculateIncomeTax(40_000, 2)).toBe(
       calculateIncomeTaxGrundtabelle(zvEReduced)
     );
@@ -113,23 +116,24 @@ describe("calculateIncomeTax – Steuerklassen", () => {
 // ---------------------------------------------------------------------------
 
 describe("calculateSoli", () => {
-  it("returns 0 at or below Freigrenze (18,130 €)", () => {
+  it("returns 0 at or below Freigrenze (20,350 €)", () => {
     expect(calculateSoli(0)).toBe(0);
-    expect(calculateSoli(18_130)).toBe(0);
+    expect(calculateSoli(20_350)).toBe(0);
     expect(calculateSoli(18_000)).toBe(0);
   });
 
-  it("is positive above Freigrenze", () => {
-    expect(calculateSoli(20_000)).toBeGreaterThan(0);
+  it("is positive above Freigrenze (20,350 €)", () => {
+    expect(calculateSoli(21_000)).toBeGreaterThan(0);
   });
 
   it("applies full 5.5 % above Milderungszone", () => {
-    const highTax = 40_000;
+    const highTax = 45_000;
     expect(calculateSoli(highTax)).toBeCloseTo(highTax * 0.055, 0);
   });
 
   it("is lower than full rate within Milderungszone", () => {
-    const borderlineTax = 19_000;
+    // Just above the Freigrenze of 20,350
+    const borderlineTax = 21_000;
     const full = borderlineTax * 0.055;
     const actual = calculateSoli(borderlineTax);
     expect(actual).toBeGreaterThan(0);
@@ -137,8 +141,8 @@ describe("calculateSoli", () => {
   });
 
   it("is continuous at zone boundaries (no jump)", () => {
-    // Just above Freigrenze
-    const atFreigrenze = calculateSoli(18_131);
+    // Just above Freigrenze 2026
+    const atFreigrenze = calculateSoli(20_351);
     expect(atFreigrenze).toBeGreaterThanOrEqual(0);
     expect(atFreigrenze).toBeLessThan(100);
   });
@@ -187,28 +191,28 @@ describe("calculateAnnualSV", () => {
     const withKind = calculateAnnualSV(50_000, true);
     const ohneKind = calculateAnnualSV(50_000, false);
     expect(ohneKind).toBeGreaterThan(withKind);
-    // PV-Kinderlosenzuschlag 0.6 % on kvBasis
-    const minKvBasis = Math.min(50_000, TAX_CONSTANTS_2024.bbg.kvPv);
-    expect(ohneKind - withKind).toBeCloseTo(minKvBasis * TAX_CONSTANTS_2024.sv.pvKinderlos, 0);
+    // PV-Kinderlosenzuschlag 0.6 % on kvBasis (50k < 69,750 BBG, so not capped)
+    const minKvBasis = Math.min(50_000, C.bbg.kvPv);
+    expect(ohneKind - withKind).toBeCloseTo(minKvBasis * C.sv.pvKinderlos, 0);
   });
 
-  it("is capped at BBG for KV+PV (62,100 €)", () => {
-    // At exactly the BBG and well above it, KV+PV contribution is identical
-    const atBbg = calculateAnnualSV(62_100, true);
-    const above = calculateAnnualSV(80_000, true);
+  it("is capped at BBG for KV+PV (69,750 €)", () => {
+    // At exactly the BBG and above it, KV+PV contribution is identical
+    const atBbg = calculateAnnualSV(69_750, true);
+    const above = calculateAnnualSV(85_000, true);
     // Only RV+AV grows above the KV+PV BBG
-    const rvAvDiff = (80_000 - 62_100) * (TAX_CONSTANTS_2024.sv.rv + TAX_CONSTANTS_2024.sv.av);
+    const rvAvDiff = (85_000 - 69_750) * (C.sv.rv + C.sv.av);
     expect(above - atBbg).toBeCloseTo(rvAvDiff, 0);
   });
 
-  it("is capped at BBG for RV+AV (90,600 €)", () => {
-    const at90k = calculateAnnualSV(90_000, true);
+  it("is capped at BBG for RV+AV (101,400 €)", () => {
     const at100k = calculateAnnualSV(100_000, true);
     const at110k = calculateAnnualSV(110_000, true);
-    // Once both BBG are exceeded, adding more income adds no SV
-    const delta1 = at100k - at90k;
-    const delta2 = at110k - at100k;
-    expect(delta2).toBeLessThan(delta1);
+    const at120k = calculateAnnualSV(120_000, true);
+    // Once both BBG are exceeded (after 101,400), no more SV growth
+    const deltaBeforeCap = at110k - at100k; // partly before cap
+    const deltaAfterCap = at120k - at110k;  // fully after cap
+    expect(deltaAfterCap).toBeLessThan(deltaBeforeCap);
   });
 });
 
