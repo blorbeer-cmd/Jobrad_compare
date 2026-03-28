@@ -322,6 +322,15 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 - Descriptive variable and function names
 - Keep abstractions minimal — don't over-engineer
 
+## Version Policy
+
+**Never rely on training data for version information.** AI training data is outdated and may reference wrong or non-existent versions.
+
+- When adding, upgrading, or recommending a dependency: **always verify the current stable version** via `npm view <package> version`, official docs, or a web search
+- When writing documentation or config that references a framework/tool version: verify it first
+- When a user asks about a version or compatibility: look it up, don't guess
+- If a version cannot be verified (e.g. no internet access): state clearly that the version was not verified and recommend the user check manually
+
 ## Secrets Management
 
 - All secrets (DB connection, NextAuth secret, API keys) via environment variables
