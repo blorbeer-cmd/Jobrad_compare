@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   const savedBike = await db.savedBike.create({
     data: {
       userId: session.user.id,
-      bikeData: bikeData as unknown as Record<string, unknown>,
+      bikeData: JSON.parse(JSON.stringify(bikeData)),
       dealer: bikeData.dealer,
       note: note ?? null,
     },
