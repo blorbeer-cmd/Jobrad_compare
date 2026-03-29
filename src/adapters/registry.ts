@@ -8,8 +8,8 @@ import { persistBikes, loadBikesFromDb } from "@/lib/bike-persistence";
 
 const adapters: BaseAdapter[] = [
   new FahrradXXLAdapter(),
-  new LuckyBikeAdapter(),
-  new BikeDiscountAdapter(),
+  // LuckyBike: products are rendered client-side via JavaScript — not scrapable with Cheerio
+  // BikeDiscount: returns HTTP 403 for all requests from server environments
 ];
 
 export interface FetchResult {

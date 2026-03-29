@@ -34,33 +34,44 @@ export class FahrradXXLAdapter extends BaseAdapter {
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
-    const cards = $(".product-card, .product-item, [data-product-id]");
+    const cards = $("[data-product-id]");
     console.log(`[FahrradXXL] ${categoryPath}: ${cards.length} product cards found`);
     cards.each((_, el) => {
       try {
         const $el = $(el);
-        const name = $el.find(".product-title, .product-name, h3 a, h2 a").first().text().trim()
-          || $el.find("a[title]").first().attr("title")?.trim();
+
+        // Brand and title are in separate elements
+        const brand = $el.find(".fxxl-element-artikel__brand").first().text().trim();
+        const title = $el.find(".fxxl-element-artikel__title").first().text().trim();
+        // Fallback: use img alt attribute which contains the full product name
+        const imgAlt = $el.find("img").first().attr("alt")?.trim() || "";
+        const name = brand && title ? `${brand} ${title}` : imgAlt || title || brand;
         if (!name) return;
 
-        const priceText = $el.find(".price, .product-price, .current-price").first().text().trim();
+        // Crossed-out / old price (must be checked BEFORE current price)
+        const listPriceText = $el.find(".fxxl-element-artikel__price--old, .fxxl-element-artikel__price--uvp, del").first().text().trim();
+
+        // Current price — exclude old/uvp price elements
+        const priceEl = $el.find(".fxxl-element-artikel__price, .fxxl-element-artikel__price--current").not(".fxxl-element-artikel__price--old, .fxxl-element-artikel__price--uvp").first();
+        const priceText = priceEl.text().trim();
         const price = this.parsePrice(priceText);
         if (!price) return;
-
-        // Try to find original list price (crossed-out)
-        const listPriceText = $el.find(".price-old, .original-price, del").first().text().trim();
         const listPrice = listPriceText ? this.parsePrice(listPriceText) ?? undefined : undefined;
 
-        const href = $el.find("a[href]").first().attr("href") || "";
+        // The card itself is an <a> tag with href
+        const href = $el.attr("href") || $el.find("a[href]").first().attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-        const imageUrl = $el.find("img").first().attr("data-src") || $el.find("img").first().attr("src");
+
+        // Image with srcset or src
+        const imageUrl = $el.find("img.fxxl-element-artikel__image").first().attr("src")
+          || $el.find("img").first().attr("src");
+
         const category = this.mapCategory(categoryPath);
-        const availability = $el.find(".availability, .delivery-info, .stock-info").first().text().trim() || undefined;
         const sourceId = $el.attr("data-product-id") || undefined;
 
         const result = BikeSchema.safeParse({
           name,
-          brand: this.extractBrand(name),
+          brand: brand || this.extractBrand(name),
           category,
           price: listPrice && price < listPrice ? price : price,
           listPrice: listPrice && listPrice > price ? listPrice : undefined,
@@ -68,7 +79,6 @@ export class FahrradXXLAdapter extends BaseAdapter {
           dealer: this.name,
           dealerUrl,
           imageUrl: imageUrl || undefined,
-          availability,
           sourceId,
           sourceType: "scrape" as const,
         });
