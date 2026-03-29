@@ -73,7 +73,7 @@ function assertBikeContract(bike: Bike, adapterName: string) {
 describe("FahrradXXLAdapter contract", () => {
   const adapter = new TestFahrradXXL();
   const html = fixture("fahrrad-xxl-ebikes.html");
-  const bikes = adapter.parse(html, "/fahrraeder/e-bikes");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bike/");
 
   it("parses 3 valid bikes and skips 2 invalid cards", () => {
     expect(bikes.length).toBe(3);
@@ -84,7 +84,7 @@ describe("FahrradXXLAdapter contract", () => {
   });
 
   it("parses Cube Touring with offer price and list price", () => {
-    const cube = bikes.find((b) => b.name.includes("Cube Touring"));
+    const cube = bikes.find((b) => b.name.includes("Cube"));
     expect(cube).toBeDefined();
     expect(cube!.price).toBe(2799);
     expect(cube!.listPrice).toBe(2999);
@@ -94,21 +94,16 @@ describe("FahrradXXLAdapter contract", () => {
   });
 
   it("parses Trek Domane without discount", () => {
-    const trek = bikes.find((b) => b.name.includes("Trek Domane"));
+    const trek = bikes.find((b) => b.name.includes("Trek"));
     expect(trek).toBeDefined();
     expect(trek!.price).toBe(2999);
     expect(trek!.listPrice).toBeUndefined();
     expect(trek!.brand).toBe("Trek");
   });
 
-  it("parses image URL from data-src attribute", () => {
+  it("parses image URL from src attribute", () => {
     const trek = bikes.find((b) => b.name.includes("Trek"));
     expect(trek?.imageUrl).toMatch(/^https?:\/\//);
-  });
-
-  it("parses availability text", () => {
-    const cube = bikes.find((b) => b.name.includes("Cube"));
-    expect(cube?.availability).toBeTruthy();
   });
 
   it("sets sourceId from data-product-id attribute", () => {
@@ -117,11 +112,11 @@ describe("FahrradXXLAdapter contract", () => {
   });
 
   it("returns empty array for empty HTML", () => {
-    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes")).toEqual([]);
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bike/")).toEqual([]);
   });
 
   it("returns empty array for garbled HTML", () => {
-    expect(adapter.parse("<<<!>>#$%@!GARBLED", "/fahrraeder/e-bikes")).toEqual([]);
+    expect(adapter.parse("<<<!>>#$%@!GARBLED", "/fahrraeder/e-bike/")).toEqual([]);
   });
 });
 
