@@ -18,14 +18,23 @@ export class FahrradXXLAdapter extends BaseAdapter {
   ];
 
   async fetchBikes(): Promise<Bike[]> {
-    const allBikes: Bike[] = [];
-    for (const path of this.searchUrls) {
-      try {
+    // Fetch all categories in parallel to stay within Vercel function timeout
+    const results = await Promise.allSettled(
+      this.searchUrls.map(async (path) => {
         const html = await this.fetchPage(`${this.baseUrl}${path}?jobrad=1`);
-        allBikes.push(...this.parseListing(html, path));
-      } catch (error) {
-        console.error(`[FahrradXXL] Error fetching ${path}:`, error);
-        this.recordError(error instanceof Error ? error.message : String(error));
+        return this.parseListing(html, path);
+      })
+    );
+
+    const allBikes: Bike[] = [];
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === "fulfilled") {
+        allBikes.push(...result.value);
+      } else {
+        const path = this.searchUrls[i];
+        console.error(`[FahrradXXL] Error fetching ${path}:`, result.reason);
+        this.recordError(result.reason instanceof Error ? result.reason.message : String(result.reason));
       }
     }
     return this.stampAndRecord(allBikes);
