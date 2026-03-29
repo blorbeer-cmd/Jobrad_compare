@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { TaxProfile } from "./tax";
 
 const STORAGE_KEY = "jobrad:tax-profile";
@@ -12,21 +12,18 @@ export const DEFAULT_TAX_PROFILE: TaxProfile = {
   childCount: 0,
 };
 
-export function useTaxProfile() {
-  const [profile, setProfile] = useState<TaxProfile | null>(null);
-  const [loaded, setLoaded] = useState(false);
+function readFromStorage(): TaxProfile | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? (JSON.parse(stored) as TaxProfile) : null;
+  } catch {
+    return null;
+  }
+}
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setProfile(JSON.parse(stored) as TaxProfile);
-      }
-    } catch {
-      // Ignore parse errors — start fresh
-    }
-    setLoaded(true);
-  }, []);
+export function useTaxProfile() {
+  const [profile, setProfile] = useState<TaxProfile | null>(readFromStorage);
 
   function saveProfile(p: TaxProfile) {
     setProfile(p);
@@ -49,5 +46,5 @@ export function useTaxProfile() {
   /** Profile to use for calculations: saved profile or fallback defaults */
   const activeProfile = profile ?? DEFAULT_TAX_PROFILE;
 
-  return { profile, activeProfile, saveProfile, clearProfile, loaded };
+  return { profile, activeProfile, saveProfile, clearProfile };
 }
