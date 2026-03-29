@@ -9,12 +9,12 @@ export class LuckyBikeAdapter extends BaseAdapter {
 
   private baseUrl = "https://www.lucky-bike.de";
   private searchUrls = [
-    "/e-bikes/",
-    "/fahrraeder/trekkingfahrraeder/",
-    "/fahrraeder/cityraeder-urbanraeder/",
-    "/fahrraeder/mountainbikes/",
-    "/fahrraeder/rennraeder/",
-    "/fahrraeder/gravel-crossraeder/",
+    "/Fahrraeder/E-Bike/",
+    "/Fahrraeder/Trekkingrad/",
+    "/Fahrraeder/Citybike/",
+    "/Fahrraeder/Mountainbike/",
+    "/Fahrraeder/Rennrad/",
+    "/Fahrraeder/Rennrad/Gravelbikes/",
   ];
 
   async fetchBikes(): Promise<Bike[]> {

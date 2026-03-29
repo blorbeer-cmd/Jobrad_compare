@@ -9,12 +9,12 @@ export class FahrradXXLAdapter extends BaseAdapter {
 
   private baseUrl = "https://www.fahrrad-xxl.de";
   private searchUrls = [
-    "/fahrraeder/e-bikes",
-    "/fahrraeder/trekkingbikes",
-    "/fahrraeder/citybikes",
-    "/fahrraeder/mountainbikes",
-    "/fahrraeder/rennraeder",
-    "/fahrraeder/gravelbikes",
+    "/fahrraeder/e-bike/",
+    "/fahrraeder/trekkingraeder/",
+    "/fahrraeder/citybike/",
+    "/fahrraeder/mountainbikes/",
+    "/fahrraeder/rennraeder/",
+    "/fahrraeder/rennraeder/gravel-bikes/",
   ];
 
   async fetchBikes(): Promise<Bike[]> {
@@ -54,7 +54,7 @@ export class FahrradXXLAdapter extends BaseAdapter {
         const href = $el.find("a[href]").first().attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
         const imageUrl = $el.find("img").first().attr("data-src") || $el.find("img").first().attr("src");
-        const category = this.mapCategory(categoryPath.replace("/fahrraeder/", ""));
+        const category = this.mapCategory(categoryPath);
         const availability = $el.find(".availability, .delivery-info, .stock-info").first().text().trim() || undefined;
         const sourceId = $el.attr("data-product-id") || undefined;
 
