@@ -5,12 +5,16 @@ import { DemoAdapter } from "./demo";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
+import { RoseBikesAdapter } from "./rose-bikes";
+import { Bike24Adapter } from "./bike24";
 import { persistBikes, loadBikesFromDb } from "@/lib/bike-persistence";
 
 const realAdapters: BaseAdapter[] = [
   new FahrradXXLAdapter(),
   new LuckyBikeAdapter(),
   new BikeDiscountAdapter(),
+  new RoseBikesAdapter(),
+  new Bike24Adapter(),
 ];
 
 const demoAdapter = new DemoAdapter();

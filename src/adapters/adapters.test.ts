@@ -22,6 +22,8 @@ import { describe, it, expect } from "vitest";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
+import { RoseBikesAdapter } from "./rose-bikes";
+import { Bike24Adapter } from "./bike24";
 import type { Bike } from "./types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -46,6 +48,18 @@ class TestLuckyBike extends LuckyBikeAdapter {
 }
 
 class TestBikeDiscount extends BikeDiscountAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestRoseBikes extends RoseBikesAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestBike24 extends Bike24Adapter {
   parse(html: string, path: string): Bike[] {
     return this.stampAndRecord(this.parseListing(html, path));
   }
@@ -221,11 +235,85 @@ describe("BikeDiscountAdapter contract", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Rose Bikes
+// ---------------------------------------------------------------------------
+
+describe("RoseBikesAdapter contract", () => {
+  const adapter = new TestRoseBikes();
+  const html = fixture("rose-bikes-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bike");
+
+  it("parses 3 valid bikes", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Rose Bikes");
+  });
+
+  it("parses Cross E 10 with list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Cross E 10"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3299);
+    expect(bike!.listPrice).toBe(3699);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Urban Street without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Urban Street"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2499);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bike")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bike24
+// ---------------------------------------------------------------------------
+
+describe("Bike24Adapter contract", () => {
+  const adapter = new TestBike24();
+  const html = fixture("bike24-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 valid bikes", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Bike24");
+  });
+
+  it("parses Trek Powerfly with offer price", () => {
+    const bike = bikes.find((b) => b.name.includes("Trek Powerfly"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2899);
+    expect(bike!.listPrice).toBe(3199);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Cube Touring without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Cube Touring"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3199);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Cross-adapter: all parsed bikes pass the unified BikeSchema
 // ---------------------------------------------------------------------------
 
 describe("All adapters: unified schema compliance", () => {
-  const cases: [string, TestFahrradXXL | TestLuckyBike | TestBikeDiscount, string, string][] = [
+  const cases: [string, TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestRoseBikes | TestBike24, string, string][] = [
     [
       "fahrrad-xxl-ebikes.html",
       new TestFahrradXXL(),
@@ -239,6 +327,8 @@ describe("All adapters: unified schema compliance", () => {
       "/fahrraeder/e-bikes",
       "Bike-Discount",
     ],
+    ["rose-bikes-ebikes.html", new TestRoseBikes(), "/fahrraeder/e-bike", "Rose Bikes"],
+    ["bike24-ebikes.html", new TestBike24(), "/fahrraeder/e-bikes/", "Bike24"],
   ];
 
   for (const [fixtureName, adapter, path, dealerName] of cases) {

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   profile: TaxProfile | null;
+  initialListPrice?: number;
 }
 
 function formatEur(value: number, decimals = 2) {
@@ -29,8 +30,8 @@ const DURATION_OPTIONS = [
   { value: "48", label: "48 Monate" },
 ];
 
-export function BikeCalculator({ profile }: Props) {
-  const [listPriceRaw, setListPriceRaw] = useState("");
+export function BikeCalculator({ profile, initialListPrice }: Props) {
+  const [listPriceRaw, setListPriceRaw] = useState(initialListPrice ? String(initialListPrice) : "");
   const [duration, setDuration] = useState<24 | 36 | 48>(36);
   const [subsidy, setSubsidy] = useState("");
   const [showBreakdown, setShowBreakdown] = useState(false);

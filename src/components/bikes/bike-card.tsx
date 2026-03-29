@@ -1,9 +1,11 @@
 "use client";
 
-import { Heart, ExternalLink, GitCompareArrows } from "lucide-react";
+import { useState } from "react";
+import { Heart, ExternalLink, GitCompareArrows, Calculator } from "lucide-react";
 import type { Bike } from "@/adapters/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CalcModal } from "@/components/tax/calc-modal";
 import { cn } from "@/lib/utils";
 
 interface BikeCardProps {
@@ -15,6 +17,8 @@ interface BikeCardProps {
 }
 
 export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }: BikeCardProps) {
+  const [calcOpen, setCalcOpen] = useState(false);
+
   return (
     <div
       className={cn(
@@ -127,6 +131,16 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }
               Zum Händler
             </a>
           </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setCalcOpen(true)}
+            aria-label="Netto-Rate berechnen"
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Rechner</span>
+          </Button>
           {onCompare && (
             <Button
               variant={isComparing ? "default" : "secondary"}
@@ -141,6 +155,8 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }
           )}
         </div>
       </div>
+
+      <CalcModal bike={bike} open={calcOpen} onOpenChange={setCalcOpen} />
     </div>
   );
 }
