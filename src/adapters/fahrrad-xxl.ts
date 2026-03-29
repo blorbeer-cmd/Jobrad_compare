@@ -57,12 +57,19 @@ export class FahrradXXLAdapter extends BaseAdapter {
         const name = brand && title ? `${brand} ${title}` : imgAlt || title || brand;
         if (!name) return;
 
-        // Crossed-out / old price (must be checked BEFORE current price)
-        const listPriceText = $el.find(".fxxl-element-artikel__price--old, .fxxl-element-artikel__price--uvp, del").first().text().trim();
-
-        // Current price — exclude old/uvp price elements
-        const priceEl = $el.find(".fxxl-element-artikel__price, .fxxl-element-artikel__price--current").not(".fxxl-element-artikel__price--old, .fxxl-element-artikel__price--uvp").first();
+        // Current price: prefer --new (sale price), fall back to plain price (non-sale)
+        let priceEl = $el.find(".fxxl-element-artikel__price--new").first();
+        if (!priceEl.length) {
+          // Non-sale items: find price div that isn't --old, --discount, or the wrapper
+          priceEl = $el.find("[class~='fxxl-element-artikel__price']")
+            .not(".fxxl-element-artikel__price--old, .fxxl-element-artikel__price--discount")
+            .first();
+        }
         const priceText = priceEl.text().trim();
+
+        // Crossed-out / old price (the actual number is inside .fxxl-strike-price)
+        const listPriceText = $el.find(".fxxl-element-artikel__price--old .fxxl-strike-price").first().text().trim()
+          || $el.find(".fxxl-element-artikel__price--old").first().text().trim();
         const price = this.parsePrice(priceText);
         if (!price) return;
         const listPrice = listPriceText ? this.parsePrice(listPriceText) ?? undefined : undefined;
