@@ -46,6 +46,12 @@ export default function RootLayout({
                     <span className="sm:hidden">JobRad</span>
                   </Link>
 
+                  <nav className="flex items-center gap-4 text-sm">
+                    <Link href="/rechner" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Rechner
+                    </Link>
+                  </nav>
+
                   <div className="flex flex-1 items-center justify-end gap-2">
                     <ThemeToggle />
                     <UserNav />

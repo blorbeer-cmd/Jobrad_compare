@@ -61,6 +61,7 @@ export function BikeGroupCard({ group }: BikeGroupCardProps) {
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {representativeListing.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={representativeListing.imageUrl}
             alt={group.name}

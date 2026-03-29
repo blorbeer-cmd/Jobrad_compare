@@ -32,6 +32,7 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
       label: "Bild",
       render: (b) =>
         b.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={b.imageUrl}
             alt={b.name}

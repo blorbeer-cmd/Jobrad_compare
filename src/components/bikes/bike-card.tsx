@@ -26,6 +26,7 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {bike.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={bike.imageUrl}
             alt={bike.name}
