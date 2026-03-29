@@ -65,9 +65,9 @@ export abstract class BaseAdapter {
     if (lower.includes("city") || lower.includes("urban")) return "City";
     if (lower.includes("trekking") || lower.includes("touring")) return "Trekking";
     if (lower.includes("mountain") || lower.includes("mtb")) return "Mountainbike";
-    if (lower.includes("rennrad") || lower.includes("road") || lower.includes("race")) return "Rennrad";
+    if (lower.includes("gravel") || lower.includes("cyclocross") || lower.includes("crossrad") || lower.includes("crossbike")) return "Gravel";
+    if (lower.includes("rennrad") || lower.includes("rennrae") || lower.includes("road") || lower.includes("race")) return "Rennrad";
     if (lower.includes("cargo") || lower.includes("lasten") || lower.includes("transport")) return "Cargo";
-    if (lower.includes("gravel") || lower.includes("cross") || lower.includes("cyclocross")) return "Gravel";
     if (lower.includes("kinder") || lower.includes("jugend") || lower.includes("kids")) return "Kinder";
     return "Sonstige";
   }
