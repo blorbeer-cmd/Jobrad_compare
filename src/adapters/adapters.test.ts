@@ -83,14 +83,14 @@ describe("FahrradXXLAdapter contract", () => {
     for (const bike of bikes) assertBikeContract(bike, "Fahrrad XXL");
   });
 
-  it("parses Cube Touring with offer price and list price", () => {
-    const cube = bikes.find((b) => b.name.includes("Cube"));
-    expect(cube).toBeDefined();
-    expect(cube!.price).toBe(2799);
-    expect(cube!.listPrice).toBe(2999);
-    expect(cube!.offerPrice).toBe(2799);
-    expect(cube!.brand).toBe("Cube");
-    expect(cube!.category).toBe("E-Bike");
+  it("parses Carver sale bike with offer price and list price", () => {
+    const carver = bikes.find((b) => b.name.includes("Carver"));
+    expect(carver).toBeDefined();
+    expect(carver!.price).toBe(1799.99);
+    expect(carver!.listPrice).toBe(2699.99);
+    expect(carver!.offerPrice).toBe(1799.99);
+    expect(carver!.brand).toBe("Carver");
+    expect(carver!.category).toBe("E-Bike");
   });
 
   it("parses Trek Domane without discount", () => {
@@ -101,14 +101,21 @@ describe("FahrradXXLAdapter contract", () => {
     expect(trek!.brand).toBe("Trek");
   });
 
+  it("parses Giant with sale price", () => {
+    const giant = bikes.find((b) => b.name.includes("Giant"));
+    expect(giant).toBeDefined();
+    expect(giant!.price).toBe(3499);
+    expect(giant!.listPrice).toBe(3899);
+  });
+
   it("parses image URL from src attribute", () => {
     const trek = bikes.find((b) => b.name.includes("Trek"));
     expect(trek?.imageUrl).toMatch(/^https?:\/\//);
   });
 
   it("sets sourceId from data-product-id attribute", () => {
-    const cube = bikes.find((b) => b.name.includes("Cube"));
-    expect(cube?.sourceId).toBe("cube-touring-625");
+    const carver = bikes.find((b) => b.name.includes("Carver"));
+    expect(carver?.sourceId).toBe("581912");
   });
 
   it("returns empty array for empty HTML", () => {
