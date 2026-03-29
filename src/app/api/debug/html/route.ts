@@ -10,16 +10,6 @@ const targets = [
   {
     dealer: "Fahrrad XXL",
     url: "https://www.fahrrad-xxl.de/fahrraeder/e-bike/?jobrad=1",
-    cardSelectors: [".product-card", ".product-item", "[data-product-id]", "article", ".product", "[data-product]", ".ProductCard", ".product-listing__item", ".listing--product"],
-    nameSelectors: [".product-title", ".product-name", "h3 a", "h2 a", "a[title]", ".product-card__title", ".product-card__name"],
-    priceSelectors: [".price", ".product-price", ".current-price", ".product-card__price", ".price--current"],
-  },
-  {
-    dealer: "Lucky Bike",
-    url: "https://www.lucky-bike.de/Fahrraeder/E-Bike/",
-    cardSelectors: [".product--box", ".product-box", "[data-product-id]", "article", ".product", "[data-product]", ".ProductCard", ".product-listing__item", ".listing--product", ".product-card"],
-    nameSelectors: [".product--title", ".product-name", ".product-title a", "a[title]", ".product-card__title"],
-    priceSelectors: [".product--price", ".price--default", ".product-price", ".price", ".product-card__price"],
   },
 ];
 
@@ -42,56 +32,58 @@ export async function GET() {
       clearTimeout(timeout);
       const html = await response.text();
 
-      // Use cheerio to test selectors
       const cheerio = await import("cheerio");
       const $ = cheerio.load(html);
 
-      const selectorResults: Record<string, number> = {};
-      for (const sel of target.cardSelectors) {
-        const count = $(sel).length;
-        if (count > 0) selectorResults[sel] = count;
-      }
+      const totalCards = $("[data-product-id]").length;
 
-      // Find first element that looks like a product and get its HTML
-      let sampleCardHtml = "";
-      for (const sel of target.cardSelectors) {
-        if ($(sel).length > 0) {
-          sampleCardHtml = $(sel).first().html()?.slice(0, 3000) ?? "";
-          break;
-        }
-      }
+      // Analyze price structure of first 5 cards in detail
+      const cardAnalysis: object[] = [];
+      $("[data-product-id]").slice(0, 5).each((i, el) => {
+        const $el = $(el);
+        const brand = $el.find(".fxxl-element-artikel__brand").first().text().trim();
+        const title = $el.find(".fxxl-element-artikel__title").first().text().trim();
 
-      // Try common parent elements that contain product-like content
-      const bodyClasses = $("body").attr("class") || "";
-      const mainContent = $("main, #content, .content, [role='main']").first();
-      const mainClasses = mainContent.attr("class") || "";
+        // Get ALL elements with "price" or "preis" in class name
+        const priceElements: string[] = [];
+        $el.find("[class*='price'], [class*='Price'], [class*='preis'], [class*='Preis']").each((_, pe) => {
+          const cls = $(pe).attr("class") || "";
+          const text = $(pe).text().trim().slice(0, 100);
+          priceElements.push(`<${pe.type === "tag" ? pe.tagName : "?"} class="${cls}"> → "${text}"`);
+        });
 
-      // Get all unique class names from direct children of the listing area
-      const listingArea = $("main .listing, main .products, main .product-list, main [class*='product'], main [class*='listing'], main ul, main ol, .content-listing").first();
-      const listingHtml = listingArea.html()?.slice(0, 2000) ?? "";
+        // Get all elements containing "€" symbol
+        const euroElements: string[] = [];
+        $el.find("*").each((_, child) => {
+          const text = $(child).text().trim();
+          // Only direct text content (not inherited from children)
+          const ownText = $(child).contents().filter(function() { return this.type === "text"; }).text().trim();
+          if (ownText.includes("€") || ownText.includes("EUR")) {
+            const cls = $(child).attr("class") || "";
+            const tag = child.type === "tag" ? child.tagName : "?";
+            euroElements.push(`<${tag} class="${cls}"> → "${ownText.slice(0, 100)}"`);
+          }
+        });
 
-      // Sample of all elements with 'product' in class name
-      const productElements: string[] = [];
-      $("[class*='product'], [class*='Product']").slice(0, 5).each((_, el) => {
-        const tag = el.type === "tag" ? el.tagName : "?";
-        const cls = $(el).attr("class") || "";
-        productElements.push(`<${tag} class="${cls}">`);
+        // Full inner HTML of card (truncated)
+        const cardHtml = $el.html()?.slice(0, 3000) ?? "";
+
+        cardAnalysis.push({
+          index: i,
+          brand,
+          title,
+          priceElements,
+          euroElements,
+          cardHtml,
+        });
       });
-
-      // Sample of first 5000 chars of a section that likely contains products
-      const contentSample = $("main, #content, .content").first().html()?.slice(0, 5000) ?? html.slice(0, 5000);
 
       results.push({
         dealer: target.dealer,
         status: response.status,
         htmlLength: html.length,
-        bodyClasses,
-        mainClasses,
-        selectorMatches: selectorResults,
-        productElements,
-        sampleCardHtml: sampleCardHtml.slice(0, 2000),
-        listingHtml: listingHtml.slice(0, 2000),
-        contentSample: contentSample.slice(0, 5000),
+        totalCards,
+        cardAnalysis,
       });
     } catch (err) {
       results.push({
