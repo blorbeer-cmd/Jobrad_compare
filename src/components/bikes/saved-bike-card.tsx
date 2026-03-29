@@ -55,6 +55,7 @@ export function SavedBikeCard({
         {/* Image */}
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-24">
           {bike.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={bike.imageUrl}
               alt={bike.name}
