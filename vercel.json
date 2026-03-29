@@ -3,5 +3,10 @@
   "framework": "nextjs",
   "buildCommand": "npx prisma generate && npx prisma db push && next build",
   "installCommand": "npm install --legacy-peer-deps",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 60
+    }
+  }
 }
