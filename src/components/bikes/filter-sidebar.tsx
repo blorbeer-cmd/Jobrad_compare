@@ -9,17 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
-import { X, SlidersHorizontal, Search } from "lucide-react";
+import { X, SlidersHorizontal, Search, Tag, ChevronDown, ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type { FilterValues };
 
-const defaultFilters: FilterValues = {
+export const defaultFilters: FilterValues = {
   search: "",
   categories: [],
   priceMin: "",
   priceMax: "",
   dealer: "",
+  dealers: [],
   brand: "",
+  brands: [],
+  onlyDiscounted: false,
+  availability: "",
   sortBy: "netrate-asc",
 };
 
@@ -32,37 +37,129 @@ const sortOptions = [
   { value: "netrate-desc", label: "Netto-Rate absteigend" },
   { value: "price-asc", label: "Preis aufsteigend" },
   { value: "price-desc", label: "Preis absteigend" },
-  { value: "name-asc", label: "Name A-Z" },
-  { value: "name-desc", label: "Name Z-A" },
+  { value: "name-asc", label: "Name A–Z" },
+  { value: "name-desc", label: "Name Z–A" },
+  { value: "discount-desc", label: "Größter Rabatt (%) zuerst" },
+  { value: "discount-abs-desc", label: "Größter Rabatt (€) zuerst" },
 ];
+
+/** Toggle-pill used for categories, dealers, and brands. */
+function Pill({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors",
+        active
+          ? "bg-primary text-primary-foreground"
+          : "border bg-background text-foreground hover:bg-muted"
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+/** Collapsible multi-select pill group. Shows `initialVisible` items then a show-more button. */
+function PillGroup({
+  label,
+  items,
+  selected,
+  onToggle,
+  initialVisible = 8,
+}: {
+  label: string;
+  items: string[];
+  selected: string[];
+  onToggle: (item: string) => void;
+  initialVisible?: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? items : items.slice(0, initialVisible);
+  const hasMore = items.length > initialVisible;
+
+  return (
+    <div>
+      <label className="text-sm font-medium text-foreground">{label}</label>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {visible.map((item) => (
+          <Pill
+            key={item}
+            label={item}
+            active={selected.includes(item)}
+            onClick={() => onToggle(item)}
+          />
+        ))}
+        {hasMore && (
+          <button
+            onClick={() => setExpanded((e) => !e)}
+            className="inline-flex items-center gap-0.5 rounded-full px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="h-3 w-3" />
+                weniger
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" />+{items.length - initialVisible} weitere
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface FilterSidebarProps {
   filters: FilterValues;
   onFiltersChange: (filters: FilterValues) => void;
   availableDealers: string[];
   availableBrands: string[];
+  availableAvailabilities?: string[];
 }
 
-export function FilterSidebar({ filters, onFiltersChange, availableDealers, availableBrands }: FilterSidebarProps) {
+export function FilterSidebar({
+  filters,
+  onFiltersChange,
+  availableDealers,
+  availableBrands,
+  availableAvailabilities = [],
+}: FilterSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  function toggleCategory(cat: BikeCategory) {
-    const next = filters.categories.includes(cat)
-      ? filters.categories.filter((c) => c !== cat)
-      : [...filters.categories, cat];
-    onFiltersChange({ ...filters, categories: next });
-  }
 
   function update(partial: Partial<FilterValues>) {
     onFiltersChange({ ...filters, ...partial });
   }
 
+  function toggleItem(field: "categories" | "dealers" | "brands", value: string) {
+    const current = filters[field] as string[];
+    const next = current.includes(value)
+      ? current.filter((v) => v !== value)
+      : [...current, value];
+    onFiltersChange({ ...filters, [field]: next });
+  }
+
   const activeFilterCount =
     filters.categories.length +
+    filters.dealers.length +
+    filters.brands.length +
     (filters.priceMin ? 1 : 0) +
     (filters.priceMax ? 1 : 0) +
-    (filters.dealer ? 1 : 0) +
-    (filters.brand ? 1 : 0);
+    (filters.onlyDiscounted ? 1 : 0) +
+    (filters.availability ? 1 : 0) +
+    // legacy single-select fallback
+    (filters.dealer && filters.dealers.length === 0 ? 1 : 0) +
+    (filters.brand && filters.brands.length === 0 ? 1 : 0);
 
   const filterContent = (
     <div className="space-y-5">
@@ -72,7 +169,7 @@ export function FilterSidebar({ filters, onFiltersChange, availableDealers, avai
         <div className="relative mt-1.5">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Fahrrad suchen..."
+            placeholder="Fahrrad, Marke, Händler..."
             value={filters.search}
             onChange={(e) => update({ search: e.target.value })}
             className="pl-9"
@@ -82,25 +179,33 @@ export function FilterSidebar({ filters, onFiltersChange, availableDealers, avai
 
       <Separator />
 
-      {/* Categories */}
+      {/* Nur reduzierte Angebote */}
       <div>
-        <label className="text-sm font-medium text-foreground">Kategorie</label>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {allCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className={
-                filters.categories.includes(cat)
-                  ? "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary text-primary-foreground transition-colors"
-                  : "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border bg-background text-foreground hover:bg-muted transition-colors"
-              }
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <button
+          onClick={() => update({ onlyDiscounted: !filters.onlyDiscounted })}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors",
+            filters.onlyDiscounted
+              ? "border-primary bg-primary/10 text-primary font-medium"
+              : "bg-background hover:bg-muted"
+          )}
+        >
+          <Tag className={cn("h-4 w-4 shrink-0", filters.onlyDiscounted ? "text-primary" : "text-muted-foreground")} />
+          Nur reduzierte Angebote
+          {filters.onlyDiscounted && <X className="ml-auto h-3.5 w-3.5 shrink-0" />}
+        </button>
       </div>
+
+      <Separator />
+
+      {/* Categories */}
+      <PillGroup
+        label="Kategorie"
+        items={allCategories}
+        selected={filters.categories}
+        onToggle={(cat) => toggleItem("categories", cat)}
+        initialVisible={9}
+      />
 
       <Separator />
 
@@ -128,31 +233,50 @@ export function FilterSidebar({ filters, onFiltersChange, availableDealers, avai
 
       <Separator />
 
-      {/* Dealer */}
-      <div>
-        <label className="text-sm font-medium text-foreground">Händler</label>
-        <Select
-          className="mt-1.5"
-          placeholder="Alle Händler"
-          value={filters.dealer}
-          onChange={(e) => update({ dealer: e.target.value })}
-          options={availableDealers.map((d) => ({ value: d, label: d }))}
-        />
-      </div>
+      {/* Dealers — multi-select pills */}
+      {availableDealers.length > 0 && (
+        <>
+          <PillGroup
+            label="Händler"
+            items={availableDealers}
+            selected={filters.dealers}
+            onToggle={(d) => toggleItem("dealers", d)}
+            initialVisible={6}
+          />
+          <Separator />
+        </>
+      )}
 
-      {/* Brand */}
-      <div>
-        <label className="text-sm font-medium text-foreground">Marke</label>
-        <Select
-          className="mt-1.5"
-          placeholder="Alle Marken"
-          value={filters.brand}
-          onChange={(e) => update({ brand: e.target.value })}
-          options={availableBrands.map((b) => ({ value: b, label: b }))}
-        />
-      </div>
+      {/* Brands — multi-select pills */}
+      {availableBrands.length > 0 && (
+        <>
+          <PillGroup
+            label="Marke"
+            items={availableBrands}
+            selected={filters.brands}
+            onToggle={(b) => toggleItem("brands", b)}
+            initialVisible={8}
+          />
+          <Separator />
+        </>
+      )}
 
-      <Separator />
+      {/* Availability */}
+      {availableAvailabilities.length > 0 && (
+        <>
+          <div>
+            <label className="text-sm font-medium text-foreground">Verfügbarkeit</label>
+            <Select
+              className="mt-1.5"
+              placeholder="Alle"
+              value={filters.availability}
+              onChange={(e) => update({ availability: e.target.value })}
+              options={availableAvailabilities.map((a) => ({ value: a, label: a }))}
+            />
+          </div>
+          <Separator />
+        </>
+      )}
 
       {/* Sort */}
       <div>
@@ -228,5 +352,3 @@ export function FilterSidebar({ filters, onFiltersChange, availableDealers, avai
     </>
   );
 }
-
-export { defaultFilters };

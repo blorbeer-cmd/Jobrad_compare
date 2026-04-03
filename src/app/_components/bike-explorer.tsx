@@ -116,6 +116,11 @@ export function BikeExplorer() {
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
 
+  const availableAvailabilities = useMemo(
+    () => [...new Set(allBikes.map((b) => b.availability).filter((a): a is string => !!a))].sort(),
+    [allBikes]
+  );
+
   const netRates = useMemo(() => {
     const map = new Map<string, number>();
     for (const bike of allBikes) {
@@ -143,6 +148,7 @@ export function BikeExplorer() {
     }
     return minKey;
   }, [filteredBikes, netRates]);
+
 
   const bikeGroups = useMemo(() => groupBikes(allBikes), [allBikes]);
   const resolution = useMemo(() => summarizeResolution(bikeGroups), [bikeGroups]);
@@ -312,6 +318,7 @@ export function BikeExplorer() {
                 onFiltersChange={setFilters}
                 availableDealers={availableDealers}
                 availableBrands={availableBrands}
+                availableAvailabilities={availableAvailabilities}
               />
               <Button
                 variant="ghost"
@@ -333,6 +340,7 @@ export function BikeExplorer() {
                   onFiltersChange={setFilters}
                   availableDealers={availableDealers}
                   availableBrands={availableBrands}
+                  availableAvailabilities={availableAvailabilities}
                 />
               </div>
 
