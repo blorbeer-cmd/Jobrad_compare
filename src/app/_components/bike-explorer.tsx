@@ -63,7 +63,7 @@ export function BikeExplorer() {
   const loadBikes = useCallback(async (refresh = false) => {
     setFetchState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const url = refresh ? "/api/bikes?refresh=true" : "/api/bikes";
+      const url = refresh ? "/api/bikes?refresh=true&limit=200" : "/api/bikes?limit=200";
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 401) {
