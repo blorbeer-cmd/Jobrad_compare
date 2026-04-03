@@ -11,6 +11,7 @@ import { calculateBikeLease, estimateMonthlyGrossRate } from "@/lib/tax";
 import type { TaxProfile } from "@/lib/tax";
 import { DEFAULT_TAX_PROFILE } from "@/lib/use-tax-profile";
 import { cn } from "@/lib/utils";
+import { TermTooltip } from "./term-tooltip";
 
 interface Props {
   profile: TaxProfile | null;
@@ -127,8 +128,9 @@ export function BikeCalculator({ profile, initialListPrice }: Props) {
           <div className="space-y-3 border-t pt-4">
             {/* Hero: Netto-Rate */}
             <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                Monatliche Netto-Rate{" "}
+              <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+                Monatliche Netto-Rate
+                <TermTooltip term="nettoRate" />
                 <span className="text-xs">(ohne Versicherung/Service)</span>
               </p>
               <p className="mt-1 text-4xl font-bold text-primary">
@@ -145,26 +147,34 @@ export function BikeCalculator({ profile, initialListPrice }: Props) {
             {/* Key figures */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Brutto-Rate / Monat</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  Brutto-Rate / Monat <TermTooltip term="bruttoRate" />
+                </p>
                 <p className="mt-0.5 text-lg font-semibold">
                   {formatEur(result.monthlyGrossRate)} €
                 </p>
               </div>
               <div className="rounded-lg border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Ersparnis / Monat</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  Ersparnis / Monat <TermTooltip term="entgeltumwandlung" />
+                </p>
                 <p className="mt-0.5 text-lg font-semibold text-green-600 dark:text-green-400">
                   {formatEur(result.monthlySaving)} €
                 </p>
               </div>
               <div className="rounded-lg border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Gesamtersparnis</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  Gesamtersparnis <TermTooltip term="gesamtersparnis" />
+                </p>
                 <p className="mt-0.5 text-lg font-semibold text-green-600 dark:text-green-400">
                   {formatEur(result.totalSaving, 0)} €
                 </p>
                 <p className="text-xs text-muted-foreground">vs. Direktkauf ({formatEur(result.directPurchasePrice, 0)} €)</p>
               </div>
               <div className="rounded-lg border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Geldwerter Vorteil</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  Geldwerter Vorteil <TermTooltip term="gwv" />
+                </p>
                 <p className="mt-0.5 text-lg font-semibold">
                   {formatEur(result.monthlyBenefit)} €
                 </p>
