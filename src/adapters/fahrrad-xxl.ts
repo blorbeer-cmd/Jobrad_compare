@@ -18,14 +18,23 @@ export class FahrradXXLAdapter extends BaseAdapter {
   ];
 
   async fetchBikes(): Promise<Bike[]> {
-    const allBikes: Bike[] = [];
-    for (const path of this.searchUrls) {
-      try {
+    // Fetch all categories in parallel to stay within Vercel function timeout
+    const results = await Promise.allSettled(
+      this.searchUrls.map(async (path) => {
         const html = await this.fetchPage(`${this.baseUrl}${path}?jobrad=1`);
-        allBikes.push(...this.parseListing(html, path));
-      } catch (error) {
-        console.error(`[FahrradXXL] Error fetching ${path}:`, error);
-        this.recordError(error instanceof Error ? error.message : String(error));
+        return this.parseListing(html, path);
+      })
+    );
+
+    const allBikes: Bike[] = [];
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === "fulfilled") {
+        allBikes.push(...result.value);
+      } else {
+        const path = this.searchUrls[i];
+        console.error(`[FahrradXXL] Error fetching ${path}:`, result.reason);
+        this.recordError(result.reason instanceof Error ? result.reason.message : String(result.reason));
       }
     }
     return this.stampAndRecord(allBikes);
@@ -34,39 +43,57 @@ export class FahrradXXLAdapter extends BaseAdapter {
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
-    $(".product-card, .product-item, [data-product-id]").each((_, el) => {
+
+    // Real fahrrad-xxl.de structure: product links with data-product-id
+    $("a.fxxl-element-artikel__link[data-product-id]").each((_, el) => {
       try {
         const $el = $(el);
-        const name = $el.find(".product-title, .product-name, h3 a, h2 a").first().text().trim()
-          || $el.find("a[title]").first().attr("title")?.trim();
+
+        // Brand + title are separate elements; combine into full name
+        const brand = $el.find(".fxxl-element-artikel__brand").first().text().trim();
+        const title = $el.find(".fxxl-element-artikel__title").first().text().trim();
+        const imgAlt = $el.find("img.fxxl-element-artikel__image").first().attr("alt")?.trim();
+        const name = brand && title ? `${brand} ${title}` : imgAlt || title || brand;
         if (!name) return;
 
-        const priceText = $el.find(".price, .product-price, .current-price").first().text().trim();
+        // Current price: prefer --new (sale price), fall back to plain price (non-sale)
+        let priceEl = $el.find(".fxxl-element-artikel__price--new").first();
+        if (!priceEl.length) {
+          priceEl = $el
+            .find("[class~='fxxl-element-artikel__price']")
+            .not(".fxxl-element-artikel__price--old, .fxxl-element-artikel__price--discount")
+            .first();
+        }
+        const priceText = priceEl.text().trim();
+
+        // Crossed-out / old price (actual number is inside .fxxl-strike-price)
+        const listPriceText =
+          $el.find(".fxxl-element-artikel__price--old .fxxl-strike-price").first().text().trim() ||
+          $el.find(".fxxl-element-artikel__price--old").first().text().trim();
+
         const price = this.parsePrice(priceText);
         if (!price) return;
+        const listPrice = listPriceText ? (this.parsePrice(listPriceText) ?? undefined) : undefined;
 
-        // Try to find original list price (crossed-out)
-        const listPriceText = $el.find(".price-old, .original-price, del").first().text().trim();
-        const listPrice = listPriceText ? this.parsePrice(listPriceText) ?? undefined : undefined;
-
-        const href = $el.find("a[href]").first().attr("href") || "";
+        const href = $el.attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-        const imageUrl = $el.find("img").first().attr("data-src") || $el.find("img").first().attr("src");
+        const imageUrl =
+          $el.find("img").first().attr("data-src") ||
+          $el.find("img").first().attr("src") ||
+          undefined;
         const category = this.mapCategory(categoryPath.replace("/fahrraeder/", ""));
-        const availability = $el.find(".availability, .delivery-info, .stock-info").first().text().trim() || undefined;
         const sourceId = $el.attr("data-product-id") || undefined;
 
         const result = BikeSchema.safeParse({
           name,
-          brand: this.extractBrand(name),
+          brand: brand || this.extractBrand(name),
           category,
-          price: listPrice && price < listPrice ? price : price,
+          price,
           listPrice: listPrice && listPrice > price ? listPrice : undefined,
           offerPrice: listPrice && price < listPrice ? price : undefined,
           dealer: this.name,
           dealerUrl,
-          imageUrl: imageUrl || undefined,
-          availability,
+          imageUrl,
           sourceId,
           sourceType: "scrape" as const,
         });

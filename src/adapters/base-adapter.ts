@@ -34,7 +34,7 @@ export abstract class BaseAdapter {
 
   protected async fetchPage(url: string): Promise<string> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15_000);
+    const timeout = setTimeout(() => controller.abort(), 55_000);
     try {
       const response = await fetch(url, {
         signal: controller.signal,
