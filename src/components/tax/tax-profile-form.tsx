@@ -112,14 +112,15 @@ export function TaxProfileForm({ initialProfile, onSave, onClear }: Props) {
           {/* Salary */}
           <div className="space-y-1">
             <label className="text-sm font-medium" htmlFor="salary">
-              Brutto-Jahresgehalt (€)
+              Brutto-Jahresgehalt (€){" "}
+              <span className="font-normal text-muted-foreground">– pro Jahr, nicht pro Monat</span>
             </label>
             <Input
               id="salary"
               type="number"
-              min={1}
+              min={0}
               max={1_000_000}
-              step={100}
+              step={1}
               value={salary}
               onChange={(e) => { setSalary(e.target.value); setSaved(false); }}
               placeholder="z.B. 45000"

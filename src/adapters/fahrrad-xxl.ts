@@ -43,8 +43,9 @@ export class FahrradXXLAdapter extends BaseAdapter {
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
-    // Use a[data-product-id] to match only link elements, not wrapper divs
-    const cards = $("a[data-product-id]");
+
+    // Use a.fxxl-element-artikel__link[data-product-id] to match only link elements, not wrapper divs
+    const cards = $("a.fxxl-element-artikel__link[data-product-id]");
     const seenIds = new Set<string>();
     console.log(`[FahrradXXL] ${categoryPath}: ${cards.length} product cards found`);
     cards.each((_, el) => {
@@ -60,7 +61,7 @@ export class FahrradXXLAdapter extends BaseAdapter {
         const brand = $el.find(".fxxl-element-artikel__brand").first().text().trim();
         const title = $el.find(".fxxl-element-artikel__title").first().text().trim();
         // Fallback: use img alt attribute which contains the full product name
-        const imgAlt = $el.find("img").first().attr("alt")?.trim() || "";
+        const imgAlt = $el.find("img.fxxl-element-artikel__image").first().attr("alt")?.trim() || "";
         const name = brand && title ? `${brand} ${title}` : imgAlt || title || brand;
         if (!name) return;
 
@@ -82,12 +83,13 @@ export class FahrradXXLAdapter extends BaseAdapter {
         const listPrice = listPriceText ? this.parsePrice(listPriceText) ?? undefined : undefined;
 
         // The card itself is an <a> tag with href
-        const href = $el.attr("href") || $el.find("a[href]").first().attr("href") || "";
+        const href = $el.attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
 
-        // Image with srcset or src
-        const imageUrl = $el.find("img.fxxl-element-artikel__image").first().attr("src")
-          || $el.find("img").first().attr("src");
+        // Image: prefer data-src (lazy-load), then src
+        const imageUrl = $el.find("img").first().attr("data-src")
+          || $el.find("img").first().attr("src")
+          || undefined;
 
         const category = this.mapCategory(categoryPath);
         const sourceId = $el.attr("data-product-id") || undefined;
@@ -96,12 +98,12 @@ export class FahrradXXLAdapter extends BaseAdapter {
           name,
           brand: brand || this.extractBrand(name),
           category,
-          price: listPrice && price < listPrice ? price : price,
+          price,
           listPrice: listPrice && listPrice > price ? listPrice : undefined,
           offerPrice: listPrice && price < listPrice ? price : undefined,
           dealer: this.name,
           dealerUrl,
-          imageUrl: imageUrl || undefined,
+          imageUrl,
           sourceId,
           sourceType: "scrape" as const,
         });

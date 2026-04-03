@@ -89,7 +89,7 @@ describe("FahrradXXLAdapter contract", () => {
   const html = fixture("fahrrad-xxl-ebikes.html");
   const bikes = adapter.parse(html, "/fahrraeder/e-bike/");
 
-  it("parses 3 valid bikes and skips 2 invalid cards", () => {
+  it("parses 3 valid bikes and skips 1 invalid card", () => {
     expect(bikes.length).toBe(3);
   });
 
