@@ -10,7 +10,15 @@ export interface FilterValues {
   sortBy: string;
 }
 
-export function filterAndSortBikes(bikes: Bike[], filters: FilterValues): Bike[] {
+function bikeKey(bike: Bike) {
+  return `${bike.dealer}:${bike.name}`;
+}
+
+export function filterAndSortBikes(
+  bikes: Bike[],
+  filters: FilterValues,
+  netRates?: Map<string, number>
+): Bike[] {
   let result = [...bikes];
 
   if (filters.search) {
@@ -36,10 +44,20 @@ export function filterAndSortBikes(bikes: Bike[], filters: FilterValues): Bike[]
   }
 
   switch (filters.sortBy) {
-    case "price-asc": result.sort((a, b) => a.price - b.price); break;
+    case "price-asc":  result.sort((a, b) => a.price - b.price); break;
     case "price-desc": result.sort((a, b) => b.price - a.price); break;
-    case "name-asc": result.sort((a, b) => a.name.localeCompare(b.name, "de")); break;
-    case "name-desc": result.sort((a, b) => b.name.localeCompare(a.name, "de")); break;
+    case "name-asc":   result.sort((a, b) => a.name.localeCompare(b.name, "de")); break;
+    case "name-desc":  result.sort((a, b) => b.name.localeCompare(a.name, "de")); break;
+    case "netrate-asc":
+      result.sort((a, b) =>
+        (netRates?.get(bikeKey(a)) ?? a.price) - (netRates?.get(bikeKey(b)) ?? b.price)
+      );
+      break;
+    case "netrate-desc":
+      result.sort((a, b) =>
+        (netRates?.get(bikeKey(b)) ?? b.price) - (netRates?.get(bikeKey(a)) ?? a.price)
+      );
+      break;
   }
 
   return result;

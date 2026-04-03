@@ -1,9 +1,11 @@
 "use client";
 
-import { Heart, ExternalLink, GitCompareArrows } from "lucide-react";
+import { useState } from "react";
+import { Heart, ExternalLink, GitCompareArrows, Calculator } from "lucide-react";
 import type { Bike } from "@/adapters/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CalcModal } from "@/components/tax/calc-modal";
 import { cn } from "@/lib/utils";
 
 interface BikeCardProps {
@@ -12,9 +14,13 @@ interface BikeCardProps {
   onToggleSave?: (bike: Bike) => void;
   onCompare?: (bike: Bike) => void;
   isComparing?: boolean;
+  monthlyNetRate?: number;
+  isLowestNetRate?: boolean;
 }
 
-export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }: BikeCardProps) {
+export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing, monthlyNetRate, isLowestNetRate }: BikeCardProps) {
+  const [calcOpen, setCalcOpen] = useState(false);
+
   return (
     <div
       className={cn(
@@ -94,25 +100,48 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }
           {bike.name}
         </h3>
 
-        <div className="mt-3 flex items-baseline gap-2 flex-wrap">
-          <span className="text-2xl font-bold tabular-nums">
-            {bike.price.toLocaleString("de-DE", { minimumFractionDigits: 0 })}
-          </span>
-          <span className="text-base font-medium text-muted-foreground">&euro;</span>
-          {bike.listPrice && bike.listPrice > bike.price && (
-            <span className="text-sm text-muted-foreground line-through tabular-nums">
-              {bike.listPrice.toLocaleString("de-DE", { minimumFractionDigits: 0 })} €
+        {/* Net rate (prominent) when profile is available */}
+        {monthlyNetRate !== undefined ? (
+          <div className="mt-3">
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold tabular-nums text-primary">
+                {monthlyNetRate.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <span className="text-sm font-medium text-primary">€/Monat</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              netto · UVP{" "}
+              {(bike.listPrice ?? bike.price).toLocaleString("de-DE", { minimumFractionDigits: 0 })} €
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-baseline gap-2 flex-wrap">
+            <span className="text-2xl font-bold tabular-nums">
+              {bike.price.toLocaleString("de-DE", { minimumFractionDigits: 0 })}
             </span>
-          )}
-        </div>
+            <span className="text-base font-medium text-muted-foreground">&euro;</span>
+            {bike.listPrice && bike.listPrice > bike.price && (
+              <span className="text-sm text-muted-foreground line-through tabular-nums">
+                {bike.listPrice.toLocaleString("de-DE", { minimumFractionDigits: 0 })} €
+              </span>
+            )}
+          </div>
+        )}
 
         <p className="mt-1 text-xs text-muted-foreground truncate">{bike.dealer}</p>
 
-        {bike.availability && (
-          <Badge variant="outline" className="mt-2 w-fit text-xs">
-            {bike.availability}
-          </Badge>
-        )}
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {isLowestNetRate && (
+            <Badge className="w-fit text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200 dark:border-green-800">
+              Niedrigste Netto-Rate
+            </Badge>
+          )}
+          {bike.availability && (
+            <Badge variant="outline" className="w-fit text-xs">
+              {bike.availability}
+            </Badge>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="mt-4 flex gap-2">
@@ -126,6 +155,16 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }
               <ExternalLink className="h-3.5 w-3.5" />
               Zum Händler
             </a>
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setCalcOpen(true)}
+            aria-label="Netto-Rate berechnen"
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Rechner</span>
           </Button>
           {onCompare && (
             <Button
@@ -141,6 +180,8 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing }
           )}
         </div>
       </div>
+
+      <CalcModal bike={bike} open={calcOpen} onOpenChange={setCalcOpen} />
     </div>
   );
 }

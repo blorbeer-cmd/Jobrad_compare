@@ -20,7 +20,7 @@ const defaultFilters: FilterValues = {
   priceMax: "",
   dealer: "",
   brand: "",
-  sortBy: "price-asc",
+  sortBy: "netrate-asc",
 };
 
 const allCategories: BikeCategory[] = [
@@ -28,6 +28,8 @@ const allCategories: BikeCategory[] = [
 ];
 
 const sortOptions = [
+  { value: "netrate-asc", label: "Netto-Rate aufsteigend" },
+  { value: "netrate-desc", label: "Netto-Rate absteigend" },
   { value: "price-asc", label: "Preis aufsteigend" },
   { value: "price-desc", label: "Preis absteigend" },
   { value: "name-asc", label: "Name A-Z" },

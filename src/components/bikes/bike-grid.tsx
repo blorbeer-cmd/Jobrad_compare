@@ -10,6 +10,8 @@ interface BikeGridProps {
   onToggleSave?: (bike: Bike) => void;
   onCompare?: (bike: Bike) => void;
   loading?: boolean;
+  netRates?: Map<string, number>;
+  lowestNetRateKey?: string;
 }
 
 function bikeKey(bike: Bike) {
@@ -23,6 +25,8 @@ export function BikeGrid({
   onToggleSave,
   onCompare,
   loading,
+  netRates,
+  lowestNetRateKey,
 }: BikeGridProps) {
   if (loading) {
     return (
@@ -67,6 +71,8 @@ export function BikeGrid({
             isComparing={comparingKeys?.has(key)}
             onToggleSave={onToggleSave}
             onCompare={onCompare}
+            monthlyNetRate={netRates?.get(key)}
+            isLowestNetRate={lowestNetRateKey === key}
           />
         );
       })}
