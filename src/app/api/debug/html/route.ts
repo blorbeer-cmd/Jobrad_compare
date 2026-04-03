@@ -7,10 +7,13 @@ import { NextResponse } from "next/server";
  */
 
 const targets = [
-  {
-    dealer: "Fahrrad XXL",
-    url: "https://www.fahrrad-xxl.de/fahrraeder/e-bike/?jobrad=1",
-  },
+  { dealer: "B.O.C.", url: "https://www.boc24.de/fahrraeder/e-bikes/" },
+  { dealer: "Stadler", url: "https://www.zweirad-stadler.de/e-bikes/" },
+  { dealer: "Bike24", url: "https://www.bike24.de/e-bikes" },
+  { dealer: "Bikester", url: "https://www.bikester.de/e-bikes/" },
+  { dealer: "Radon", url: "https://www.radon-bikes.de/e-bike/" },
+  { dealer: "Lucky Bike Suggest", url: "https://www.lucky-bike.de/suggest?search=e-bike" },
+  { dealer: "Lucky Bike Widgets", url: "https://www.lucky-bike.de/widgets/listing/listingCount/Fahrraeder/E-Bike/" },
 ];
 
 export async function GET() {
@@ -35,55 +38,41 @@ export async function GET() {
       const cheerio = await import("cheerio");
       const $ = cheerio.load(html);
 
-      const totalCards = $("[data-product-id]").length;
+      // Generic product detection: look for common product card selectors
+      const productSelectors = [
+        "[data-product-id]", ".product-card", ".product-box", ".product-item",
+        ".product--box", "[data-product]", "article.product", ".productCard",
+        ".product-listing__item", ".listing--product", ".product-tile",
+      ];
+      const selectorHits: Record<string, number> = {};
+      for (const sel of productSelectors) {
+        const count = $(sel).length;
+        if (count > 0) selectorHits[sel] = count;
+      }
 
-      // Analyze price structure of first 5 cards in detail
-      const cardAnalysis: object[] = [];
-      $("[data-product-id]").slice(0, 5).each((i, el) => {
-        const $el = $(el);
-        const brand = $el.find(".fxxl-element-artikel__brand").first().text().trim();
-        const title = $el.find(".fxxl-element-artikel__title").first().text().trim();
+      // Count euro signs in the page (indicator of prices)
+      const euroCount = (html.match(/€/g) || []).length;
 
-        // Get ALL elements with "price" or "preis" in class name
-        const priceElements: string[] = [];
-        $el.find("[class*='price'], [class*='Price'], [class*='preis'], [class*='Preis']").each((_, pe) => {
-          const cls = $(pe).attr("class") || "";
-          const text = $(pe).text().trim().slice(0, 100);
-          priceElements.push(`<${pe.type === "tag" ? pe.tagName : "?"} class="${cls}"> → "${text}"`);
-        });
-
-        // Get all elements containing "€" symbol
-        const euroElements: string[] = [];
-        $el.find("*").each((_, child) => {
-          const text = $(child).text().trim();
-          // Only direct text content (not inherited from children)
-          const ownText = $(child).contents().filter(function() { return this.type === "text"; }).text().trim();
-          if (ownText.includes("€") || ownText.includes("EUR")) {
-            const cls = $(child).attr("class") || "";
-            const tag = child.type === "tag" ? child.tagName : "?";
-            euroElements.push(`<${tag} class="${cls}"> → "${ownText.slice(0, 100)}"`);
-          }
-        });
-
-        // Full inner HTML of card (truncated)
-        const cardHtml = $el.html()?.slice(0, 3000) ?? "";
-
-        cardAnalysis.push({
-          index: i,
-          brand,
-          title,
-          priceElements,
-          euroElements,
-          cardHtml,
-        });
+      // Look for elements with "product" in class
+      const productClasses: string[] = [];
+      $("[class*='product'], [class*='Product']").slice(0, 8).each((_, el) => {
+        const tag = el.type === "tag" ? el.tagName : "?";
+        const cls = $(el).attr("class") || "";
+        const text = $(el).text().trim().slice(0, 80);
+        productClasses.push(`<${tag} class="${cls}"> → "${text}"`);
       });
+
+      // First 2000 chars of body content for inspection
+      const bodySnippet = $("body").text().trim().slice(0, 2000);
 
       results.push({
         dealer: target.dealer,
         status: response.status,
         htmlLength: html.length,
-        totalCards,
-        cardAnalysis,
+        euroCount,
+        selectorHits,
+        productClasses: productClasses.slice(0, 5),
+        bodySnippet: bodySnippet.slice(0, 1000),
       });
     } catch (err) {
       results.push({
