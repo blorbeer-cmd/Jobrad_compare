@@ -13,6 +13,15 @@ export interface FilterValues {
   brands: string[];
   onlyDiscounted: boolean;
   availability: string;
+  // ── Technical filters ──────────────────────────────────────────────────
+  frameSizes: string[];
+  wheelSizes: string[];
+  driveTypes: string[];
+  suspensions: string[];
+  batteryWhMin: string;
+  batteryWhMax: string;
+  frameMaterials: string[];
+  modelYears: string[];
   sortBy: string;
 }
 
@@ -70,6 +79,39 @@ export function filterAndSortBikes(
     result = result.filter((b) => b.availability === filters.availability);
   }
 
+  // ── Technical filters ────────────────────────────────────────────────
+
+  if (filters.frameSizes.length > 0) {
+    result = result.filter((b) => b.frameSize !== undefined && filters.frameSizes.includes(b.frameSize));
+  }
+
+  if (filters.wheelSizes.length > 0) {
+    result = result.filter((b) => b.wheelSize !== undefined && filters.wheelSizes.includes(b.wheelSize));
+  }
+
+  if (filters.driveTypes.length > 0) {
+    result = result.filter((b) => b.driveType !== undefined && filters.driveTypes.includes(b.driveType));
+  }
+
+  if (filters.suspensions.length > 0) {
+    result = result.filter((b) => b.suspension !== undefined && filters.suspensions.includes(b.suspension));
+  }
+
+  if (filters.batteryWhMin) {
+    result = result.filter((b) => b.batteryWh !== undefined && b.batteryWh >= Number(filters.batteryWhMin));
+  }
+  if (filters.batteryWhMax) {
+    result = result.filter((b) => b.batteryWh !== undefined && b.batteryWh <= Number(filters.batteryWhMax));
+  }
+
+  if (filters.frameMaterials.length > 0) {
+    result = result.filter((b) => b.frameMaterial !== undefined && filters.frameMaterials.includes(b.frameMaterial));
+  }
+
+  if (filters.modelYears.length > 0) {
+    result = result.filter((b) => b.modelYear !== undefined && filters.modelYears.includes(String(b.modelYear)));
+  }
+
   switch (filters.sortBy) {
     case "price-asc":
       result.sort((a, b) => a.price - b.price);
@@ -96,13 +138,9 @@ export function filterAndSortBikes(
     case "discount-desc": {
       result.sort((a, b) => {
         const discountA =
-          a.listPrice && a.listPrice > a.price
-            ? (a.listPrice - a.price) / a.listPrice
-            : -1;
+          a.listPrice && a.listPrice > a.price ? (a.listPrice - a.price) / a.listPrice : -1;
         const discountB =
-          b.listPrice && b.listPrice > b.price
-            ? (b.listPrice - b.price) / b.listPrice
-            : -1;
+          b.listPrice && b.listPrice > b.price ? (b.listPrice - b.price) / b.listPrice : -1;
         return discountB - discountA;
       });
       break;
@@ -115,6 +153,12 @@ export function filterAndSortBikes(
       });
       break;
     }
+    case "battery-desc":
+      result.sort((a, b) => (b.batteryWh ?? 0) - (a.batteryWh ?? 0));
+      break;
+    case "year-desc":
+      result.sort((a, b) => (b.modelYear ?? 0) - (a.modelYear ?? 0));
+      break;
   }
 
   return result;

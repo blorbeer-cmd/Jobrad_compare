@@ -113,11 +113,32 @@ export function BikeExplorer() {
   const { profile, activeProfile } = useTaxProfile();
 
   const allBikes = fetchState.bikes;
+
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
 
   const availableAvailabilities = useMemo(
     () => [...new Set(allBikes.map((b) => b.availability).filter((a): a is string => !!a))].sort(),
+    [allBikes]
+  );
+
+  const availableFrameSizes = useMemo(
+    () => [...new Set(allBikes.map((b) => b.frameSize).filter((s): s is string => !!s))].sort(),
+    [allBikes]
+  );
+  const availableWheelSizes = useMemo(
+    () => [...new Set(allBikes.map((b) => b.wheelSize).filter((s): s is string => !!s))].sort(),
+    [allBikes]
+  );
+  const availableFrameMaterials = useMemo(
+    () => [...new Set(allBikes.map((b) => b.frameMaterial).filter((m): m is string => !!m))].sort(),
+    [allBikes]
+  );
+  const availableModelYears = useMemo(
+    () =>
+      [...new Set(allBikes.map((b) => b.modelYear).filter((y): y is number => y !== undefined))]
+        .sort((a, b) => b - a)
+        .map(String),
     [allBikes]
   );
 
@@ -319,6 +340,10 @@ export function BikeExplorer() {
                 availableDealers={availableDealers}
                 availableBrands={availableBrands}
                 availableAvailabilities={availableAvailabilities}
+                availableFrameSizes={availableFrameSizes}
+                availableWheelSizes={availableWheelSizes}
+                availableFrameMaterials={availableFrameMaterials}
+                availableModelYears={availableModelYears}
               />
               <Button
                 variant="ghost"
@@ -341,6 +366,10 @@ export function BikeExplorer() {
                   availableDealers={availableDealers}
                   availableBrands={availableBrands}
                   availableAvailabilities={availableAvailabilities}
+                  availableFrameSizes={availableFrameSizes}
+                  availableWheelSizes={availableWheelSizes}
+                  availableFrameMaterials={availableFrameMaterials}
+                  availableModelYears={availableModelYears}
                 />
               </div>
 
