@@ -43,11 +43,18 @@ export class FahrradXXLAdapter extends BaseAdapter {
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
-    const cards = $("[data-product-id]");
+    // Use a[data-product-id] to match only link elements, not wrapper divs
+    const cards = $("a[data-product-id]");
+    const seenIds = new Set<string>();
     console.log(`[FahrradXXL] ${categoryPath}: ${cards.length} product cards found`);
     cards.each((_, el) => {
       try {
         const $el = $(el);
+
+        // Deduplicate by product ID (variants share the same card)
+        const productId = $el.attr("data-product-id") || "";
+        if (!productId || seenIds.has(productId)) return;
+        seenIds.add(productId);
 
         // Brand and title are in separate elements
         const brand = $el.find(".fxxl-element-artikel__brand").first().text().trim();
