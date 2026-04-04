@@ -15,6 +15,8 @@ export class Bike24Adapter extends BaseAdapter {
     "/fahrraeder/mountainbikes/",
     "/fahrraeder/rennraeder/",
     "/fahrraeder/gravel-bikes/",
+    "/fahrraeder/kinderfahrraeder/",
+    "/fahrraeder/cargo-bikes/",
   ];
 
   async fetchBikes(): Promise<Bike[]> {
@@ -82,6 +84,10 @@ export class Bike24Adapter extends BaseAdapter {
           availability,
           sourceId,
           sourceType: "scrape" as const,
+          driveType: this.inferDriveType(name),
+          suspension: this.inferSuspension(name),
+          batteryWh: this.inferBatteryWh(name),
+          modelYear: this.inferModelYear(name),
         });
         if (result.success) bikes.push(result.data);
       } catch {

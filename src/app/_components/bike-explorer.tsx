@@ -66,7 +66,7 @@ export function BikeExplorer() {
   const loadBikes = useCallback(async (refresh = false) => {
     setFetchState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const url = refresh ? "/api/bikes?refresh=true&limit=200" : "/api/bikes?limit=200";
+      const url = refresh ? "/api/bikes?refresh=true&limit=500" : "/api/bikes?limit=500";
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 401) {
@@ -140,6 +140,14 @@ export function BikeExplorer() {
       [...new Set(allBikes.map((b) => b.modelYear).filter((y): y is number => y !== undefined))]
         .sort((a, b) => b - a)
         .map(String),
+    [allBikes]
+  );
+  const availableDriveTypes = useMemo(
+    () => [...new Set(allBikes.map((b) => b.driveType).filter((d): d is NonNullable<typeof d> => d != null))].sort(),
+    [allBikes]
+  );
+  const availableSuspensions = useMemo(
+    () => [...new Set(allBikes.map((b) => b.suspension).filter((s): s is NonNullable<typeof s> => s != null))].sort(),
     [allBikes]
   );
 
@@ -365,6 +373,8 @@ export function BikeExplorer() {
                   availableWheelSizes={availableWheelSizes}
                   availableFrameMaterials={availableFrameMaterials}
                   availableModelYears={availableModelYears}
+                  availableDriveTypes={availableDriveTypes}
+                  availableSuspensions={availableSuspensions}
                 />
                 {fetchState.fetchedAt && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground sm:hidden">
@@ -398,6 +408,8 @@ export function BikeExplorer() {
                   availableWheelSizes={availableWheelSizes}
                   availableFrameMaterials={availableFrameMaterials}
                   availableModelYears={availableModelYears}
+                  availableDriveTypes={availableDriveTypes}
+                  availableSuspensions={availableSuspensions}
                 />
               </div>
 

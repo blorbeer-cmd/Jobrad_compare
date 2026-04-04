@@ -178,6 +178,8 @@ export interface FilterSidebarProps {
   availableWheelSizes?: string[];
   availableFrameMaterials?: string[];
   availableModelYears?: string[];
+  availableDriveTypes?: string[];
+  availableSuspensions?: string[];
 }
 
 export function FilterSidebar({
@@ -190,6 +192,8 @@ export function FilterSidebar({
   availableWheelSizes = [],
   availableFrameMaterials = [],
   availableModelYears = [],
+  availableDriveTypes = [],
+  availableSuspensions = [],
 }: FilterSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -357,96 +361,77 @@ export function FilterSidebar({
       )}
 
       {/* Technische Details — collapsible, closed by default */}
-      <FilterSection title="Technische Details" activeCount={technicalActiveCount} defaultOpen={technicalActiveCount > 0}>
-        <div className="space-y-4">
+      {/* Technische Details — only render when at least one sub-section has data */}
+      {(availableFrameSizes.length > 0 || availableWheelSizes.length > 0 ||
+        availableDriveTypes.length > 0 || availableSuspensions.length > 0 ||
+        availableFrameMaterials.length > 0 || availableModelYears.length > 0) && (
+        <FilterSection title="Technische Details" activeCount={technicalActiveCount} defaultOpen={technicalActiveCount > 0}>
+          <div className="space-y-4">
 
-          {/* Rahmengröße */}
-          {availableFrameSizes.length > 0 && (
-            <PillGroup
-              label="Rahmengröße"
-              items={availableFrameSizes}
-              selected={filters.frameSizes}
-              onToggle={(s) => toggleItem("frameSizes", s)}
-              initialVisible={8}
-            />
-          )}
-
-          {/* Laufradgröße */}
-          {availableWheelSizes.length > 0 && (
-            <PillGroup
-              label="Laufradgröße"
-              items={availableWheelSizes}
-              selected={filters.wheelSizes}
-              onToggle={(s) => toggleItem("wheelSizes", s)}
-              initialVisible={6}
-            />
-          )}
-
-          {/* Antrieb */}
-          <PillGroup
-            label="Antrieb"
-            items={["chain", "belt", "shaft"]}
-            selected={filters.driveTypes}
-            onToggle={(d) => toggleItem("driveTypes", d)}
-            labelMap={DRIVE_TYPE_LABELS}
-            initialVisible={3}
-          />
-
-          {/* Federung */}
-          <PillGroup
-            label="Federung"
-            items={["rigid", "front", "hardtail", "fully"]}
-            selected={filters.suspensions}
-            onToggle={(s) => toggleItem("suspensions", s)}
-            labelMap={SUSPENSION_LABELS}
-            initialVisible={4}
-          />
-
-          {/* Akku (E-Bike) */}
-          <div>
-            <label className="text-sm font-medium text-foreground">Akkukapazität (Wh)</label>
-            <div className="mt-1.5 flex gap-2 items-center">
-              <Input
-                type="number"
-                placeholder="Min"
-                value={filters.batteryWhMin}
-                onChange={(e) => update({ batteryWhMin: e.target.value })}
-                className="w-0 flex-1"
+            {availableFrameSizes.length > 0 && (
+              <PillGroup
+                label="Rahmengröße"
+                items={availableFrameSizes}
+                selected={filters.frameSizes}
+                onToggle={(s) => toggleItem("frameSizes", s)}
+                initialVisible={8}
               />
-              <span className="text-muted-foreground text-sm shrink-0">&ndash;</span>
-              <Input
-                type="number"
-                placeholder="Max"
-                value={filters.batteryWhMax}
-                onChange={(e) => update({ batteryWhMax: e.target.value })}
-                className="w-0 flex-1"
+            )}
+
+            {availableWheelSizes.length > 0 && (
+              <PillGroup
+                label="Laufradgröße"
+                items={availableWheelSizes}
+                selected={filters.wheelSizes}
+                onToggle={(s) => toggleItem("wheelSizes", s)}
+                initialVisible={6}
               />
-            </div>
+            )}
+
+            {availableDriveTypes.length > 0 && (
+              <PillGroup
+                label="Antrieb"
+                items={availableDriveTypes}
+                selected={filters.driveTypes}
+                onToggle={(d) => toggleItem("driveTypes", d)}
+                labelMap={DRIVE_TYPE_LABELS}
+                initialVisible={3}
+              />
+            )}
+
+            {availableSuspensions.length > 0 && (
+              <PillGroup
+                label="Federung"
+                items={availableSuspensions}
+                selected={filters.suspensions}
+                onToggle={(s) => toggleItem("suspensions", s)}
+                labelMap={SUSPENSION_LABELS}
+                initialVisible={4}
+              />
+            )}
+
+            {availableFrameMaterials.length > 0 && (
+              <PillGroup
+                label="Rahmenmaterial"
+                items={availableFrameMaterials}
+                selected={filters.frameMaterials}
+                onToggle={(m) => toggleItem("frameMaterials", m)}
+                initialVisible={6}
+              />
+            )}
+
+            {availableModelYears.length > 0 && (
+              <PillGroup
+                label="Modelljahr"
+                items={availableModelYears}
+                selected={filters.modelYears}
+                onToggle={(y) => toggleItem("modelYears", y)}
+                initialVisible={6}
+              />
+            )}
           </div>
-
-          {/* Rahmenmaterial */}
-          {availableFrameMaterials.length > 0 && (
-            <PillGroup
-              label="Rahmenmaterial"
-              items={availableFrameMaterials}
-              selected={filters.frameMaterials}
-              onToggle={(m) => toggleItem("frameMaterials", m)}
-              initialVisible={6}
-            />
-          )}
-
-          {/* Modelljahr */}
-          {availableModelYears.length > 0 && (
-            <PillGroup
-              label="Modelljahr"
-              items={availableModelYears}
-              selected={filters.modelYears}
-              onToggle={(y) => toggleItem("modelYears", y)}
-              initialVisible={6}
-            />
-          )}
-        </div>
-      </FilterSection>
+        </FilterSection>
+      )}
 
       <Separator />
 

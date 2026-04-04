@@ -15,6 +15,8 @@ export class RoseBikesAdapter extends BaseAdapter {
     "/fahrraeder/mountainbike",
     "/fahrraeder/rennrad",
     "/fahrraeder/gravel",
+    "/fahrraeder/kinder",
+    "/fahrraeder/cargo",
   ];
 
   async fetchBikes(): Promise<Bike[]> {
@@ -78,6 +80,10 @@ export class RoseBikesAdapter extends BaseAdapter {
           imageUrl,
           sourceId,
           sourceType: "scrape" as const,
+          driveType: this.inferDriveType(name),
+          suspension: this.inferSuspension(name),
+          batteryWh: this.inferBatteryWh(name),
+          modelYear: this.inferModelYear(name),
         });
         if (result.success) bikes.push(result.data);
       } catch {

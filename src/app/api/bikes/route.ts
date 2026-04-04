@@ -5,7 +5,7 @@ import { fetchAllBikes } from "@/adapters/registry";
 import { loadBikesFromDb } from "@/lib/bike-persistence";
 
 const DEFAULT_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 200;
+const MAX_PAGE_SIZE = 500;
 
 function parsePagination(searchParams: URLSearchParams) {
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
