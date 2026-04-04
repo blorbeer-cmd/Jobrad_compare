@@ -2,6 +2,7 @@ import type { Bike, DealerAdapter, AdapterHealth } from "./types";
 import { BaseAdapter } from "./base-adapter";
 import { cacheGet, cacheSet, cacheClear } from "./cache";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
+import { BOCAdapter } from "./boc";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
 import { RoseBikesAdapter } from "./rose-bikes";
@@ -10,6 +11,7 @@ import { persistBikes, loadBikesFromDb } from "@/lib/bike-persistence";
 
 const adapters: BaseAdapter[] = [
   new FahrradXXLAdapter(),
+  new BOCAdapter(),
   // LuckyBike: products are rendered client-side via JavaScript — not scrapable with Cheerio
   // BikeDiscount: returns HTTP 403 for all requests from server environments
   new RoseBikesAdapter(),
