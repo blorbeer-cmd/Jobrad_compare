@@ -6,6 +6,9 @@ import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
 import { RoseBikesAdapter } from "./rose-bikes";
 import { Bike24Adapter } from "./bike24";
+import { HibikeAdapter } from "./hibike";
+import { BruegelmannAdapter } from "./bruegelmann";
+import { BikesterAdapter } from "./bikester";
 import { persistBikes, loadBikesFromDb } from "@/lib/bike-persistence";
 
 const adapters: BaseAdapter[] = [
@@ -14,6 +17,9 @@ const adapters: BaseAdapter[] = [
   // BikeDiscount: returns HTTP 403 for all requests from server environments
   new RoseBikesAdapter(),
   new Bike24Adapter(),
+  new HibikeAdapter(),
+  new BruegelmannAdapter(),
+  new BikesterAdapter(),
 ];
 
 export interface FetchResult {

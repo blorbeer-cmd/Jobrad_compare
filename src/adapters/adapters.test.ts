@@ -24,6 +24,9 @@ import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
 import { RoseBikesAdapter } from "./rose-bikes";
 import { Bike24Adapter } from "./bike24";
+import { HibikeAdapter } from "./hibike";
+import { BruegelmannAdapter } from "./bruegelmann";
+import { BikesterAdapter } from "./bikester";
 import type { Bike } from "./types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -60,6 +63,24 @@ class TestRoseBikes extends RoseBikesAdapter {
 }
 
 class TestBike24 extends Bike24Adapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestHibike extends HibikeAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestBruegelmann extends BruegelmannAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestBikester extends BikesterAdapter {
   parse(html: string, path: string): Bike[] {
     return this.stampAndRecord(this.parseListing(html, path));
   }
@@ -311,11 +332,148 @@ describe("Bike24Adapter contract", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Hibike
+// ---------------------------------------------------------------------------
+
+describe("HibikeAdapter contract", () => {
+  const adapter = new TestHibike();
+  const html = fixture("hibike-ebikes.html");
+  const bikes = adapter.parse(html, "/c/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Hibike");
+  });
+
+  it("parses Haibike with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Haibike"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3199);
+    expect(bike!.listPrice).toBe(3599);
+    expect(bike!.offerPrice).toBe(3199);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Cube Touring without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Cube Touring"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(1199);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("parses Specialized Turbo Vado with batteryWh inferred from name", () => {
+    const bike = bikes.find((b) => b.name.includes("Specialized"));
+    expect(bike).toBeDefined();
+    expect(bike!.batteryWh).toBe(500);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/c/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/c/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Brügelmann
+// ---------------------------------------------------------------------------
+
+describe("BruegelmannAdapter contract", () => {
+  const adapter = new TestBruegelmann();
+  const html = fixture("bruegelmann-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Brügelmann");
+  });
+
+  it("parses Kalkhoff with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2699);
+    expect(bike!.listPrice).toBe(2999);
+    expect(bike!.offerPrice).toBe(2699);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Stevens without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Stevens"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2999);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bikester
+// ---------------------------------------------------------------------------
+
+describe("BikesterAdapter contract", () => {
+  const adapter = new TestBikester();
+  const html = fixture("bikester-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Bikester");
+  });
+
+  it("parses Bulls Lacuba with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Bulls"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3499);
+    expect(bike!.listPrice).toBe(3899);
+    expect(bike!.offerPrice).toBe(3499);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Bergamont without discount and infers hardtail suspension", () => {
+    const bike = bikes.find((b) => b.name.includes("Bergamont"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3299);
+    expect(bike!.listPrice).toBeUndefined();
+    expect(bike!.suspension).toBe("hardtail");
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Cross-adapter: all parsed bikes pass the unified BikeSchema
 // ---------------------------------------------------------------------------
 
+type AnyTestAdapter =
+  | TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestRoseBikes | TestBike24
+  | TestHibike | TestBruegelmann | TestBikester;
+
 describe("All adapters: unified schema compliance", () => {
-  const cases: [string, TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestRoseBikes | TestBike24, string, string][] = [
+  const cases: [string, AnyTestAdapter, string, string][] = [
     [
       "fahrrad-xxl-ebikes.html",
       new TestFahrradXXL(),
@@ -331,6 +489,9 @@ describe("All adapters: unified schema compliance", () => {
     ],
     ["rose-bikes-ebikes.html", new TestRoseBikes(), "/fahrraeder/e-bike", "Rose Bikes"],
     ["bike24-ebikes.html", new TestBike24(), "/fahrraeder/e-bikes/", "Bike24"],
+    ["hibike-ebikes.html", new TestHibike(), "/c/e-bikes/", "Hibike"],
+    ["bruegelmann-ebikes.html", new TestBruegelmann(), "/fahrraeder/e-bikes/", "Brügelmann"],
+    ["bikester-ebikes.html", new TestBikester(), "/fahrraeder/e-bikes/", "Bikester"],
   ];
 
   for (const [fixtureName, adapter, path, dealerName] of cases) {
