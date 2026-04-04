@@ -66,4 +66,18 @@
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
+
+  /* Safe area support for iOS notch / home indicator */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Utility: hide scrollbar visually while keeping scroll */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

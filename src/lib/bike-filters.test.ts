@@ -97,6 +97,49 @@ describe("filterAndSortBikes", () => {
       const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "nonexistent" });
       expect(result).toHaveLength(0);
     });
+
+    it("multi-word search requires all tokens to match (AND logic)", () => {
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "cube touring" });
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("Cube Touring Hybrid");
+    });
+
+    it("multi-word search returns nothing when one token does not match", () => {
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "cube nonexistent" });
+      expect(result).toHaveLength(0);
+    });
+
+    it("filters by category", () => {
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "e-bike" });
+      expect(result).toHaveLength(1);
+      expect(result[0].category).toBe("E-Bike");
+    });
+
+    it("filters by motor brand", () => {
+      // Cube has motor "Bosch Performance Line", R&M has "Bosch Cargo Line"
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "bosch" });
+      expect(result).toHaveLength(2);
+    });
+
+    it("filters by frame material", () => {
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "carbon" });
+      expect(result).toHaveLength(1);
+      expect(result[0].brand).toBe("Canyon");
+    });
+
+    it("filters by model year as string", () => {
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "2025" });
+      // Specialized (2025) and R&M (2025)
+      expect(result).toHaveLength(2);
+      expect(result.every((b) => b.modelYear === 2025)).toBe(true);
+    });
+
+    it("cross-field multi-word search works", () => {
+      // "bosch cargo" matches R&M Load (motor: "Bosch Cargo Line", category: Cargo)
+      const result = filterAndSortBikes(bikes, { ...emptyFilters, search: "bosch cargo" });
+      expect(result).toHaveLength(1);
+      expect(result[0].brand).toBe("Riese & Müller");
+    });
   });
 
   describe("category filter", () => {

@@ -245,11 +245,20 @@ export function FilterSidebar({
         <div className="relative mt-1.5">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Fahrrad, Marke, Händler..."
+            placeholder="Fahrrad, Marke, Händler, Motor..."
             value={filters.search}
             onChange={(e) => update({ search: e.target.value })}
-            className="pl-9"
+            className={cn("pl-9", filters.search ? "pr-8" : "")}
           />
+          {filters.search && (
+            <button
+              onClick={() => update({ search: "" })}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Suche löschen"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -487,15 +496,14 @@ export function FilterSidebar({
       {/* Mobile toggle */}
       <div className="lg:hidden">
         <Button
-          variant="outline"
+          variant={activeFilterCount > 0 ? "default" : "outline"}
           onClick={() => setMobileOpen(true)}
-          className="gap-2"
-          size="sm"
+          className="h-10 gap-2"
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className="h-4 w-4 shrink-0" />
           Filter
           {activeFilterCount > 0 && (
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/25 px-1 text-[11px] font-bold">
               {activeFilterCount}
             </span>
           )}

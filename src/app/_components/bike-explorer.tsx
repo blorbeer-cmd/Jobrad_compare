@@ -11,7 +11,8 @@ import { StatsBar } from "@/components/bikes/stats-bar";
 import { SavedBikeCard } from "@/components/bikes/saved-bike-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock, Layers } from "lucide-react";
+import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock, Layers, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatDataAge } from "@/lib/freshness";
 import { groupBikes, summarizeResolution } from "@/lib/entity-resolution";
@@ -248,44 +249,45 @@ export function BikeExplorer() {
   const savedKeySet = new Set(savedKeys.keys());
 
   return (
-    <Tabs defaultValue="browse" className="space-y-4">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <TabsList className="h-10 rounded-lg p-1">
-          <TabsTrigger value="browse" className="gap-1.5 text-sm rounded-md">
-            <Search className="h-3.5 w-3.5" />
-            Durchsuchen
+    <Tabs defaultValue="browse" className="space-y-3 sm:space-y-4">
+      <div className="flex items-center gap-3">
+        {/* Tabs: icon-only on mobile, icon+label on sm+ */}
+        <TabsList className="h-10 rounded-lg p-1 grid grid-cols-4 flex-1 sm:flex-none sm:inline-flex sm:w-auto">
+          <TabsTrigger value="browse" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
+            <Search className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden sm:inline text-sm">Durchsuchen</span>
           </TabsTrigger>
-          <TabsTrigger value="favorites" className="gap-1.5 text-sm rounded-md">
-            <Heart className="h-3.5 w-3.5" />
-            Favoriten
+          <TabsTrigger value="favorites" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
+            <Heart className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden sm:inline text-sm">Favoriten</span>
             {savedBikes.length > 0 && (
-              <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">
+              <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary/20 px-0.5 text-[10px] font-bold text-primary">
                 {savedBikes.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="compare" className="gap-1.5 text-sm rounded-md">
-            <GitCompareArrows className="h-3.5 w-3.5" />
-            Vergleich
+          <TabsTrigger value="compare" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
+            <GitCompareArrows className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden sm:inline text-sm">Vergleich</span>
             {compareBikes.length > 0 && (
-              <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">
+              <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary/20 px-0.5 text-[10px] font-bold text-primary">
                 {compareBikes.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="models" className="gap-1.5 text-sm rounded-md">
-            <Layers className="h-3.5 w-3.5" />
-            Modelle
+          <TabsTrigger value="models" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
+            <Layers className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden sm:inline text-sm">Modelle</span>
             {resolution.multiDealerGroups > 0 && (
-              <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary">
+              <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary/20 px-0.5 text-[10px] font-bold text-primary">
                 {resolution.multiDealerGroups}
               </span>
             )}
           </TabsTrigger>
         </TabsList>
 
-        {/* Cache info + refresh on desktop */}
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+        {/* Cache info + refresh — desktop only */}
+        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground ml-auto">
           {fetchState.fetchedAt && (
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -332,29 +334,55 @@ export function BikeExplorer() {
           <>
             <StatsBar bikes={filteredBikes} totalCount={allBikes.length} loading={fetchState.loading} />
 
-            {/* Mobile filter + refresh row */}
-            <div className="flex items-center gap-2 lg:hidden">
-              <FilterSidebar
-                filters={filters}
-                onFiltersChange={setFilters}
-                availableDealers={availableDealers}
-                availableBrands={availableBrands}
-                availableAvailabilities={availableAvailabilities}
-                availableFrameSizes={availableFrameSizes}
-                availableWheelSizes={availableWheelSizes}
-                availableFrameMaterials={availableFrameMaterials}
-                availableModelYears={availableModelYears}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => loadBikes(true)}
-                disabled={fetchState.loading}
-                className="ml-auto gap-1.5 text-xs sm:hidden"
-              >
-                <RefreshCw className={cn("h-3.5 w-3.5", fetchState.loading && "animate-spin")} />
-                Aktualisieren
-              </Button>
+            {/* Mobile: search bar + filter button + refresh */}
+            <div className="flex flex-col gap-2 lg:hidden">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Fahrrad, Marke, Händler, Motor..."
+                  value={filters.search}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                  className={cn("h-10 pl-9", filters.search && "pr-9")}
+                />
+                {filters.search && (
+                  <button
+                    onClick={() => setFilters((prev) => ({ ...prev, search: "" }))}
+                    aria-label="Suche löschen"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <FilterSidebar
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  availableDealers={availableDealers}
+                  availableBrands={availableBrands}
+                  availableAvailabilities={availableAvailabilities}
+                  availableFrameSizes={availableFrameSizes}
+                  availableWheelSizes={availableWheelSizes}
+                  availableFrameMaterials={availableFrameMaterials}
+                  availableModelYears={availableModelYears}
+                />
+                {fetchState.fetchedAt && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground sm:hidden">
+                    <Clock className="h-3 w-3 shrink-0" />
+                    {formatDataAge(fetchState.fetchedAt)}
+                  </span>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => loadBikes(true)}
+                  disabled={fetchState.loading}
+                  className="ml-auto gap-1.5 text-xs"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", fetchState.loading && "animate-spin")} />
+                  <span className="hidden xs:inline sm:inline">Aktualisieren</span>
+                </Button>
+              </div>
             </div>
 
             <div className="flex gap-6">
