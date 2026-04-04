@@ -85,53 +85,52 @@ export abstract class BaseAdapter {
     return isNaN(num) || num <= 0 ? null : num;
   }
 
-  /**
-   * Infer drive type from product name.
-   * Belt-drive bikes often mention "Riemen", "Belt", or the Gates brand.
-   * Shaft-drive is rare but flagged by "Kardan" / "Shaft".
-   * Returns undefined (not "chain") to avoid false positives.
-   */
+  /** Infer all name-derived fields in a single pass (one toLowerCase call). */
+  protected inferFromName(name: string): {
+    driveType?: "belt" | "shaft";
+    modelYear?: number;
+    batteryWh?: number;
+    suspension?: "fully" | "hardtail" | "front" | "rigid";
+  } {
+    const lower = name.toLowerCase();
+
+    let driveType: "belt" | "shaft" | undefined;
+    if (lower.includes("riemen") || lower.includes(" belt") || lower.includes("gates")) driveType = "belt";
+    else if (lower.includes("kardan") || lower.includes("shaft")) driveType = "shaft";
+
+    const yearMatch = name.match(/\b(20[12]\d)\b/);
+    const modelYear = yearMatch ? parseInt(yearMatch[1], 10) : undefined;
+
+    const whMatch = name.match(/\b(\d{3,4})\s*[Ww][Hh]\b/);
+    let batteryWh: number | undefined;
+    if (whMatch) {
+      const wh = parseInt(whMatch[1], 10);
+      batteryWh = wh >= 100 && wh <= 2000 ? wh : undefined;
+    }
+
+    let suspension: "fully" | "hardtail" | "front" | "rigid" | undefined;
+    if (lower.includes("fully") || lower.includes("vollfeder") || lower.includes("full suspension")) suspension = "fully";
+    else if (lower.includes("hardtail") || lower.includes("hard tail")) suspension = "hardtail";
+    else if (lower.includes("federgabel") || lower.includes("front suspension")) suspension = "front";
+    else if (lower.includes(" starr") || lower.includes("rigid")) suspension = "rigid";
+
+    return { driveType, modelYear, batteryWh, suspension };
+  }
+
   protected inferDriveType(name: string): "belt" | "shaft" | undefined {
-    const lower = name.toLowerCase();
-    if (lower.includes("riemen") || lower.includes(" belt") || lower.includes("gates")) return "belt";
-    if (lower.includes("kardan") || lower.includes("shaft")) return "shaft";
-    return undefined;
+    return this.inferFromName(name).driveType;
   }
 
-  /**
-   * Infer model year from product name.
-   * Matches 4-digit years in the range 2010–2029 (e.g. "Cube Acid 260 2025").
-   * Returns undefined when no year is found or ambiguous.
-   */
   protected inferModelYear(name: string): number | undefined {
-    const match = name.match(/\b(20[12]\d)\b/);
-    return match ? parseInt(match[1], 10) : undefined;
+    return this.inferFromName(name).modelYear;
   }
 
-  /**
-   * Infer battery capacity in Wh from product name.
-   * Only matches when "Wh" is explicitly present to avoid model-number false positives
-   * (e.g. "Cube Reaction Hybrid 500Wh" → 500, "Cube Reaction Hybrid 500" → undefined).
-   */
   protected inferBatteryWh(name: string): number | undefined {
-    const match = name.match(/\b(\d{3,4})\s*[Ww][Hh]\b/);
-    if (!match) return undefined;
-    const wh = parseInt(match[1], 10);
-    // Sanity-check: realistic e-bike battery range 100–2000 Wh
-    return wh >= 100 && wh <= 2000 ? wh : undefined;
+    return this.inferFromName(name).batteryWh;
   }
 
-  /**
-   * Infer suspension type from product name.
-   * Uses explicit keywords only — does not guess for bikes that don't mention suspension.
-   */
   protected inferSuspension(name: string): "fully" | "hardtail" | "front" | "rigid" | undefined {
-    const lower = name.toLowerCase();
-    if (lower.includes("fully") || lower.includes("vollfeder") || lower.includes("full suspension")) return "fully";
-    if (lower.includes("hardtail") || lower.includes("hard tail")) return "hardtail";
-    if (lower.includes("federgabel") || lower.includes("front suspension")) return "front";
-    if (lower.includes(" starr") || lower.includes("rigid")) return "rigid";
-    return undefined;
+    return this.inferFromName(name).suspension;
   }
 
   protected extractBrand(productName: string): string {

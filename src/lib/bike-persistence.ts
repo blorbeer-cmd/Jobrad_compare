@@ -171,23 +171,23 @@ export async function persistBikes(
   try {
     const dealerId = await upsertDealer(dealerName);
 
-    for (const bike of bikes) {
-      try {
+    const results = await Promise.allSettled(
+      bikes.map(async (bike) => {
         const bikeModelId = await upsertBikeModel(bike);
-        const { id: listingId, previousPrice } = await upsertBikeListing(
-          bike,
-          bikeModelId,
-          dealerId
-        );
+        const { id: listingId, previousPrice } = await upsertBikeListing(bike, bikeModelId, dealerId);
         await maybeCreateSnapshot(listingId, bike, previousPrice);
+        return { bike, previousPrice };
+      })
+    );
 
+    for (const result of results) {
+      if (result.status === "fulfilled") {
         upserted++;
-        if (previousPrice !== null && previousPrice !== bike.price) {
-          priceChanges++;
-        }
-      } catch (err) {
+        const { bike, previousPrice } = result.value;
+        if (previousPrice !== null && previousPrice !== bike.price) priceChanges++;
+      } else {
         errors++;
-        console.error("[bike-persistence] Error persisting bike:", bike.name, err);
+        console.error("[bike-persistence] Error persisting bike:", result.reason);
       }
     }
   } catch (err) {
@@ -202,8 +202,9 @@ export async function persistBikes(
  * Load all current bike listings from the DB, joined with model and dealer data.
  * Returns them as Bike objects compatible with the adapter output format.
  */
-export async function loadBikesFromDb(): Promise<Bike[]> {
+export async function loadBikesFromDb(limit = 2000): Promise<Bike[]> {
   const listings = await db.bikeListing.findMany({
+    take: limit,
     include: {
       bikeModel: true,
       dealer: true,
