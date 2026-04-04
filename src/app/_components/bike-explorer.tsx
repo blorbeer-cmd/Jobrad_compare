@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Bike } from "@/adapters/types";
 import { BikeGrid } from "@/components/bikes/bike-grid";
 import { FilterSidebar, defaultFilters } from "@/components/bikes/filter-sidebar";
@@ -54,20 +54,6 @@ export function BikeExplorer() {
   const [savedBikes, setSavedBikes] = useState<SavedBikeRecord[]>([]);
   const [savedLoading, setSavedLoading] = useState(true);
   const [compareBikes, setCompareBikes] = useState<Bike[]>([]);
-
-  // Mobile inline search — local state with debounce, synced to filters
-  const [mobileSearchValue, setMobileSearchValue] = useState("");
-  const mobileSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    setMobileSearchValue(filters.search);
-  }, [filters.search]);
-  function handleMobileSearch(value: string) {
-    setMobileSearchValue(value);
-    if (mobileSearchTimer.current) clearTimeout(mobileSearchTimer.current);
-    mobileSearchTimer.current = setTimeout(() => {
-      setFilters((prev) => ({ ...prev, search: value }));
-    }, 150);
-  }
 
   const savedKeys = useMemo(() => {
     const keys = new Map<string, string>();
@@ -354,13 +340,13 @@ export function BikeExplorer() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Fahrrad, Marke, Händler, Motor..."
-                  value={mobileSearchValue}
-                  onChange={(e) => handleMobileSearch(e.target.value)}
-                  className={cn("h-10 pl-9", mobileSearchValue && "pr-9")}
+                  value={filters.search}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                  className={cn("h-10 pl-9", filters.search && "pr-9")}
                 />
-                {mobileSearchValue && (
+                {filters.search && (
                   <button
-                    onClick={() => handleMobileSearch("")}
+                    onClick={() => setFilters((prev) => ({ ...prev, search: "" }))}
                     aria-label="Suche löschen"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                   >
