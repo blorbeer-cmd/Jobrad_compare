@@ -1,275 +1,185 @@
-# JobRad Compare – Konsolidierte Roadmap
+# JobRad Compare – Roadmap
 
-> Zusammenführung von User Stories, technischer Architektur und Produkt-Priorisierung.
+> Stand: April 2026. Dieses Dokument spiegelt den tatsächlichen Projektstatus wider.
 
 ---
 
 ## Übersicht
 
-| Phase | Fokus | Stories | Status |
-|-------|-------|---------|--------|
-| **Phase 0** | Next.js-Projekt aufsetzen | – | Ausstehend |
-| **Phase 1** | Profil & Einzelberechnung (MVP-Kern) | US-1.1, US-1.2 | Ausstehend |
-| **Phase 2** | Berechnungslogik verfeinern | US-2.1, US-2.2 | Ausstehend |
-| **Phase 3** | Mehrere Räder verwalten | US-3.1, US-3.2 | Ausstehend |
-| **Phase 4** | Vergleich, Netto-Rate & Filter | US-4.1, US-4.2 | Ausstehend |
-| **Phase 5** | Visualisierung & Export | US-5.1, US-5.2 | Ausstehend |
-| **Phase 6** | Polish, Accessibility & Onboarding | US-6.1, US-6.2 | Ausstehend |
+| Phase | Fokus | Status |
+|-------|-------|--------|
+| **Phase 0** | Projekt-Setup, Auth, CI/CD | ✅ Abgeschlossen |
+| **Phase 1** | UI-Modernisierung, Dark Mode, Mobile | ✅ Abgeschlossen |
+| **Phase 2** | Adapter-Infrastruktur, Schema, Security | ✅ Abgeschlossen |
+| **Phase 3** | Vergleichsmotor, DB-Normalisierung, Tests | ✅ Abgeschlossen |
+| **Phase 4** | Entity Resolution, erweiterte Filter | ✅ Abgeschlossen |
+| **Phase 5** | Calculator, Rose Bikes & Bike24 Adapter | ✅ Abgeschlossen |
+| **Phase 6** | Weitere Händler-Adapter | 🔄 Laufend |
+| **Phase 7** | Admin-Review, Monitoring, Skalierung | ⏳ Ausstehend |
 
 ---
 
-## Phase 0 – Next.js-Projekt aufsetzen
+## Phase 0 – Projekt-Setup ✅
 
-> Tech-Stack steht fest: **Next.js + TypeScript**. Diese Phase setzt das Fundament um.
-
-### Technische Aufgaben
-
-- [ ] **Next.js-Projekt initialisieren**: `create-next-app` mit TypeScript, App Router
-- [ ] **Linting & Formatting**: ESLint, Prettier konfigurieren
-- [ ] **Design-System Grundlagen**: Farbpalette, Typografie, Spacing (4px/8px), Design-Tokens als CSS-Variablen
-- [ ] **CI/CD-Pipeline**: GitHub Actions für Lint, Type-Check, Tests, Build bei jedem Push
-- [ ] **Deployment**: Vercel-Anbindung mit Preview-Deployments
-- [ ] **Berechnungslogik-Modul**: Steuerberechnung als isoliertes, testbares Modul vorbereiten
-- [ ] **Datenmodelle definieren**: TypeScript-Interfaces für Profil, Rad, Berechnung
-- [ ] **localStorage-Abstraktion**: Speichern/Laden von Profil und Rädern
-
-### Beteiligte Rollen
-| Rolle | Aufgabe |
-|-------|---------|
-| Engineer | Next.js-Setup, Architektur, Datenmodelle |
-| Designer | Design-System, Tokens, Farbpalette |
-| DevOps | CI/CD, Deployment, Performance-Budgets |
-
-### Definition of Done
-- Next.js-Projekt baut erfolgreich, CI-Pipeline läuft, Preview-Deployment funktioniert
-- Design-Tokens definiert, Basis-Layout steht
+- Next.js 16 + TypeScript strict, App Router
+- Prisma 7 + PostgreSQL (Neon), `@prisma/adapter-pg`
+- Tailwind CSS + shadcn/ui (13 Base-Komponenten)
+- Zod-Validierung, Vitest, GitHub Actions CI/CD
+- Vercel Deployment, Dockerfile, docker-compose
+- NextAuth.js v4: Magic Link (EmailProvider) + Dev-Login (CredentialsProvider)
+- Invite-System (7-Tage-Ablauf), Admin-Rolle (ADMIN_EMAIL), GDPR-Felder
+- Content-Security-Policy, Rate Limiting (Middleware), alle Security Header
+- GDPR: Account-Löschung (Art. 17), Daten-Export (Art. 20), Datenschutzseite
+- `/api/health` Endpoint
 
 ---
 
-## Phase 1 – Profil & Einzelberechnung (MVP-Kern)
+## Phase 1 – UI-Modernisierung ✅
 
-> **MoSCoW: Must Have** – Das Minimum, um einen Nutzen zu liefern.
-
-### User Stories
-- **US-1.1**: Persönliches Steuerprofil anlegen (Gehalt, Steuerklasse, Kirchensteuer, Bundesland)
-- **US-1.2**: Einzelnes Rad berechnen (Listenpreis → Netto-Rate, Brutto-Rate, Ersparnis)
-
-### Technische Aufgaben
-- [ ] Profil-Formular mit Validierung (Eingabefelder, Fehlermeldungen)
-- [ ] Steuerberechnung implementieren:
-  - Einkommensteuer nach Grundtabelle
-  - Solidaritätszuschlag (5,5%, Freigrenzen)
-  - Kirchensteuer (8%/9% je Bundesland)
-  - Sozialversicherung: KV, PV, RV, AV (AN-Anteil)
-  - Beitragsbemessungsgrenzen
-- [ ] Leasingrate-Berechnung: UVP × Leasingfaktor / Laufzeit
-- [ ] Geldwerter Vorteil: 0,25% des UVP/Monat
-- [ ] Netto-Rate-Berechnung: Differenz Netto mit/ohne Gehaltsumwandlung
-- [ ] Ergebnis-Anzeige: Netto-Rate (prominent), Brutto-Rate, Ersparnis
-- [ ] Profil in localStorage speichern, Datenschutz-Hinweis
-- [ ] Unit Tests für alle Berechnungsformeln (gegen BMF-Tabellen validieren)
-
-### Beteiligte Rollen
-| Rolle | Aufgabe |
-|-------|---------|
-| Engineer | Formular, Berechnung, localStorage |
-| Data Analyst | Steuerformeln validieren, Testdaten liefern |
-| UX Writer | Labels, Fehlermeldungen, Datenschutz-Hinweis |
-| Designer | Formular-Layout, Ergebnis-Darstellung |
-| QA | Berechnungs-Tests, Edge Cases (Steuerklassen, Grenzen) |
-| Accessibility | Formular-Labels, aria-required, Fokus-Management |
-
-### Definition of Done
-- Nutzer kann Profil anlegen und einen Listenpreis eingeben
-- Korrekte Netto-Rate wird angezeigt
-- Berechnung durch Unit Tests abgesichert (alle 6 Steuerklassen)
+- Dark Mode via `next-themes`, systemabhängig, CSS-Variable-basiert
+- Modernes Layout: sticky Header, Bike-Logo, ThemeToggle, UserNav
+- BikeCard: Hover-Lift, dark-safe Save-Button, UVP durchgestrichen
+- FilterSidebar: Sheet-basierter Mobile-Drawer statt inline Toggle
+- BikeExplorer: Tabs (Durchsuchen / Favoriten / Vergleich)
+- StatsBar: Anzahl Treffer, Ø-Preis, Preisspanne, Händler-Anzahl
+- Freshness-Indikator: "Daten vor X Stunden" + Cache-Badge
 
 ---
 
-## Phase 2 – Berechnungslogik verfeinern
+## Phase 2 – Adapter-Infrastruktur & Schema ✅
 
-> **MoSCoW: Should Have** – Macht die Berechnung genauer und transparenter.
-
-### User Stories
-- **US-2.1**: Detaillierte Kostenaufstellung (Aufschlüsselung aller Posten)
-- **US-2.2**: Arbeitgeber-Zuschuss berücksichtigen
-
-### Technische Aufgaben
-- [ ] Kostenaufschlüsselung: Leasingrate, Versicherung, Service, Übernahmepreis
-- [ ] Vergleichsrechnung: JobRad vs. Direktkauf (Szenario A vs. B)
-- [ ] Steuerersparnis aufschlüsseln (Einkommensteuer, Sozialabgaben, Kirchensteuer)
-- [ ] AG-Zuschuss: Eingabefeld (€ oder %), Einrechnung in Netto-Rate
-- [ ] Darstellung als Tabelle oder Balkendiagramm
-- [ ] Konfigurierbare Konstanten für jährlich ändernde Werte (SV-Sätze, BBG)
-
-### Beteiligte Rollen
-| Rolle | Aufgabe |
-|-------|---------|
-| Data Analyst | Formeln erweitern, Restwert, Versicherung |
-| Engineer | Aufschlüsselung-UI, AG-Zuschuss-Logik |
-| UX Writer | Erklärungstexte für Kostenposten |
-| Designer | Tabellen/Diagramm-Design |
-| QA | Vergleichsrechnung testen, Randfälle |
-
-### Definition of Done
-- Alle Kostenposten transparent aufgeschlüsselt
-- AG-Zuschuss fließt korrekt in Berechnung ein
-- Vergleich Leasing vs. Direktkauf sichtbar
+- `BikeSchema` (Zod) mit sourceId, sourceType, lastSeenAt, listPrice, offerPrice, availability
+- `BaseAdapter` mit Health-Tracking, `stampAndRecord()`, konfigurierbarem `cacheTtlMs`
+- Registry mit per-Adapter-Cache-Keys, fire-and-forget DB-Persistenz
+- `AdapterHealth`-Interface, Admin-Adapter-Health-Dashboard (`/admin/adapters`)
+- Adapter-Contract-Tests mit statischen HTML-Fixtures (Fahrrad XXL, Lucky Bike, Bike Discount)
+- Freshness-Infrastruktur (`src/lib/freshness.ts`)
+- In-Memory Sliding-Window Rate Limiter (`src/lib/rate-limit.ts`)
 
 ---
 
-## Phase 3 – Mehrere Räder verwalten
+## Phase 3 – Vergleichsmotor & DB-Normalisierung ✅
 
-> **MoSCoW: Should Have** – Kernfunktion des Vergleichsportals.
-
-### User Stories
-- **US-3.1**: Rad zur Merkliste hinzufügen (Name, Preis, Laufzeit)
-- **US-3.2**: Schnelleingabe über URL/Link (Preis & Name automatisch auslesen)
-
-### Technische Aufgaben
-- [ ] Rad-Verwaltung: Hinzufügen, Bearbeiten, Löschen (localStorage)
-- [ ] Karten/Listen-Ansicht für gespeicherte Räder
-- [ ] URL-Parser: Produktname & Preis aus Shop-URLs extrahieren (Best Effort)
-- [ ] Fallback bei fehlgeschlagenem URL-Parsing
-- [ ] Mindestens 10 Räder speicherbar
-
-### Beteiligte Rollen
-| Rolle | Aufgabe |
-|-------|---------|
-| Engineer | CRUD-Logik, URL-Parser, localStorage |
-| Designer | Karten-Layout, Interaktionen |
-| UX Writer | Empty States, Fehlermeldungen beim URL-Import |
-| QA | CRUD-Tests, URL-Parsing mit verschiedenen Shops |
-
-### Definition of Done
-- Nutzer kann mehrere Räder speichern und verwalten
-- URL-Import funktioniert für mindestens 3 große Shops
+- TypeScript-Port des Python-Vergleichsmotors (`src/lib/comparison.ts`):
+  - Angebotsgültigkeit, per-Shop-Deduplication, günstigstes Angebot
+  - 27 Tests (deckt alle 24 Python-Testfälle ab)
+- Normalisiertes DB-Schema: Dealer → BikeModel → BikeListing → PriceSnapshot
+- `bike-persistence.ts`: Upsert-Pipeline, automatische Preis-Snapshots bei Änderungen
+- DB-first Strategie in `/api/bikes` (überlebt Serverneustarts)
+- SavedBike-API: POST / GET / DELETE / PATCH mit Zod-Validierung, Optimistic UI
+- API-Pagination: `?page=N&limit=N` (default 50, max 200)
+- Error Boundaries: `error.tsx`, `global-error.tsx`, `admin/error.tsx`
 
 ---
 
-## Phase 4 – Vergleich, Netto-Rate & Filter
+## Phase 4 – Entity Resolution & Erweiterte Filter ✅
 
-> **MoSCoW: Should Have → Kern-Feature** – Die Netto-Rate als zentraler Vergleichswert.
+### Entity Resolution (`src/lib/entity-resolution.ts`)
+- `groupBikes()`: Exaktes Matching per `canonicalKey` + Levenshtein Fuzzy-Matching (Union-Find)
+- `BikeGroup`: bestPrice, highestPrice, dealerCount, isBestOffer, savings, confidence (`exact | fuzzy`)
+- `BikeGroupCard`: Preiszeilen je Händler, "bis X € sparen"-Badge, Fuzzy-Warnung
+- Neuer Tab "Modelle" im BikeExplorer mit Summary-Banner
+- `GET /api/bikes/groups` Endpoint
 
-### User Stories
-- **US-4.1**: Räder vergleichen mit Netto-Rate & Filter (Sortierung, Min/Max-Slider)
-- **US-4.2**: Beste Option hervorheben (Badges, Farbabstufung)
+### Erweitertes BikeSchema (neue technische Felder)
+- `frameSize`, `wheelSize`, `driveType` (chain/belt/shaft), `gearCount`
+- `batteryWh`, `motor`, `suspension` (rigid/front/hardtail/fully)
+- `frameMaterial`, `color`, `modelYear`
 
-### Technische Aufgaben
-- [ ] Vergleichstabelle: Alle Räder nebeneinander mit allen Kennzahlen
-- [ ] **Netto-Rate prominent** anzeigen (größere Schrift, Akzentfarbe)
-- [ ] Sortierung: nach Netto-Rate (Default), Listenpreis, Gesamtersparnis
-- [ ] Filter: Min/Max-Slider für Netto-Rate und Listenpreis
-- [ ] Aktive Filter anzeigen + "Filter zurücksetzen"
-- [ ] Badges: "Niedrigste Netto-Rate", "Beste Ersparnis"
-- [ ] Farbskala: grün (günstig) → rot (teuer)
-- [ ] Live-Update bei Profiländerung
-- [ ] Barrierefreie Tabelle: `<th>`, `scope`, `<caption>`, Keyboard-Sortierung
-
-### Beteiligte Rollen
-| Rolle | Aufgabe |
-|-------|---------|
-| Engineer | Vergleichslogik, Filter, Sortierung |
-| Designer | Tabellen-Design, Badges, Farbskala, Slider |
-| Accessibility | Tabellen-Semantik, Keyboard-Navigation, aria-live |
-| UX Writer | Badge-Texte, Filter-Labels, Hinweis ohne Profil |
-| QA | Sortierung/Filter testen, Responsiveness |
-
-### Definition of Done
-- Vergleichstabelle zeigt Netto-Rate als Hauptwert
-- Sortierung und Filter funktionieren korrekt
-- Badges markieren beste Optionen automatisch
+### Erweitertes Filter-System (`src/lib/bike-filters.ts`)
+- Multi-Select: `dealers[]`, `brands[]` (Pills statt Dropdown)
+- `onlyDiscounted`-Toggle: Nur Angebote mit listPrice > price
+- `availability`-Filter: aus Daten befüllt
+- Technische Filter: `frameSizes[]`, `wheelSizes[]`, `driveTypes[]`, `suspensions[]`
+- Akku-Bereich: `batteryWhMin` / `batteryWhMax`
+- `frameMaterials[]`, `modelYears[]`
+- Neue Sortieroptionen: `discount-desc`, `discount-abs-desc`, `battery-desc`, `year-desc`
+- FilterSidebar: Einklappbare Sektionen (`FilterSection`-Komponente), scrollbare Desktop-Sidebar
+- 218 Tests (alle grün)
 
 ---
 
-## Phase 5 – Visualisierung & Export
+## Phase 5 – Calculator, Rose Bikes & Bike24 ✅
 
-> **MoSCoW: Could Have** – Mehrwert für Power-User und Sharing.
+### Steuerrechner (`src/lib/tax.ts`)
+- `calculateBikeLease()`: Gehaltsumwandlung, geldwerter Vorteil, Steuerersparnis
+- `estimateMonthlyGrossRate()`: Leasingrate aus UVP
+- `useTaxProfile()`-Hook: Persönliches Steuerprofil (Gehalt, Steuerklasse, KiSt, AG-Zuschuss)
+- `BikeCalculator`-Komponente: Echtzeit-Berechnung mit allen Steuerposten
+- `CalcModal`: Dialog mit Calculator + einklappbarem Steuerprofil-Formular
+- `TermTooltip`: Erklärungen für Fachbegriffe (Entgeltumwandlung etc.)
+- BikeCard: "Rechner"-Button öffnet CalcModal mit vorausgefülltem Listenpreis
+- BikeGrid: Netto-Rate unter jedem Bike, "Niedrigste Rate"-Badge
+- Sortierung nach Netto-Rate (`netrate-asc / netrate-desc`)
 
-### User Stories
-- **US-5.1**: Grafischer Vergleich (Balkendiagramme)
-- **US-5.2**: Ergebnis exportieren / teilen (PDF, Share-Link)
-
-### Technische Aufgaben
-- [ ] Chart-Library integrieren (z.B. Chart.js, Recharts)
-- [ ] Balkendiagramm: Netto-Rate pro Rad
-- [ ] Balkendiagramm: Gesamtersparnis pro Rad
-- [ ] Toggle: Tabelle ↔ Diagramm
-- [ ] PDF-Export (Client-seitig, z.B. mit jsPDF/html2canvas)
-- [ ] Teilen-Link: Daten als URL-Parameter oder Short-Link
-- [ ] Druckoptimiertes CSS
-- [ ] Charts mit Textalternativen (Accessibility)
-
-### Beteiligte Rollen
-| Rolle | Aufgabe |
-|-------|---------|
-| Engineer | Charts, PDF-Export, Share-Link |
-| Designer | Chart-Styling, Drucklayout |
-| Accessibility | Alt-Texte für Charts, Textalternativen |
-| QA | Export-Tests, Cross-Browser |
-
-### Definition of Done
-- Diagramme zeigen korrekten Vergleich
-- PDF enthält alle relevanten Daten
-- Share-Link lädt gespeicherte Konfiguration
+### Neue Adapter
+- **Rose Bikes** (`rose-bikes.ts`): CSS-Selector-Scraper, 6 Kategorien, 6h TTL
+- **Bike24** (`bike24.ts`): React data-attribute Selektoren, 6 Kategorien, 6h TTL
+- HTML-Fixtures + 12 Contract-Tests für beide Adapter
+- 279 Tests gesamt (alle grün)
 
 ---
 
-## Phase 6 – Polish, Accessibility & Onboarding
+## Phase 6 – Weitere Händler-Adapter 🔄
 
-> **MoSCoW: Should Have (Accessibility) + Could Have (Onboarding)**
+### Ziel
+Mehr echte Bikes im System. Aktuell liefern von 5 echten Adaptern nur Fahrrad XXL + Rose Bikes + Bike24 zuverlässig — Lucky Bike und Bike Discount sind wegen Client-Side-Rendering bzw. 403 eingeschränkt.
 
-### User Stories
-- **US-6.1**: Responsive Design & Accessibility (WCAG 2.1 AA)
-- **US-6.2**: Onboarding & Hilfe (Tooltips, Wizard, FAQ)
+### Offen
+- [ ] Lucky Bike: Alternative (API, Feed, Sitemap) suchen — Client-Side-Rendering blockiert Cheerio
+- [ ] Bike Discount: Workaround für HTTP 403 finden (Proxy, andere Route)
+- [ ] Weitere JobRad-Partner evaluieren (z.B. Specialized, Canyon Direct, Cube Store)
+- [ ] `robots.txt` und AGB aller neuen Kandidaten prüfen
+- [ ] Adapter-Gesundheitscheck im Admin-Dashboard — manuelle Aktualisierung auslösen
 
-### Technische Aufgaben
-- [ ] Mobile-Layout: Cards statt Tabelle, Touch-Slider
-- [ ] WCAG 2.1 AA Audit: Kontraste, Screenreader, Keyboard
-- [ ] `prefers-reduced-motion` respektieren
-- [ ] Touch-Targets ≥ 44x44px
-- [ ] Tooltips für Fachbegriffe (Entgeltumwandlung, Leasingrate, Restwert)
-- [ ] Optionaler Onboarding-Wizard (erster Besuch)
-- [ ] FAQ-Bereich
-- [ ] Lighthouse Audit: Performance > 90, Accessibility > 95
-
-### Beteiligte Rollen
-| Rolle | Aufgabe |
-|-------|---------|
-| Accessibility | Vollständiger WCAG-Audit, Screen-Reader-Tests |
-| Designer | Mobile-Layout, Touch-Optimierung |
-| UX Writer | Tooltip-Texte, FAQ-Inhalte, Wizard-Texte |
-| Engineer | Responsive Implementierung, Wizard-Logik |
-| DevOps | Lighthouse CI, Performance-Budgets durchsetzen |
-| QA | Cross-Browser, Mobile-Testing, Accessibility-Tests |
-
-### Definition of Done
-- Lighthouse: Performance > 90, Accessibility > 95
-- WCAG 2.1 AA vollständig erfüllt
-- Onboarding-Wizard funktioniert, FAQ ist hilfreich
+### Qualität
+- [ ] Fixture-Tests bei HTML-Änderungen der Händlerseiten automatisch aktualisieren
+- [ ] Warn-Benachrichtigung wenn Adapter 0 Bikes zurückliefert (Selektor veraltet)
 
 ---
 
-## Performance-Budgets (phasenübergreifend)
+## Phase 7 – Admin-Review, Monitoring & Skalierung ⏳
 
-| Metrik | Ziel |
-|--------|------|
-| Lighthouse Performance | > 90 |
-| First Contentful Paint | < 1.5s |
-| Largest Contentful Paint | < 2.5s |
-| Total Blocking Time | < 200ms |
-| Cumulative Layout Shift | < 0.1 |
-| Bundle Size (JS, gzipped) | < 150KB |
+### Admin
+- [ ] Review-Interface für unsichere Entity-Matches (confidence = `fuzzy`)
+- [ ] Manuelle Zuordnung / Ablehnung von Bike-Gruppen
+- [ ] Adapter manuell deaktivieren / reaktivieren
+- [ ] Manuelle Cache-Invalidierung pro Adapter
+
+### Monitoring
+- [ ] Sentry (oder ähnliches) für Produktionsfehler
+- [ ] Alert wenn Adapter > 2h keine Daten liefert
+- [ ] Logging für Preis-Änderungen (PriceSnapshot-Historie nutzen)
+
+### Performance & Skalierung
+- [ ] Server-seitige Filterung wenn Datenmenge > ~1000 Bikes
+- [ ] Virtuelle Scrolling-Liste für große Ergebnismengen
+- [ ] Edge Caching für `/api/bikes` auf Vercel
+
+### Sonstiges
+- [ ] Resend-Setup (Domain-Verifikation, API-Key) für Magic-Link-Login in Produktion
+- [ ] Product-Category-Abstraktion (siehe `docs/konzept-flexible-produktvergleiche.md`)
+- [ ] Playwright E2E-Tests tatsächlich ausführen (Setup vorhanden, aber kein Test-Runner in CI)
 
 ---
 
-## Nächster Schritt
+## Bekannte Einschränkungen
 
-**→ Phase 0: Next.js-Projekt aufsetzen**
+| Problem | Ursache | Workaround |
+|---------|---------|------------|
+| Lucky Bike liefert 0 Bikes | Client-Side-Rendering | Adapter registriert, aber deaktiviert |
+| Bike Discount liefert 403 | Anti-Bot-Schutz | Adapter registriert, aber deaktiviert |
+| Entity Resolution zeigt `fuzzy` für Varianten | Gleiche Rahmengröße = neuer Eintrag | Admin-Review (Phase 7) |
+| Netto-Rate basiert auf Schätzwerten | Employer-Parameter unbekannt | Nutzer setzt Steuerprofil manuell |
+| Magic Link inaktiv | Resend nicht konfiguriert | Dev-Login via `ALLOW_DEV_LOGIN=true` |
 
-1. `create-next-app` mit TypeScript + App Router ausführen
-2. ESLint & Prettier konfigurieren
-3. Design-Tokens definieren (CSS-Variablen)
-4. CI/CD-Pipeline aufsetzen (GitHub Actions)
-5. TypeScript-Interfaces für Profil, Rad, Berechnung anlegen
-6. Berechnungsmodul-Grundstruktur + erste Tests
+---
+
+## Technische Schulden
+
+| Bereich | Beschreibung | Priorität |
+|---------|-------------|-----------|
+| `SavedBike.bikeData` | JSON-Blob (nicht normalisiert auf BikeListing) | Niedrig |
+| Python-Referenzfiles | `models.py`, `compare.py` können entfernt werden | Niedrig |
+| Playwright CI | E2E-Tests nicht in GitHub Actions integriert | Mittel |
+| Per-User Rate Limiting | Aktuell nur per IP, nicht per authentifiziertem User | Mittel |

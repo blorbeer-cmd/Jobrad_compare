@@ -1,6 +1,6 @@
 import type { Bike, DealerAdapter, AdapterHealth } from "./types";
 import { BaseAdapter } from "./base-adapter";
-import { cacheGet, cacheSet } from "./cache";
+import { cacheGet, cacheSet, cacheClear } from "./cache";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
@@ -84,4 +84,32 @@ export function getAdapterNames(): string[] {
 
 export function getAdapterHealthStatuses(): AdapterHealth[] {
   return adapters.map((a) => a.getHealth());
+}
+
+/**
+ * Force-refresh a single adapter by name. Clears its cache entry, fetches
+ * fresh data, persists to DB, and returns the updated health status.
+ * Returns null if the adapter name is not found.
+ */
+export async function refreshAdapter(adapterName: string): Promise<{ health: AdapterHealth; bikeCount: number } | null> {
+  const adapter = adapters.find((a) => a.name === adapterName);
+  if (!adapter) return null;
+
+  const key = adapterCacheKey(adapter.name);
+  cacheClear(key);
+
+  try {
+    const bikes = await adapter.fetchBikes();
+    cacheSet(key, bikes, adapter.cacheTtlMs);
+    if (bikes.length > 0) {
+      persistBikes(bikes, adapter.name).catch((err) =>
+        console.error(`[registry] DB persist failed for ${adapter.name}:`, err)
+      );
+    }
+    return { health: adapter.getHealth(), bikeCount: bikes.length };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[registry] Refresh failed for ${adapter.name}:`, message);
+    return { health: adapter.getHealth(), bikeCount: 0 };
+  }
 }

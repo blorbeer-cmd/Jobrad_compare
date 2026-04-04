@@ -9,6 +9,7 @@ export abstract class BaseAdapter {
 
   private _lastFetchAt: Date | null = null;
   private _lastError: string | null = null;
+  private _lastWarning: string | null = null;
   private _listingCount: number = 0;
 
   getHealth(): AdapterHealth {
@@ -17,6 +18,7 @@ export abstract class BaseAdapter {
       isHealthy: this._lastError === null && this._lastFetchAt !== null,
       lastFetchAt: this._lastFetchAt,
       lastError: this._lastError,
+      lastWarning: this._lastWarning,
       listingCount: this._listingCount,
       cacheTtlMs: this.cacheTtlMs,
     };
@@ -26,6 +28,11 @@ export abstract class BaseAdapter {
     this._lastFetchAt = new Date();
     this._lastError = null;
     this._listingCount = count;
+    if (count === 0) {
+      this._lastWarning = "0 Bikes geparst — Selektoren veraltet?";
+    } else {
+      this._lastWarning = null;
+    }
   }
 
   protected recordError(error: string): void {

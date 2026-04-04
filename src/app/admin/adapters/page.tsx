@@ -18,10 +18,44 @@ function formatTtl(ms: number): string {
   return `${m}min`;
 }
 
+function StatusBadge({ adapter }: { adapter: AdapterHealth }) {
+  if (!adapter.lastFetchAt) {
+    return (
+      <Badge variant="secondary" className="gap-1 shrink-0">
+        <Clock className="h-3 w-3" />
+        Ausstehend
+      </Badge>
+    );
+  }
+  if (!adapter.isHealthy) {
+    return (
+      <Badge variant="destructive" className="gap-1 shrink-0">
+        <XCircle className="h-3 w-3" />
+        Fehler
+      </Badge>
+    );
+  }
+  if (adapter.lastWarning) {
+    return (
+      <Badge variant="outline" className="gap-1 border-amber-500 text-amber-600 dark:text-amber-400 shrink-0">
+        <AlertTriangle className="h-3 w-3" />
+        Warnung
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-700 shrink-0">
+      <CheckCircle className="h-3 w-3" />
+      OK
+    </Badge>
+  );
+}
+
 export default function AdaptersPage() {
   const [data, setData] = useState<AdapterStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [cacheClearing, setCacheClearing] = useState(false);
+  const [refreshing, setRefreshing] = useState<Record<string, boolean>>({});
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
   const load = useCallback(async () => {
@@ -46,6 +80,16 @@ export default function AdaptersPage() {
       await load();
     } finally {
       setCacheClearing(false);
+    }
+  }
+
+  async function refreshSingleAdapter(name: string) {
+    setRefreshing((prev) => ({ ...prev, [name]: true }));
+    try {
+      await fetch(`/api/admin/adapters/${encodeURIComponent(name)}`, { method: "POST" });
+      await load();
+    } finally {
+      setRefreshing((prev) => ({ ...prev, [name]: false }));
     }
   }
 
@@ -104,24 +148,7 @@ export default function AdaptersPage() {
               {/* Header */}
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold">{adapter.name}</h3>
-                {adapter.lastFetchAt ? (
-                  adapter.isHealthy ? (
-                    <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-700 shrink-0">
-                      <CheckCircle className="h-3 w-3" />
-                      OK
-                    </Badge>
-                  ) : (
-                    <Badge variant="destructive" className="gap-1 shrink-0">
-                      <XCircle className="h-3 w-3" />
-                      Fehler
-                    </Badge>
-                  )
-                ) : (
-                  <Badge variant="secondary" className="gap-1 shrink-0">
-                    <Clock className="h-3 w-3" />
-                    Ausstehend
-                  </Badge>
-                )}
+                <StatusBadge adapter={adapter} />
               </div>
 
               {/* Stats */}
@@ -144,6 +171,14 @@ export default function AdaptersPage() {
                 </div>
               </dl>
 
+              {/* Warning message */}
+              {adapter.lastWarning && !adapter.lastError && (
+                <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+                  <p className="font-medium">Warnung:</p>
+                  <p className="mt-0.5 break-words">{adapter.lastWarning}</p>
+                </div>
+              )}
+
               {/* Error message */}
               {adapter.lastError && (
                 <div className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -151,6 +186,18 @@ export default function AdaptersPage() {
                   <p className="mt-0.5 break-words">{adapter.lastError}</p>
                 </div>
               )}
+
+              {/* Per-adapter refresh */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5"
+                disabled={refreshing[adapter.name]}
+                onClick={() => refreshSingleAdapter(adapter.name)}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${refreshing[adapter.name] ? "animate-spin" : ""}`} />
+                {refreshing[adapter.name] ? "Wird geladen…" : "Neu laden"}
+              </Button>
             </div>
           ))}
         </div>

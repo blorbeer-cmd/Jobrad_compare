@@ -72,6 +72,8 @@ export interface AdapterHealth {
   isHealthy: boolean;
   lastFetchAt: Date | null;
   lastError: string | null;
+  /** Warning message set when fetch succeeded but returned 0 bikes (stale selectors?) */
+  lastWarning: string | null;
   listingCount: number;
   cacheTtlMs: number;
 }
