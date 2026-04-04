@@ -9,12 +9,12 @@ export class LuckyBikeAdapter extends BaseAdapter {
 
   private baseUrl = "https://www.lucky-bike.de";
   private searchUrls = [
-    "/e-bikes/",
-    "/fahrraeder/trekkingfahrraeder/",
-    "/fahrraeder/cityraeder-urbanraeder/",
-    "/fahrraeder/mountainbikes/",
-    "/fahrraeder/rennraeder/",
-    "/fahrraeder/gravel-crossraeder/",
+    "/Fahrraeder/E-Bike/",
+    "/Fahrraeder/Trekkingrad/",
+    "/Fahrraeder/Citybike/",
+    "/Fahrraeder/Mountainbike/",
+    "/Fahrraeder/Rennrad/",
+    "/Fahrraeder/Rennrad/Gravelbikes/",
   ];
 
   async fetchBikes(): Promise<Bike[]> {
@@ -34,7 +34,9 @@ export class LuckyBikeAdapter extends BaseAdapter {
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
-    $(".product--box, .product-box, [data-product-id]").each((_, el) => {
+    const cards = $(".product--box, .product-box, [data-product-id]");
+    console.log(`[LuckyBike] ${categoryPath}: ${cards.length} product cards found`);
+    cards.each((_, el) => {
       try {
         const $el = $(el);
         const name = $el.find(".product--title, .product-name, .product-title a").first().text().trim()

@@ -9,12 +9,12 @@ export class FahrradXXLAdapter extends BaseAdapter {
 
   private baseUrl = "https://www.fahrrad-xxl.de";
   private searchUrls = [
-    "/fahrraeder/e-bikes",
-    "/fahrraeder/trekkingbikes",
-    "/fahrraeder/citybikes",
-    "/fahrraeder/mountainbikes",
-    "/fahrraeder/rennraeder",
-    "/fahrraeder/gravelbikes",
+    "/fahrraeder/e-bike/",
+    "/fahrraeder/trekkingraeder/",
+    "/fahrraeder/citybike/",
+    "/fahrraeder/mountainbikes/",
+    "/fahrraeder/rennraeder/",
+    "/fahrraeder/rennraeder/gravel-bikes/",
   ];
 
   async fetchBikes(): Promise<Bike[]> {
@@ -44,44 +44,54 @@ export class FahrradXXLAdapter extends BaseAdapter {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
 
-    // Real fahrrad-xxl.de structure: product links with data-product-id
-    $("a.fxxl-element-artikel__link[data-product-id]").each((_, el) => {
+    // Use a.fxxl-element-artikel__link[data-product-id] to match only link elements, not wrapper divs
+    const cards = $("a.fxxl-element-artikel__link[data-product-id]");
+    const seenIds = new Set<string>();
+    console.log(`[FahrradXXL] ${categoryPath}: ${cards.length} product cards found`);
+    cards.each((_, el) => {
       try {
         const $el = $(el);
 
-        // Brand + title are separate elements; combine into full name
+        // Deduplicate by product ID (variants share the same card)
+        const productId = $el.attr("data-product-id") || "";
+        if (!productId || seenIds.has(productId)) return;
+        seenIds.add(productId);
+
+        // Brand and title are in separate elements
         const brand = $el.find(".fxxl-element-artikel__brand").first().text().trim();
         const title = $el.find(".fxxl-element-artikel__title").first().text().trim();
-        const imgAlt = $el.find("img.fxxl-element-artikel__image").first().attr("alt")?.trim();
+        // Fallback: use img alt attribute which contains the full product name
+        const imgAlt = $el.find("img.fxxl-element-artikel__image").first().attr("alt")?.trim() || "";
         const name = brand && title ? `${brand} ${title}` : imgAlt || title || brand;
         if (!name) return;
 
         // Current price: prefer --new (sale price), fall back to plain price (non-sale)
         let priceEl = $el.find(".fxxl-element-artikel__price--new").first();
         if (!priceEl.length) {
-          priceEl = $el
-            .find("[class~='fxxl-element-artikel__price']")
+          // Non-sale items: find price div that isn't --old, --discount, or the wrapper
+          priceEl = $el.find("[class~='fxxl-element-artikel__price']")
             .not(".fxxl-element-artikel__price--old, .fxxl-element-artikel__price--discount")
             .first();
         }
         const priceText = priceEl.text().trim();
 
-        // Crossed-out / old price (actual number is inside .fxxl-strike-price)
-        const listPriceText =
-          $el.find(".fxxl-element-artikel__price--old .fxxl-strike-price").first().text().trim() ||
-          $el.find(".fxxl-element-artikel__price--old").first().text().trim();
-
+        // Crossed-out / old price (the actual number is inside .fxxl-strike-price)
+        const listPriceText = $el.find(".fxxl-element-artikel__price--old .fxxl-strike-price").first().text().trim()
+          || $el.find(".fxxl-element-artikel__price--old").first().text().trim();
         const price = this.parsePrice(priceText);
         if (!price) return;
-        const listPrice = listPriceText ? (this.parsePrice(listPriceText) ?? undefined) : undefined;
+        const listPrice = listPriceText ? this.parsePrice(listPriceText) ?? undefined : undefined;
 
+        // The card itself is an <a> tag with href
         const href = $el.attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
-        const imageUrl =
-          $el.find("img").first().attr("data-src") ||
-          $el.find("img").first().attr("src") ||
-          undefined;
-        const category = this.mapCategory(categoryPath.replace("/fahrraeder/", ""));
+
+        // Image: prefer data-src (lazy-load), then src
+        const imageUrl = $el.find("img").first().attr("data-src")
+          || $el.find("img").first().attr("src")
+          || undefined;
+
+        const category = this.mapCategory(categoryPath);
         const sourceId = $el.attr("data-product-id") || undefined;
 
         const result = BikeSchema.safeParse({

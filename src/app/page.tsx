@@ -11,7 +11,7 @@ export default async function Home() {
           Fahrrad-Angebote vergleichen
         </h2>
         <p className="text-muted-foreground">
-          Finde das beste JobRad-Angebot bei verschiedenen H\u00e4ndlern.
+          Finde das beste JobRad-Angebot bei verschiedenen Händlern.
         </p>
       </div>
       <BikeExplorer />

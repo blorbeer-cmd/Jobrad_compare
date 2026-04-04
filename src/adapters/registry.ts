@@ -1,7 +1,6 @@
 import type { Bike, DealerAdapter, AdapterHealth } from "./types";
 import { BaseAdapter } from "./base-adapter";
 import { cacheGet, cacheSet } from "./cache";
-import { DemoAdapter } from "./demo";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
@@ -9,21 +8,13 @@ import { RoseBikesAdapter } from "./rose-bikes";
 import { Bike24Adapter } from "./bike24";
 import { persistBikes, loadBikesFromDb } from "@/lib/bike-persistence";
 
-const realAdapters: BaseAdapter[] = [
+const adapters: BaseAdapter[] = [
   new FahrradXXLAdapter(),
-  new LuckyBikeAdapter(),
-  new BikeDiscountAdapter(),
+  // LuckyBike: products are rendered client-side via JavaScript — not scrapable with Cheerio
+  // BikeDiscount: returns HTTP 403 for all requests from server environments
   new RoseBikesAdapter(),
   new Bike24Adapter(),
 ];
-
-const demoAdapter = new DemoAdapter();
-
-function getActiveAdapters(): BaseAdapter[] {
-  const useDemo = process.env.USE_DEMO_ADAPTERS === "true";
-  if (useDemo) return [demoAdapter];
-  return realAdapters;
-}
 
 export interface FetchResult {
   bikes: Bike[];
@@ -37,7 +28,7 @@ function adapterCacheKey(name: string) {
 }
 
 export async function fetchAllBikes(forceRefresh = false): Promise<FetchResult> {
-  const active = getActiveAdapters();
+  const active = adapters;
   const allBikes: Bike[] = [];
   const errors: { dealer: string; error: string }[] = [];
   let anyFresh = false;
@@ -56,6 +47,12 @@ export async function fetchAllBikes(forceRefresh = false): Promise<FetchResult> 
 
       try {
         const bikes = await adapter.fetchBikes();
+        if (bikes.length === 0) {
+          console.warn(`[registry] WARNING: ${adapter.name} returned 0 bikes`);
+          errors.push({ dealer: adapter.name, error: "0 bikes parsed — selectors may not match current HTML" });
+        } else {
+          console.log(`[registry] ${adapter.name}: ${bikes.length} bikes fetched`);
+        }
         cacheSet(key, bikes, adapter.cacheTtlMs);
         allBikes.push(...bikes);
         anyFresh = true;
@@ -82,9 +79,9 @@ export async function fetchAllBikes(forceRefresh = false): Promise<FetchResult> 
 }
 
 export function getAdapterNames(): string[] {
-  return getActiveAdapters().map((a) => a.name);
+  return adapters.map((a) => a.name);
 }
 
 export function getAdapterHealthStatuses(): AdapterHealth[] {
-  return getActiveAdapters().map((a) => a.getHealth());
+  return adapters.map((a) => a.getHealth());
 }

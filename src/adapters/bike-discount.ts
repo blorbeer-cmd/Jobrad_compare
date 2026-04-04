@@ -9,12 +9,12 @@ export class BikeDiscountAdapter extends BaseAdapter {
 
   private baseUrl = "https://www.bike-discount.de";
   private searchUrls = [
-    "/fahrraeder/e-bikes",
-    "/fahrraeder/trekkingbikes",
-    "/fahrraeder/citybikes",
-    "/fahrraeder/mountainbikes",
-    "/fahrraeder/rennraeder",
-    "/fahrraeder/gravelbikes",
+    "/de/e-bike-kaufen",
+    "/de/trekkingrad",
+    "/de/citybike",
+    "/de/mountainbike",
+    "/de/rennrad",
+    "/de/gravel_bikes",
   ];
 
   async fetchBikes(): Promise<Bike[]> {
@@ -34,7 +34,9 @@ export class BikeDiscountAdapter extends BaseAdapter {
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
-    $(".product-card, .product--box, .productCard, [data-product]").each((_, el) => {
+    const cards = $(".product-card, .product--box, .productCard, [data-product]");
+    console.log(`[BikeDiscount] ${categoryPath}: ${cards.length} product cards found`);
+    cards.each((_, el) => {
       try {
         const $el = $(el);
         const name = $el.find(".product-card__title, .product-name, h3 a").first().text().trim()
@@ -51,7 +53,7 @@ export class BikeDiscountAdapter extends BaseAdapter {
         const href = $el.find("a[href]").first().attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
         const imageUrl = $el.find("img").first().attr("data-src") || $el.find("img").first().attr("src");
-        const category = this.mapCategory(categoryPath.replace("/fahrraeder/", ""));
+        const category = this.mapCategory(categoryPath);
         const availability = $el.find(".delivery-status, .availability").first().text().trim() || undefined;
         const sourceId = $el.attr("data-product") || undefined;
 

@@ -87,7 +87,7 @@ function assertBikeContract(bike: Bike, adapterName: string) {
 describe("FahrradXXLAdapter contract", () => {
   const adapter = new TestFahrradXXL();
   const html = fixture("fahrrad-xxl-ebikes.html");
-  const bikes = adapter.parse(html, "/fahrraeder/e-bikes");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bike/");
 
   it("parses 3 valid bikes and skips 1 invalid card", () => {
     expect(bikes.length).toBe(3);
@@ -133,11 +133,11 @@ describe("FahrradXXLAdapter contract", () => {
   });
 
   it("returns empty array for empty HTML", () => {
-    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes")).toEqual([]);
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bike/")).toEqual([]);
   });
 
   it("returns empty array for garbled HTML", () => {
-    expect(adapter.parse("<<<!>>#$%@!GARBLED", "/fahrraeder/e-bikes")).toEqual([]);
+    expect(adapter.parse("<<<!>>#$%@!GARBLED", "/fahrraeder/e-bike/")).toEqual([]);
   });
 });
 

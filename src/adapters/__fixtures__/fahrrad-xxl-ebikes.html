@@ -4,7 +4,7 @@
 <div class="fxxl-product-listing">
 
   <!-- Sale product card (matches real fahrrad-xxl.de structure) -->
-  <a data-product-id="581912" href="https://www.fahrrad-xxl.de/carver-tour-e-410-m000009403" class="gtm__artikel--click fxxl-element-artikel__link">
+  <a data-product-id="581912" data-variante-id="" data-artikelnr="M000009403" href="https://www.fahrrad-xxl.de/carver-tour-e-410-m000009403" class="gtm__artikel--click fxxl-element-artikel__link">
     <figure class="fxxl-element-artikel__image-container">
       <div class="fxxl-element-artikel__variant-main-slider">
         <img width="560" height="373" src="https://cdn.fahrrad-xxl.de/images/carver-tour.jpg" alt="E-Bike-Pedelec - Carver Tour E.410 - 400 Wh - 28 Zoll - Diamant - 2026" class="fxxl-element-artikel__image fxxl-element-artikel__image--main" loading="lazy" />
@@ -27,7 +27,7 @@
   </a>
 
   <!-- Non-sale product card (regular price, no --new/--old) -->
-  <a data-product-id="590123" href="https://www.fahrrad-xxl.de/trek-domane-sl-5" class="gtm__artikel--click fxxl-element-artikel__link">
+  <a data-product-id="590123" data-variante-id="" data-artikelnr="M000012345" href="https://www.fahrrad-xxl.de/trek-domane-sl-5" class="gtm__artikel--click fxxl-element-artikel__link">
     <figure class="fxxl-element-artikel__image-container">
       <div class="fxxl-element-artikel__variant-main-slider">
         <img width="560" height="373" src="https://cdn.fahrrad-xxl.de/images/trek-domane.jpg" alt="Rennrad - Trek Domane SL 5 - 2026" class="fxxl-element-artikel__image fxxl-element-artikel__image--main" loading="lazy" />
@@ -44,8 +44,8 @@
     </div>
   </a>
 
-  <!-- Sale product with strike-price -->
-  <a data-product-id="580456" href="https://www.fahrrad-xxl.de/giant-explore-e-plus-1" class="gtm__artikel--click fxxl-element-artikel__link">
+  <!-- Product card with img alt fallback for name -->
+  <a data-product-id="580456" data-variante-id="" data-artikelnr="M000067890" href="https://www.fahrrad-xxl.de/giant-explore-e-plus-1" class="gtm__artikel--click fxxl-element-artikel__link">
     <figure class="fxxl-element-artikel__image-container">
       <div class="fxxl-element-artikel__variant-main-slider">
         <img width="560" height="373" src="https://cdn.fahrrad-xxl.de/images/giant.jpg" alt="Giant Explore E+ 1 Pro GTS" class="fxxl-element-artikel__image fxxl-element-artikel__image--main" loading="lazy" />
@@ -61,14 +61,21 @@
       <div class="fxxl-element-artikel__price fxxl-element-artikel__price--new fxxl-price-with-strike-price"> 3.499,00 € </div>
       <div class="fxxl-element-artikel__price fxxl-element-artikel__price--old">
         <span class="fxxl-strike-price"> 3.899,00 € </span>
+        <span class="fxxl-strike-price fxxl-strike-price-note"> ¹ </span>
       </div>
+      <div class="fxxl-element-artikel__price fxxl-element-artikel__price--discount fxxl-discount"> -10% </div>
     </div>
   </a>
+
+  <!-- Empty placeholder card (not an <a> tag) — should be skipped by a[data-product-id] selector -->
+  <div data-product-id="empty-variant"></div>
 
   <!-- Card with missing price — should be skipped -->
   <a data-product-id="no-price" href="/no-price-bike" class="fxxl-element-artikel__link">
     <figcaption class="fxxl-element-artikel__caption">
-      <div class="fxxl-element-artikel__brand">NoBrand</div>
+      <div class="fxxl-element-artikel__brand-rating">
+        <div class="fxxl-element-artikel__brand">NoBrand</div>
+      </div>
       <div class="fxxl-element-artikel__title">Bike Without Price</div>
     </figcaption>
   </a>
