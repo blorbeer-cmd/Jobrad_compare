@@ -7,13 +7,15 @@ import { NextResponse } from "next/server";
  */
 
 const targets = [
-  { dealer: "B.O.C.", url: "https://www.boc24.de/fahrraeder/e-bikes/" },
-  { dealer: "Stadler", url: "https://www.zweirad-stadler.de/e-bikes/" },
-  { dealer: "Bike24", url: "https://www.bike24.de/e-bikes" },
-  { dealer: "Bikester", url: "https://www.bikester.de/e-bikes/" },
-  { dealer: "Radon", url: "https://www.radon-bikes.de/e-bike/" },
-  { dealer: "Lucky Bike Suggest", url: "https://www.lucky-bike.de/suggest?search=e-bike" },
-  { dealer: "Lucky Bike Widgets", url: "https://www.lucky-bike.de/widgets/listing/listingCount/Fahrraeder/E-Bike/" },
+  { dealer: "B.O.C. Collections", url: "https://www.boc24.de/collections/e-bikes" },
+  { dealer: "B.O.C. E-Bike", url: "https://www.boc24.de/collections/e-bike" },
+  { dealer: "B.O.C. Fahrraeder", url: "https://www.boc24.de/collections/fahrraeder" },
+  { dealer: "B.O.C. All", url: "https://www.boc24.de/collections/all" },
+  { dealer: "B.O.C. Pedelec", url: "https://www.boc24.de/collections/pedelec" },
+  { dealer: "B.O.C. E-City", url: "https://www.boc24.de/collections/e-citybikes" },
+  { dealer: "B.O.C. E-Trekking", url: "https://www.boc24.de/collections/e-trekkingbikes" },
+  { dealer: "Stadler E-Bikes", url: "https://www.zweirad-stadler.de/e-bikes/" },
+  { dealer: "Stadler Fahrraeder", url: "https://www.zweirad-stadler.de/fahrraeder/" },
 ];
 
 export async function GET() {
