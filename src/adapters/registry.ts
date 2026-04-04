@@ -9,18 +9,66 @@ import { Bike24Adapter } from "./bike24";
 import { HibikeAdapter } from "./hibike";
 import { BruegelmannAdapter } from "./bruegelmann";
 import { BikesterAdapter } from "./bikester";
+import {
+  HibikeAwinAdapter,
+  BikesterAwinAdapter,
+  FahrradXXLAwinAdapter,
+  BruegelmannAwinAdapter,
+  LuckyBikeAwinAdapter,
+  BikeDiscountAwinAdapter,
+} from "./awin-dealers";
 import { persistBikes, loadBikesFromDb } from "@/lib/bike-persistence";
 
-const adapters: BaseAdapter[] = [
-  new FahrradXXLAdapter(),
-  // LuckyBike: products are rendered client-side via JavaScript — not scrapable with Cheerio
-  // BikeDiscount: returns HTTP 403 for all requests from server environments
-  new RoseBikesAdapter(),
-  new Bike24Adapter(),
-  new HibikeAdapter(),
-  new BruegelmannAdapter(),
-  new BikesterAdapter(),
-];
+// ---------------------------------------------------------------------------
+// Adapter selection
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the active adapter list.
+ *
+ * Strategy:
+ * - When AWIN_API_KEY is set and a dealer has AWIN_FEED_ID_* configured, the
+ *   Awin feed adapter replaces the scraping adapter for that dealer.
+ *   Benefit: structured data, no HTML fragility, brand/colour fields included.
+ * - Dealers where scraping never worked (Lucky Bike, Bike Discount) are added
+ *   only when their Awin feed ID is configured.
+ * - Scraping adapters remain for all dealers without an Awin feed configured.
+ */
+function buildAdapters(): BaseAdapter[] {
+  const hasAwinKey = !!process.env.AWIN_API_KEY;
+
+  // Awin adapters — instantiated unconditionally; fetchBikes() returns [] when
+  // the API key or feed ID is missing, so they are safe to instantiate always.
+  const awinCandidates: BaseAdapter[] = hasAwinKey
+    ? [
+        new FahrradXXLAwinAdapter(),
+        new HibikeAwinAdapter(),
+        new BikesterAwinAdapter(),
+        new BruegelmannAwinAdapter(),
+        // The two below only work via Awin (scraping is not viable for them)
+        new LuckyBikeAwinAdapter(),
+        new BikeDiscountAwinAdapter(),
+      ].filter((a) => (a as { feedId: number }).feedId > 0)
+    : [];
+
+  const awinDealerNames = new Set(awinCandidates.map((a) => a.name));
+
+  // Scraping adapters — used for any dealer not covered by Awin
+  const scrapingAdapters: BaseAdapter[] = [
+    new FahrradXXLAdapter(),
+    new RoseBikesAdapter(), // Rose Bikes not on Awin — scraping only
+    new Bike24Adapter(),
+    new HibikeAdapter(),
+    new BruegelmannAdapter(),
+    new BikesterAdapter(),
+    // LuckyBike + BikeDiscount scraping doesn't work — only via Awin above
+  ].filter((a) => !awinDealerNames.has(a.name));
+
+  return [...scrapingAdapters, ...awinCandidates];
+}
+
+// Re-evaluate on each module load so env changes in tests are picked up
+const adapters: BaseAdapter[] = buildAdapters();
 
 export interface FetchResult {
   bikes: Bike[];
