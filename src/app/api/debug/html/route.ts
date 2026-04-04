@@ -7,15 +7,7 @@ import { NextResponse } from "next/server";
  */
 
 const targets = [
-  { dealer: "B.O.C. Collections", url: "https://www.boc24.de/collections/e-bikes" },
-  { dealer: "B.O.C. E-Bike", url: "https://www.boc24.de/collections/e-bike" },
-  { dealer: "B.O.C. Fahrraeder", url: "https://www.boc24.de/collections/fahrraeder" },
-  { dealer: "B.O.C. All", url: "https://www.boc24.de/collections/all" },
-  { dealer: "B.O.C. Pedelec", url: "https://www.boc24.de/collections/pedelec" },
-  { dealer: "B.O.C. E-City", url: "https://www.boc24.de/collections/e-citybikes" },
-  { dealer: "B.O.C. E-Trekking", url: "https://www.boc24.de/collections/e-trekkingbikes" },
-  { dealer: "Stadler E-Bikes", url: "https://www.zweirad-stadler.de/e-bikes/" },
-  { dealer: "Stadler Fahrraeder", url: "https://www.zweirad-stadler.de/fahrraeder/" },
+  { dealer: "B.O.C. E-Bikes", url: "https://www.boc24.de/collections/e-bikes" },
 ];
 
 export async function GET() {
@@ -40,41 +32,47 @@ export async function GET() {
       const cheerio = await import("cheerio");
       const $ = cheerio.load(html);
 
-      // Generic product detection: look for common product card selectors
-      const productSelectors = [
-        "[data-product-id]", ".product-card", ".product-box", ".product-item",
-        ".product--box", "[data-product]", "article.product", ".productCard",
-        ".product-listing__item", ".listing--product", ".product-tile",
-      ];
-      const selectorHits: Record<string, number> = {};
-      for (const sel of productSelectors) {
-        const count = $(sel).length;
-        if (count > 0) selectorHits[sel] = count;
-      }
+      const totalCards = $(".product-card").length;
 
-      // Count euro signs in the page (indicator of prices)
-      const euroCount = (html.match(/€/g) || []).length;
-
-      // Look for elements with "product" in class
-      const productClasses: string[] = [];
-      $("[class*='product'], [class*='Product']").slice(0, 8).each((_, el) => {
-        const tag = el.type === "tag" ? el.tagName : "?";
-        const cls = $(el).attr("class") || "";
-        const text = $(el).text().trim().slice(0, 80);
-        productClasses.push(`<${tag} class="${cls}"> → "${text}"`);
+      // Detailed analysis of first 3 product cards
+      const cardAnalysis: object[] = [];
+      $(".product-card").slice(0, 3).each((i, el) => {
+        const $el = $(el);
+        // Get full outer HTML of the card (truncated)
+        const outerHtml = $.html(el).slice(0, 4000);
+        // Get all text content
+        const textContent = $el.text().replace(/\s+/g, " ").trim().slice(0, 500);
+        // Find all links
+        const links: string[] = [];
+        $el.find("a[href]").each((_, a) => {
+          links.push($(a).attr("href") || "");
+        });
+        // Find all elements with price-related classes
+        const priceEls: string[] = [];
+        $el.find("[class*='price'], [class*='Price']").each((_, pe) => {
+          const cls = $(pe).attr("class") || "";
+          const text = $(pe).text().trim().slice(0, 100);
+          priceEls.push(`<${pe.type === "tag" ? pe.tagName : "?"} class="${cls}"> → "${text}"`);
+        });
+        cardAnalysis.push({ index: i, textContent, links, priceEls, outerHtml });
       });
 
-      // First 2000 chars of body content for inspection
-      const bodySnippet = $("body").text().trim().slice(0, 2000);
+      // Also find all Shopify collection URLs for other categories
+      const collectionLinks: string[] = [];
+      $("a[href*='/collections/']").each((_, a) => {
+        const href = $(a).attr("href") || "";
+        if (!collectionLinks.includes(href) && href.includes("bike") || href.includes("rad") || href.includes("trek") || href.includes("city") || href.includes("mountain")) {
+          collectionLinks.push(href);
+        }
+      });
 
       results.push({
         dealer: target.dealer,
         status: response.status,
         htmlLength: html.length,
-        euroCount,
-        selectorHits,
-        productClasses: productClasses.slice(0, 5),
-        bodySnippet: bodySnippet.slice(0, 1000),
+        totalCards,
+        collectionLinks: [...new Set(collectionLinks)].slice(0, 20),
+        cardAnalysis,
       });
     } catch (err) {
       results.push({
