@@ -98,6 +98,42 @@ export abstract class BaseAdapter {
     return undefined;
   }
 
+  /**
+   * Infer model year from product name.
+   * Matches 4-digit years in the range 2010–2029 (e.g. "Cube Acid 260 2025").
+   * Returns undefined when no year is found or ambiguous.
+   */
+  protected inferModelYear(name: string): number | undefined {
+    const match = name.match(/\b(20[12]\d)\b/);
+    return match ? parseInt(match[1], 10) : undefined;
+  }
+
+  /**
+   * Infer battery capacity in Wh from product name.
+   * Only matches when "Wh" is explicitly present to avoid model-number false positives
+   * (e.g. "Cube Reaction Hybrid 500Wh" → 500, "Cube Reaction Hybrid 500" → undefined).
+   */
+  protected inferBatteryWh(name: string): number | undefined {
+    const match = name.match(/\b(\d{3,4})\s*[Ww][Hh]\b/);
+    if (!match) return undefined;
+    const wh = parseInt(match[1], 10);
+    // Sanity-check: realistic e-bike battery range 100–2000 Wh
+    return wh >= 100 && wh <= 2000 ? wh : undefined;
+  }
+
+  /**
+   * Infer suspension type from product name.
+   * Uses explicit keywords only — does not guess for bikes that don't mention suspension.
+   */
+  protected inferSuspension(name: string): "fully" | "hardtail" | "front" | "rigid" | undefined {
+    const lower = name.toLowerCase();
+    if (lower.includes("fully") || lower.includes("vollfeder") || lower.includes("full suspension")) return "fully";
+    if (lower.includes("hardtail") || lower.includes("hard tail")) return "hardtail";
+    if (lower.includes("federgabel") || lower.includes("front suspension")) return "front";
+    if (lower.includes(" starr") || lower.includes("rigid")) return "rigid";
+    return undefined;
+  }
+
   protected extractBrand(productName: string): string {
     const knownBrands = [
       "Cube", "Canyon", "Kalkhoff", "Stevens", "Bergamont", "Specialized",

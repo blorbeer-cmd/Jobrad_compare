@@ -22,6 +22,15 @@ class TestAdapter extends BaseAdapter {
   public testInferDriveType(name: string) {
     return this.inferDriveType(name);
   }
+  public testInferModelYear(name: string) {
+    return this.inferModelYear(name);
+  }
+  public testInferBatteryWh(name: string) {
+    return this.inferBatteryWh(name);
+  }
+  public testInferSuspension(name: string) {
+    return this.inferSuspension(name);
+  }
 }
 
 describe("BaseAdapter.mapCategory", () => {
@@ -127,5 +136,68 @@ describe("BaseAdapter.inferDriveType", () => {
   });
   it("is case-insensitive", () => {
     expect(adapter.testInferDriveType("Winora Yucatan 12 RIEMEN")).toBe("belt");
+  });
+});
+
+describe("BaseAdapter.inferModelYear", () => {
+  const adapter = new TestAdapter();
+
+  it("extracts year from end of name", () => {
+    expect(adapter.testInferModelYear("Cube Acid 260 2025")).toBe(2025);
+  });
+  it("extracts year from middle of name", () => {
+    expect(adapter.testInferModelYear("Trek Marlin 5 2024 Hardtail")).toBe(2024);
+  });
+  it("returns undefined when no year present", () => {
+    expect(adapter.testInferModelYear("Canyon Roadlite CF 7")).toBeUndefined();
+  });
+  it("does not match short model numbers like '520'", () => {
+    expect(adapter.testInferModelYear("Trek FX 3 Disc 520")).toBeUndefined();
+  });
+  it("does not match years outside 2010–2029", () => {
+    expect(adapter.testInferModelYear("Old Bike 1995 Edition")).toBeUndefined();
+  });
+});
+
+describe("BaseAdapter.inferBatteryWh", () => {
+  const adapter = new TestAdapter();
+
+  it("extracts Wh when explicitly suffixed", () => {
+    expect(adapter.testInferBatteryWh("Specialized Turbo Como 3.0 500Wh")).toBe(500);
+  });
+  it("handles space before Wh", () => {
+    expect(adapter.testInferBatteryWh("Cube Reaction Hybrid 625 Wh")).toBe(625);
+  });
+  it("is case-insensitive for Wh suffix", () => {
+    expect(adapter.testInferBatteryWh("Haibike FullNine 8 750WH")).toBe(750);
+  });
+  it("returns undefined when number lacks Wh suffix (model number)", () => {
+    expect(adapter.testInferBatteryWh("Cube Reaction Hybrid 500")).toBeUndefined();
+  });
+  it("returns undefined for non-e-bikes", () => {
+    expect(adapter.testInferBatteryWh("Canyon Roadlite CF 7")).toBeUndefined();
+  });
+});
+
+describe("BaseAdapter.inferSuspension", () => {
+  const adapter = new TestAdapter();
+
+  it("detects fully from 'Fully'", () => {
+    expect(adapter.testInferSuspension("Specialized Stumpjumper 15 Fully")).toBe("fully");
+  });
+  it("detects fully from 'Vollfeder'", () => {
+    expect(adapter.testInferSuspension("KTM Scarp MT SX vollfeder")).toBe("fully");
+  });
+  it("detects hardtail", () => {
+    expect(adapter.testInferSuspension("Trek Marlin 5 Hardtail 2024")).toBe("hardtail");
+  });
+  it("detects front suspension from Federgabel", () => {
+    expect(adapter.testInferSuspension("Cube Nature Exc Federgabel")).toBe("front");
+  });
+  it("detects rigid from starr keyword", () => {
+    expect(adapter.testInferSuspension("Cube Hyde Race starr 2024")).toBe("rigid");
+  });
+  it("returns undefined when no suspension keyword present", () => {
+    expect(adapter.testInferSuspension("Cube Touring Hybrid Pro")).toBeUndefined();
   });
 });
