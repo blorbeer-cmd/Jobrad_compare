@@ -136,6 +136,11 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing, 
               Niedrigste Netto-Rate
             </Badge>
           )}
+          {bike.listPrice && bike.listPrice > bike.price && (
+            <Badge className="w-fit text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border-orange-200 dark:border-orange-800">
+              -{Math.round((1 - bike.price / bike.listPrice) * 100)}%
+            </Badge>
+          )}
           {bike.availability && (
             <Badge variant="outline" className="w-fit text-xs">
               {bike.availability}
@@ -144,40 +149,40 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing, 
         </div>
 
         {/* Actions */}
-        <div className="mt-4 flex gap-2">
+        <div className="mt-auto pt-4 space-y-1.5">
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 gap-1.5 text-xs"
+            className="w-full gap-1.5 text-xs h-9"
             asChild
           >
             <a href={bike.dealerUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" />
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
               Zum Händler
             </a>
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="gap-1.5 text-xs"
-            onClick={() => setCalcOpen(true)}
-            aria-label="Netto-Rate berechnen"
-          >
-            <Calculator className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Rechner</span>
-          </Button>
-          {onCompare && (
+          <div className={cn("grid gap-1.5", onCompare ? "grid-cols-2" : "grid-cols-1")}>
             <Button
-              variant={isComparing ? "default" : "secondary"}
+              variant="secondary"
               size="sm"
-              className="gap-1.5 text-xs"
-              onClick={() => onCompare(bike)}
-              aria-label={isComparing ? "Aus Vergleich entfernen" : "Zum Vergleich hinzufügen"}
+              className="gap-1.5 text-xs h-9"
+              onClick={() => setCalcOpen(true)}
             >
-              <GitCompareArrows className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{isComparing ? "Gewählt" : "Vergleich"}</span>
+              <Calculator className="h-3.5 w-3.5 shrink-0" />
+              Rechner
             </Button>
-          )}
+            {onCompare && (
+              <Button
+                variant={isComparing ? "default" : "secondary"}
+                size="sm"
+                className="gap-1.5 text-xs h-9"
+                onClick={() => onCompare(bike)}
+              >
+                <GitCompareArrows className="h-3.5 w-3.5 shrink-0" />
+                {isComparing ? "Gewählt" : "Vergleich"}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

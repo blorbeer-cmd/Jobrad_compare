@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -33,21 +34,20 @@ export default function RootLayout({
         >
           <SessionProvider>
             <div className="min-h-screen flex flex-col">
-              <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-                <div className="container flex h-14 items-center gap-4">
+              <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-top">
+                <div className="container flex h-14 items-center gap-3 px-4 sm:px-6">
                   <Link
                     href="/"
-                    className="flex items-center gap-2 font-bold text-foreground hover:text-primary transition-colors"
+                    className="flex shrink-0 items-center gap-2 font-bold text-foreground hover:text-primary transition-colors"
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                       <Bike className="h-4 w-4" />
                     </div>
                     <span className="hidden sm:inline">JobRad Vergleich</span>
-                    <span className="sm:hidden">JobRad</span>
                   </Link>
 
-                  <nav className="flex items-center gap-4 text-sm">
-                    <Link href="/rechner" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <nav className="flex items-center gap-3 text-sm">
+                    <Link href="/rechner" className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
                       Rechner
                     </Link>
                   </nav>
@@ -59,10 +59,10 @@ export default function RootLayout({
                 </div>
               </header>
 
-              <main className="container flex-1 py-6">{children}</main>
+              <main className="container flex-1 py-4 px-4 sm:px-6 sm:py-6">{children}</main>
 
               <footer className="border-t bg-card">
-                <div className="container flex items-center justify-between py-4 text-xs text-muted-foreground">
+                <div className="container flex items-center justify-between px-4 py-4 text-xs text-muted-foreground sm:px-6">
                   <span>JobRad Fahrrad-Vergleichstool &middot; Internes Werkzeug</span>
                   <Link href="/datenschutz" className="hover:text-foreground transition-colors">
                     Datenschutz

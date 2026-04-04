@@ -511,15 +511,14 @@ export function FilterSidebar({
       {/* Mobile toggle */}
       <div className="lg:hidden">
         <Button
-          variant="outline"
+          variant={activeFilterCount > 0 ? "default" : "outline"}
           onClick={() => setMobileOpen(true)}
-          className="gap-2"
-          size="sm"
+          className="h-10 gap-2"
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className="h-4 w-4 shrink-0" />
           Filter
           {activeFilterCount > 0 && (
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-white/25 px-1 text-[11px] font-bold">
               {activeFilterCount}
             </span>
           )}
