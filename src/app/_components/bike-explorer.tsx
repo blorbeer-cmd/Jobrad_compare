@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { formatDataAge } from "@/lib/freshness";
 import { groupBikes, summarizeResolution } from "@/lib/entity-resolution";
 import { BikeGroupCard } from "@/components/bikes/bike-group-card";
+import { useTaxProfile } from "@/lib/use-tax-profile";
+import { calculateBikeLease, estimateMonthlyGrossRate } from "@/lib/tax";
 
 interface FetchState {
   bikes: Bike[];
@@ -108,10 +110,67 @@ export function BikeExplorer() {
     loadSavedBikes();
   }, [loadBikes, loadSavedBikes]);
 
+  const { profile, activeProfile } = useTaxProfile();
+
   const allBikes = fetchState.bikes;
+
   const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
   const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
-  const filteredBikes = useMemo(() => filterAndSortBikes(allBikes, filters), [allBikes, filters]);
+
+  const availableAvailabilities = useMemo(
+    () => [...new Set(allBikes.map((b) => b.availability).filter((a): a is string => !!a))].sort(),
+    [allBikes]
+  );
+
+  const availableFrameSizes = useMemo(
+    () => [...new Set(allBikes.map((b) => b.frameSize).filter((s): s is string => !!s))].sort(),
+    [allBikes]
+  );
+  const availableWheelSizes = useMemo(
+    () => [...new Set(allBikes.map((b) => b.wheelSize).filter((s): s is string => !!s))].sort(),
+    [allBikes]
+  );
+  const availableFrameMaterials = useMemo(
+    () => [...new Set(allBikes.map((b) => b.frameMaterial).filter((m): m is string => !!m))].sort(),
+    [allBikes]
+  );
+  const availableModelYears = useMemo(
+    () =>
+      [...new Set(allBikes.map((b) => b.modelYear).filter((y): y is number => y !== undefined))]
+        .sort((a, b) => b - a)
+        .map(String),
+    [allBikes]
+  );
+
+  const netRates = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const bike of allBikes) {
+      const listPrice = bike.listPrice ?? bike.price;
+      const monthlyGrossRate = estimateMonthlyGrossRate(listPrice, 36);
+      const result = calculateBikeLease(activeProfile, { listPrice, monthlyGrossRate });
+      map.set(bikeKey(bike), result.monthlyNetRate);
+    }
+    return map;
+  }, [allBikes, activeProfile]);
+
+  const filteredBikes = useMemo(
+    () => filterAndSortBikes(allBikes, filters, netRates),
+    [allBikes, filters, netRates]
+  );
+
+  const lowestNetRateKey = useMemo(() => {
+    if (filteredBikes.length === 0) return undefined;
+    let minRate = Infinity;
+    let minKey: string | undefined;
+    for (const bike of filteredBikes) {
+      const key = bikeKey(bike);
+      const rate = netRates.get(key) ?? bike.price;
+      if (rate < minRate) { minRate = rate; minKey = key; }
+    }
+    return minKey;
+  }, [filteredBikes, netRates]);
+
+
   const bikeGroups = useMemo(() => groupBikes(allBikes), [allBikes]);
   const resolution = useMemo(() => summarizeResolution(bikeGroups), [bikeGroups]);
 
@@ -280,6 +339,11 @@ export function BikeExplorer() {
                 onFiltersChange={setFilters}
                 availableDealers={availableDealers}
                 availableBrands={availableBrands}
+                availableAvailabilities={availableAvailabilities}
+                availableFrameSizes={availableFrameSizes}
+                availableWheelSizes={availableWheelSizes}
+                availableFrameMaterials={availableFrameMaterials}
+                availableModelYears={availableModelYears}
               />
               <Button
                 variant="ghost"
@@ -301,10 +365,21 @@ export function BikeExplorer() {
                   onFiltersChange={setFilters}
                   availableDealers={availableDealers}
                   availableBrands={availableBrands}
+                  availableAvailabilities={availableAvailabilities}
+                  availableFrameSizes={availableFrameSizes}
+                  availableWheelSizes={availableWheelSizes}
+                  availableFrameMaterials={availableFrameMaterials}
+                  availableModelYears={availableModelYears}
                 />
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 space-y-3">
+                {!profile && (
+                  <div className="rounded-lg border border-dashed px-4 py-2.5 text-sm text-muted-foreground flex items-center gap-2">
+                    <span>Netto-Raten basieren auf Standardwerten (45.000 € Jahresgehalt, SK 1).</span>
+                    <span className="text-xs">Passe dein Steuerprofil im Rechner an.</span>
+                  </div>
+                )}
                 <BikeGrid
                   bikes={filteredBikes}
                   savedBikeKeys={savedKeySet}
@@ -312,6 +387,8 @@ export function BikeExplorer() {
                   onToggleSave={toggleSave}
                   onCompare={toggleCompare}
                   loading={fetchState.loading}
+                  netRates={netRates}
+                  lowestNetRateKey={lowestNetRateKey}
                 />
               </div>
             </div>

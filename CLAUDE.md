@@ -14,37 +14,73 @@ You are a pragmatic full-stack developer building a comparison tool for JobRad b
 
 ## Project Status
 
-### Completed (All Infrastructure Phases)
+### Completed
+
+#### Infrastructure & Setup
 - **Project Setup**: Next.js 16 with TypeScript strict, Prisma 7 + PostgreSQL (Neon), Tailwind CSS + shadcn/ui, Zod validation, Vitest, security headers, environment validation
 - **Authentication & Authorization**: NextAuth.js v4 with Magic Link (EmailProvider + Resend ready), CredentialsProvider dev-login (behind `ALLOW_DEV_LOGIN=true`), invite system (7-day expiry), admin role (ADMIN_EMAIL auto-promotion), GDPR consent fields on User model, JWT strategy for dev login
-- **UI Components**: 13 shadcn/ui base components, BikeExplorer with grid/filter/comparison views (Browse/Favoriten/Vergleich/Modelle tabs), admin dashboard (users, invites, stats, adapter health), login page with dev-login support, user navigation, dark mode, mobile optimization
-- **Real Dealer Adapters**: 3 adapters (Fahrrad XXL, Lucky Bike, Bike Discount) + demo adapter, each with 6hr cache TTL, health reporting, HTML parsing with contract tests and static fixtures
-- **Normalized Database**: Dealer, BikeModel, BikeListing, PriceSnapshot tables with upsert-based persistence, price change tracking
-- **Entity Resolution**: Fuzzy matching via Levenshtein distance + union-find, canonical key grouping, confidence scores, multi-dealer group detection with savings calculation
-- **Comparison Engine**: TypeScript port of Python prototype — offer validity, per-shop deduplication, cheapest offer identification (Python reference files kept for validation)
-- **Bike Schema**: Full unified schema with sourceId, sourceType, lastSeenAt, listPrice/offerPrice, availability
-- **Favorites with Persistence**: Save/unsave via API (`/api/saved-bikes`), optimistic UI, inline note editor, Zod-validated
-- **GDPR Features**: Account deletion (`/api/account` DELETE, Art. 17), data export (`/api/account/export` GET, Art. 20), privacy policy page (`/datenschutz`), user profile page (`/profil`)
-- **Filter Logic**: Extracted to `src/lib/bike-filters.ts` — text search, category, price range, dealer, brand, sorting
 - **Security**: Content-Security-Policy in `next.config.js`, rate limiting in `src/middleware.ts` (auth: 10/15min, API: 60/min, mutations: 30/min), all other security headers
-- **API Pagination**: `/api/bikes` supports `?page=N&limit=N` (default 50, max 200) with totalItems/totalPages/hasNextPage metadata
-- **Error Boundaries**: `error.tsx` (app-level), `global-error.tsx` (root), `admin/error.tsx` — German error messages with retry
-- **Freshness Indicator**: "Daten vor X Stunden" display with cache badge in BikeExplorer header
-- **Test Suite**: 8 Vitest test files (utils, types, base adapter, bike filters, saved-bikes API, entity resolution, comparison, adapter contract tests with HTML fixtures) + 24 Python pytest tests (reference)
-- **E2E Tests**: Playwright setup with 4 spec files (auth, bike-explorer, admin, privacy)
 - **DevOps**: Dockerfile, docker-compose (dev + prod), GitHub Actions CI/CD (lint, typecheck, test, build), Vercel config
 - **Health Check**: `/api/health` endpoint showing DB connectivity and env var status
-- **Long-term Vision**: Concept document (`docs/konzept-flexible-produktvergleiche.md`) — bike tool first, then abstract to support other product categories
+
+#### UI & UX
+- **BikeExplorer**: 4-tab layout — Durchsuchen / Favoriten / Vergleich / Modelle
+- **Dark Mode**: `next-themes` with system-aware toggle, full dark CSS variable set
+- **Mobile Optimization**: Sheet-based filter drawer, responsive grid, sticky header with backdrop blur
+- **Filter Sidebar**: Collapsible `FilterSection` components with active-count badges; multi-select pills for categories, dealers, brands; `onlyDiscounted` toggle; availability dropdown; technical filter group (frame size, wheel size, drive type, suspension, battery Wh, frame material, model year)
+- **Modelle Tab**: Entity-resolution grouped view — `BikeGroupCard` shows all dealer price rows per model, "bis X € sparen" badge, fuzzy-match warning
+- **Bike Card**: Hover lift, dark-safe save button, crossed-out `listPrice`, monthly net-rate display with "Niedrigste Rate" highlight badge
+- **ComparisonView**: Side-by-side table, best-price highlighting, up to 4 bikes
+- **Calculator Modal**: `CalcModal` + `BikeCalculator` — pre-filled with bike list price, collapsible tax profile form, tooltips for tax terms via `TermTooltip`
+- **Admin Dashboard**: Users, invites, stats, adapter health cards per dealer
+- **Error Boundaries**: `error.tsx`, `global-error.tsx`, `admin/error.tsx` — German messages with retry
+- **Freshness Indicator**: "Daten vor X Stunden" + Cache badge in BikeExplorer header
+
+#### Data & Adapters
+- **Unified Bike Schema** (`src/adapters/types.ts`): Full schema with sourceId, sourceType, lastSeenAt, listPrice/offerPrice, availability + technical fields: frameSize, wheelSize, driveType (chain/belt/shaft), gearCount, batteryWh, motor, suspension (rigid/front/hardtail/fully), frameMaterial, color, modelYear
+- **Dealer Adapters** (5 real + 1 demo):
+  - Fahrrad XXL (`fahrrad-xxl.ts`) — CSS selector scraper, 6 categories, 6h TTL, dedup by productId, `data-src` lazy-load support
+  - Lucky Bike (`lucky-bike.ts`) — client-side rendered, 6h TTL (limited scrapability)
+  - Bike Discount (`bike-discount.ts`) — 403 on server, 6h TTL (limited scrapability)
+  - Rose Bikes (`rose-bikes.ts`) — CSS selector scraper, 6 categories, 6h TTL
+  - Bike24 (`bike24.ts`) — React data-attribute selectors, 6 categories, 6h TTL
+  - Demo (`demo.ts`) — 8 fake bikes for development/testing
+- **Registry** (`registry.ts`): Per-adapter cache keys, fire-and-forget DB persistence, `getAdapterHealthStatuses()`
+- **Adapter Health**: `AdapterHealth` interface, `stampAndRecord()`, success/error tracking per adapter
+
+#### Database
+- **Normalized Schema**: Dealer → BikeModel → BikeListing → PriceSnapshot (upsert-based, price change tracking, `canonicalKey` for deduplication)
+- **SavedBike**: JSON blob backup for denormalized access
+- **Persistence**: `src/lib/bike-persistence.ts` — fire-and-forget after adapter fetch, `loadBikesFromDb()` for DB-first API strategy
+
+#### Logic & Algorithms
+- **Entity Resolution** (`src/lib/entity-resolution.ts`): `groupBikes()` with exact + Levenshtein fuzzy matching (union-find), `BikeGroup` type with savings/confidence, `summarizeResolution()`, `GET /api/bikes/groups`
+- **Filter Engine** (`src/lib/bike-filters.ts`): Multi-select dealers/brands, onlyDiscounted, availability, technical filters (frameSizes, wheelSizes, driveTypes, suspensions, batteryWhMin/Max, frameMaterials, modelYears), sort options: price-asc/desc, name-asc/desc, netrate-asc/desc, discount-desc, discount-abs-desc, battery-desc, year-desc
+- **Tax Calculator** (`src/lib/tax.ts`): `calculateBikeLease()`, `estimateMonthlyGrossRate()`, `useTaxProfile()` hook — income tax, Soli, church tax, SV contributions, salary sacrifice, employer subsidy
+- **Comparison Engine** (`src/lib/comparison.ts`): TypeScript port of Python prototype — offer validity, per-shop deduplication, cheapest offer identification
+- **Freshness** (`src/lib/freshness.ts`): `formatDataAge()`, `isStale()` — relative timestamps in German
+
+#### User Features
+- **Favorites**: Save/unsave via `/api/saved-bikes`, optimistic UI, inline note editor, Zod-validated
+- **GDPR**: Account deletion (`/api/account` DELETE, Art. 17), data export (`/api/account/export` GET, Art. 20), privacy policy (`/datenschutz`), user profile (`/profil`)
+- **API Pagination**: `/api/bikes` supports `?page=N&limit=N` (default 50, max 200)
+
+#### Tests
+- **279 Vitest tests** across 9 test files: utils, types, base adapter, bike filters (incl. all technical filters), entity resolution, comparison, saved-bikes API, adapter contract tests (HTML fixtures for Fahrrad XXL, Lucky Bike, Bike Discount, Rose Bikes, Bike24)
+- **24 Python pytest tests** (reference, `tests/test_shop_offer_comparisons.py`)
+- **Playwright E2E setup**: 4 spec files (auth, bike-explorer, admin, privacy)
 
 ### Deployment Status
 - **Vercel**: Configured, builds run `prisma generate && prisma db push && next build`
 - **Neon DB**: Connection string set in Vercel env vars
-- **Dev Login**: Works when `ALLOW_DEV_LOGIN=true` is set in Vercel env vars. Any email address works, no invite needed.
-- **Magic Link (Resend)**: EmailProvider configured but Resend not yet set up. Needs: Resend API key, verified domain, `EMAIL_FROM` env var.
+- **Dev Login**: Works when `ALLOW_DEV_LOGIN=true` is set. Any email, no invite needed.
+- **Magic Link (Resend)**: EmailProvider configured, Resend not yet set up. Needs: API key, verified domain, `EMAIL_FROM` env var.
 
 ### Not Started
 - Monitoring/alerting (Sentry etc.)
-- Resend email setup (domain verification, API key) — requires external service configuration
+- Resend email setup (domain verification, API key) — external service configuration required
+- Admin UI for reviewing uncertain entity matches (confidence < threshold)
+- Rate limiting per-user on mutation endpoints (currently per-IP only)
 - Product category abstraction (see `docs/konzept-flexible-produktvergleiche.md`)
 
 ### Reference Code (Python)
@@ -117,19 +153,22 @@ All bike data from different sources must be normalized to a common format:
 - Dealer URL / link to offer
 - `lastSeenAt` — Timestamp when last confirmed available
 
-**Optional fields (extend as data becomes available):**
-- `offerPrice` — Actual offer price if different from list price
-- `canonicalModelKey` — Key for matching same model across dealers
-- `modelYear`
-- `frameType` / frame size / color
-- `motor` / `batteryWh` (for E-Bikes)
-- `groupset` / `suspension`
-- Image URL
-- Availability status
-- `shippingAvailable` / `location`
-- `currency` (default: EUR)
+**Optional fields (all implemented in `BikeSchema`):**
+- `offerPrice` — Actual offer/discount price
+- `modelYear` — e.g. 2025
+- `frameSize` — e.g. "M", "L", "52 cm"
+- `wheelSize` — e.g. "28\"", "29\"", "700c"
+- `driveType` — `"chain" | "belt" | "shaft"`
+- `gearCount` — total gear count (e.g. 11 for 1×11)
+- `batteryWh` — battery capacity in Wh (E-Bikes)
+- `motor` — motor brand/model (E-Bikes)
+- `suspension` — `"rigid" | "front" | "hardtail" | "fully"`
+- `frameMaterial` — e.g. "Aluminium", "Carbon", "Stahl"
+- `color` — colour as listed by dealer
+- `availability` — availability status string
+- Image URL, `sourceId`, `sourceType`, `lastSeenAt`
 
-**Note on monthly rates**: JobRad monthly rates depend on employer-specific parameters (salary conversion, subsidies, insurance packages). The tool shows and compares list/offer prices. A rate calculator may be added later as a separate optional feature.
+**Monthly rate calculator**: Implemented in `src/lib/tax.ts` + `src/components/tax/`. JobRad net rates depend on salary, tax class, church tax, employer subsidy — users set their tax profile once, rates update live across all bikes.
 
 ## Data Acquisition Policy
 
@@ -246,15 +285,16 @@ Since the tool stores user data (email, saved preferences), GDPR applies.
 - Fast filtering without page reloads
 
 ### Core Features
-- **Search**: Free-text search across bike name, brand, model
-- **Filters**: Category, price range, brand, dealer
-- **Sorting**: By price (asc/desc), name, dealer
-- **Comparison**: Show same/similar bikes across different dealers
-- **Favorites**: Save bikes with one click (heart icon), view saved list
-- **Detail View**: Link to original offer at the dealer
-- **Freshness Indicator**: Show when dealer data was last updated
-- **View Toggle**: Grid view and table view for comparison results
-- **Best Offer Highlight**: Visually mark the cheapest offer across dealers
+- **Search**: Free-text search across bike name, brand, dealer
+- **Filters**: Multi-select categories/dealers/brands (pill UI), price range, onlyDiscounted toggle, availability, technical filters (frame size, wheel size, drive type, suspension, battery Wh, frame material, model year)
+- **Sorting**: Price, name, net rate, discount %, discount €, battery Wh, model year
+- **Comparison**: Side-by-side up to 4 bikes, best-price highlight
+- **Modelle View**: Entity-resolved groups showing same model at multiple dealers with savings calculation
+- **Favorites**: Save with one click, inline notes, GDPR-compliant persistence
+- **Calculator**: Monthly net-rate calculator with personal tax profile, pre-filled from bike list price
+- **Detail View**: Link to original offer at dealer
+- **Freshness Indicator**: "Daten vor X Stunden" + Cache badge
+- **Best Offer Highlight**: Cheapest dealer highlighted in green, "Niedrigste Rate" badge
 
 ### Responsive Design
 - Desktop-first, but usable on mobile
