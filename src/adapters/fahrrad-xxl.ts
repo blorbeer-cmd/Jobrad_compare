@@ -15,6 +15,8 @@ export class FahrradXXLAdapter extends BaseAdapter {
     "/fahrraeder/mountainbikes/",
     "/fahrraeder/rennraeder/",
     "/fahrraeder/rennraeder/gravel-bikes/",
+    "/fahrraeder/kinder/",
+    "/fahrraeder/lastenraeder/",
   ];
 
   async fetchBikes(): Promise<Bike[]> {
@@ -106,6 +108,7 @@ export class FahrradXXLAdapter extends BaseAdapter {
           imageUrl,
           sourceId,
           sourceType: "scrape" as const,
+          driveType: this.inferDriveType(name),
         });
         if (result.success) bikes.push(result.data);
       } catch { /* skip malformed entries */ }

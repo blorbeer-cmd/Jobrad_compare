@@ -19,6 +19,9 @@ class TestAdapter extends BaseAdapter {
   public testExtractBrand(productName: string) {
     return this.extractBrand(productName);
   }
+  public testInferDriveType(name: string) {
+    return this.inferDriveType(name);
+  }
 }
 
 describe("BaseAdapter.mapCategory", () => {
@@ -98,5 +101,31 @@ describe("BaseAdapter.extractBrand", () => {
 
   it("returns 'Unbekannt' for empty string", () => {
     expect(adapter.testExtractBrand("")).toBe("Unbekannt");
+  });
+});
+
+describe("BaseAdapter.inferDriveType", () => {
+  const adapter = new TestAdapter();
+
+  it("detects belt drive from 'Riemen' in name", () => {
+    expect(adapter.testInferDriveType("Riese & Müller Load 75 Riemen")).toBe("belt");
+  });
+  it("detects belt drive from 'Belt' in name", () => {
+    expect(adapter.testInferDriveType("Diamant Achat Super Deluxe belt")).toBe("belt");
+  });
+  it("detects belt drive from 'Gates' in name", () => {
+    expect(adapter.testInferDriveType("Kalkhoff Endeavour 5 Gates Edition")).toBe("belt");
+  });
+  it("detects shaft drive from 'Kardan' in name", () => {
+    expect(adapter.testInferDriveType("Hercules Kazan Kardan")).toBe("shaft");
+  });
+  it("returns undefined for regular chain-drive bikes", () => {
+    expect(adapter.testInferDriveType("Cube Touring Hybrid Pro")).toBeUndefined();
+  });
+  it("returns undefined when drive type is unrecognizable", () => {
+    expect(adapter.testInferDriveType("Canyon Roadlite CF 7")).toBeUndefined();
+  });
+  it("is case-insensitive", () => {
+    expect(adapter.testInferDriveType("Winora Yucatan 12 RIEMEN")).toBe("belt");
   });
 });

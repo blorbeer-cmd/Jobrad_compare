@@ -85,6 +85,19 @@ export abstract class BaseAdapter {
     return isNaN(num) || num <= 0 ? null : num;
   }
 
+  /**
+   * Infer drive type from product name.
+   * Belt-drive bikes often mention "Riemen", "Belt", or the Gates brand.
+   * Shaft-drive is rare but flagged by "Kardan" / "Shaft".
+   * Returns undefined (not "chain") to avoid false positives.
+   */
+  protected inferDriveType(name: string): "belt" | "shaft" | undefined {
+    const lower = name.toLowerCase();
+    if (lower.includes("riemen") || lower.includes(" belt") || lower.includes("gates")) return "belt";
+    if (lower.includes("kardan") || lower.includes("shaft")) return "shaft";
+    return undefined;
+  }
+
   protected extractBrand(productName: string): string {
     const knownBrands = [
       "Cube", "Canyon", "Kalkhoff", "Stevens", "Bergamont", "Specialized",
