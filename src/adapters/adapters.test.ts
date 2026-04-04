@@ -22,6 +22,7 @@ import { describe, it, expect } from "vitest";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
+import { BOCAdapter } from "./boc";
 import type { Bike } from "./types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -223,11 +224,75 @@ describe("BikeDiscountAdapter contract", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Test subclass for B.O.C.
+// ---------------------------------------------------------------------------
+
+class TestBOC extends BOCAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// B.O.C.
+// ---------------------------------------------------------------------------
+
+describe("BOCAdapter contract", () => {
+  const adapter = new TestBOC();
+  const html = fixture("boc-ebikes.html");
+  const bikes = adapter.parse(html, "/collections/e-bikes");
+
+  it("parses 3 valid bikes and skips 2 invalid cards", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "B.O.C.");
+  });
+
+  it("parses Kettler with sale price and list price", () => {
+    const kettler = bikes.find((b) => b.name.includes("Kettler"));
+    expect(kettler).toBeDefined();
+    expect(kettler!.price).toBe(1999);
+    expect(kettler!.listPrice).toBe(3799);
+    expect(kettler!.offerPrice).toBe(1999);
+    expect(kettler!.brand).toBe("Kettler");
+    expect(kettler!.category).toBe("E-Bike");
+  });
+
+  it("parses Cube without discount", () => {
+    const cube = bikes.find((b) => b.name.includes("Cube Kathmandu Hybrid ONE"));
+    expect(cube).toBeDefined();
+    expect(cube!.price).toBe(3199);
+    expect(cube!.listPrice).toBeUndefined();
+    expect(cube!.brand).toBe("Cube");
+  });
+
+  it("parses image URL with https prefix", () => {
+    const kettler = bikes.find((b) => b.name.includes("Kettler"));
+    expect(kettler?.imageUrl).toMatch(/^https:\/\//);
+  });
+
+  it("sets sourceId from handle attribute", () => {
+    const kettler = bikes.find((b) => b.name.includes("Kettler"));
+    expect(kettler?.sourceId).toBe("kettler-quadriga-town-country-p10");
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/collections/e-bikes")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/collections/e-bikes")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Cross-adapter: all parsed bikes pass the unified BikeSchema
 // ---------------------------------------------------------------------------
 
 describe("All adapters: unified schema compliance", () => {
-  const cases: [string, TestFahrradXXL | TestLuckyBike | TestBikeDiscount, string, string][] = [
+  const cases: [string, TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestBOC, string, string][] = [
     [
       "fahrrad-xxl-ebikes.html",
       new TestFahrradXXL(),
@@ -240,6 +305,12 @@ describe("All adapters: unified schema compliance", () => {
       new TestBikeDiscount(),
       "/fahrraeder/e-bikes",
       "Bike-Discount",
+    ],
+    [
+      "boc-ebikes.html",
+      new TestBOC(),
+      "/collections/e-bikes",
+      "B.O.C.",
     ],
   ];
 
