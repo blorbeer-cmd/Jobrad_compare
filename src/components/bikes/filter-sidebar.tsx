@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { BikeCategory } from "@/adapters/types";
 import { type FilterValues } from "@/lib/bike-filters";
 import { Button } from "@/components/ui/button";
@@ -192,6 +192,21 @@ export function FilterSidebar({
   availableModelYears = [],
 }: FilterSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep local search input in sync when filters are reset externally
+  useEffect(() => {
+    setSearchInput(filters.search);
+  }, [filters.search]);
+
+  function handleSearchChange(value: string) {
+    setSearchInput(value);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      onFiltersChange({ ...filters, search: value });
+    }, 150);
+  }
 
   function update(partial: Partial<FilterValues>) {
     onFiltersChange({ ...filters, ...partial });
@@ -245,11 +260,20 @@ export function FilterSidebar({
         <div className="relative mt-1.5">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Fahrrad, Marke, Händler..."
-            value={filters.search}
-            onChange={(e) => update({ search: e.target.value })}
-            className="pl-9"
+            placeholder="Fahrrad, Marke, Händler, Motor..."
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className={cn("pl-9", searchInput ? "pr-8" : "")}
           />
+          {searchInput && (
+            <button
+              onClick={() => handleSearchChange("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Suche löschen"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

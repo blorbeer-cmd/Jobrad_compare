@@ -37,13 +37,25 @@ export function filterAndSortBikes(
   let result = [...bikes];
 
   if (filters.search) {
-    const q = filters.search.toLowerCase();
-    result = result.filter(
-      (b) =>
-        b.name.toLowerCase().includes(q) ||
-        b.brand.toLowerCase().includes(q) ||
-        b.dealer.toLowerCase().includes(q)
-    );
+    const tokens = filters.search
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 0);
+    result = result.filter((b) => {
+      const searchable = [
+        b.name,
+        b.brand,
+        b.dealer,
+        b.category,
+        b.motor ?? "",
+        b.color ?? "",
+        b.frameMaterial ?? "",
+        b.modelYear != null ? String(b.modelYear) : "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return tokens.every((token) => searchable.includes(token));
+    });
   }
 
   if (filters.categories.length > 0) {
