@@ -11,6 +11,11 @@ import { FahrradDeAdapter } from "./bruegelmann";
 import { BikesterAdapter } from "./bikester";
 import { SportBittlAdapter } from "./sport-bittl";
 import { ZweiradStadlerAdapter } from "./zweirad-stadler";
+import { BocAdapter } from "./boc";
+import { CanyonAdapter } from "./canyon";
+import { DecathlonAdapter } from "./decathlon";
+import { SpecializedAdapter } from "./specialized";
+import { SimplyBikeAdapter } from "./simply-bike";
 import {
   HibikeAwinAdapter,
   BikesterAwinAdapter,
@@ -65,6 +70,11 @@ function buildAdapters(): BaseAdapter[] {
     new BikesterAdapter(),
     new SportBittlAdapter(),
     new ZweiradStadlerAdapter(),
+    new BocAdapter(),
+    new CanyonAdapter(),
+    new DecathlonAdapter(),
+    new SpecializedAdapter(),
+    new SimplyBikeAdapter(),
     // LuckyBike + BikeDiscount scraping doesn't work — only via Awin above
   ].filter((a) => !awinDealerNames.has(a.name));
 
