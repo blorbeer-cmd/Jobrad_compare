@@ -84,10 +84,7 @@ export class Bike24Adapter extends BaseAdapter {
           availability,
           sourceId,
           sourceType: "scrape" as const,
-          driveType: this.inferDriveType(name),
-          suspension: this.inferSuspension(name),
-          batteryWh: this.inferBatteryWh(name),
-          modelYear: this.inferModelYear(name),
+          ...this.inferFromName(name),
         });
         if (result.success) bikes.push(result.data);
       } catch {

@@ -46,7 +46,6 @@ export class BOCAdapter extends BaseAdapter {
     const bikes: Bike[] = [];
     const cards = $("product-card");
     const seenHandles = new Set<string>();
-    console.log(`[B.O.C.] ${categoryPath}: ${cards.length} product cards found`);
 
     cards.each((_, el) => {
       try {
@@ -93,6 +92,7 @@ export class BOCAdapter extends BaseAdapter {
           imageUrl: imageUrl || undefined,
           sourceId: handle,
           sourceType: "scrape" as const,
+          ...this.inferFromName(name),
         });
         if (result.success) bikes.push(result.data);
       } catch { /* skip malformed entries */ }

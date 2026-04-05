@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock, Layers, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, uniqueSortedStrings } from "@/lib/utils";
 import { formatDataAge } from "@/lib/freshness";
 import { groupBikes, summarizeResolution } from "@/lib/entity-resolution";
 import { BikeGroupCard } from "@/components/bikes/bike-group-card";
@@ -115,26 +115,14 @@ export function BikeExplorer() {
 
   const allBikes = fetchState.bikes;
 
-  const availableDealers = useMemo(() => [...new Set(allBikes.map((b) => b.dealer))].sort(), [allBikes]);
-  const availableBrands = useMemo(() => [...new Set(allBikes.map((b) => b.brand))].sort(), [allBikes]);
-
-  const availableAvailabilities = useMemo(
-    () => [...new Set(allBikes.map((b) => b.availability).filter((a): a is string => !!a))].sort(),
-    [allBikes]
-  );
-
-  const availableFrameSizes = useMemo(
-    () => [...new Set(allBikes.map((b) => b.frameSize).filter((s): s is string => !!s))].sort(),
-    [allBikes]
-  );
-  const availableWheelSizes = useMemo(
-    () => [...new Set(allBikes.map((b) => b.wheelSize).filter((s): s is string => !!s))].sort(),
-    [allBikes]
-  );
-  const availableFrameMaterials = useMemo(
-    () => [...new Set(allBikes.map((b) => b.frameMaterial).filter((m): m is string => !!m))].sort(),
-    [allBikes]
-  );
+  const availableDealers = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.dealer), [allBikes]);
+  const availableBrands = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.brand), [allBikes]);
+  const availableAvailabilities = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.availability ?? null), [allBikes]);
+  const availableFrameSizes = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.frameSize ?? null), [allBikes]);
+  const availableWheelSizes = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.wheelSize ?? null), [allBikes]);
+  const availableFrameMaterials = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.frameMaterial ?? null), [allBikes]);
+  const availableDriveTypes = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.driveType ?? null), [allBikes]);
+  const availableSuspensions = useMemo(() => uniqueSortedStrings(allBikes, (b) => b.suspension ?? null), [allBikes]);
   const availableModelYears = useMemo(
     () =>
       [...new Set(allBikes.map((b) => b.modelYear).filter((y): y is number => y !== undefined))]
@@ -142,14 +130,7 @@ export function BikeExplorer() {
         .map(String),
     [allBikes]
   );
-  const availableDriveTypes = useMemo(
-    () => [...new Set(allBikes.map((b) => b.driveType).filter((d): d is NonNullable<typeof d> => d != null))].sort(),
-    [allBikes]
-  );
-  const availableSuspensions = useMemo(
-    () => [...new Set(allBikes.map((b) => b.suspension).filter((s): s is NonNullable<typeof s> => s != null))].sort(),
-    [allBikes]
-  );
+  const hasBatteryData = useMemo(() => allBikes.some((b) => b.batteryWh != null), [allBikes]);
 
   const netRates = useMemo(() => {
     const map = new Map<string, number>();
@@ -375,6 +356,7 @@ export function BikeExplorer() {
                   availableModelYears={availableModelYears}
                   availableDriveTypes={availableDriveTypes}
                   availableSuspensions={availableSuspensions}
+                  hasBatteryData={hasBatteryData}
                 />
                 {fetchState.fetchedAt && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground sm:hidden">
@@ -410,6 +392,7 @@ export function BikeExplorer() {
                   availableModelYears={availableModelYears}
                   availableDriveTypes={availableDriveTypes}
                   availableSuspensions={availableSuspensions}
+                  hasBatteryData={hasBatteryData}
                 />
               </div>
 

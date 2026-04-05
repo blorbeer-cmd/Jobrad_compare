@@ -180,6 +180,7 @@ export interface FilterSidebarProps {
   availableModelYears?: string[];
   availableDriveTypes?: string[];
   availableSuspensions?: string[];
+  hasBatteryData?: boolean;
 }
 
 export function FilterSidebar({
@@ -194,6 +195,7 @@ export function FilterSidebar({
   availableModelYears = [],
   availableDriveTypes = [],
   availableSuspensions = [],
+  hasBatteryData = false,
 }: FilterSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -360,11 +362,11 @@ export function FilterSidebar({
         </>
       )}
 
-      {/* Technische Details — collapsible, closed by default */}
-      {/* Technische Details — only render when at least one sub-section has data */}
+      {/* Technische Details — only shown when at least one sub-section has data */}
       {(availableFrameSizes.length > 0 || availableWheelSizes.length > 0 ||
         availableDriveTypes.length > 0 || availableSuspensions.length > 0 ||
-        availableFrameMaterials.length > 0 || availableModelYears.length > 0) && (
+        availableFrameMaterials.length > 0 || availableModelYears.length > 0 ||
+        hasBatteryData) && (
         <FilterSection title="Technische Details" activeCount={technicalActiveCount} defaultOpen={technicalActiveCount > 0}>
           <div className="space-y-4">
 
@@ -408,6 +410,29 @@ export function FilterSidebar({
                 labelMap={SUSPENSION_LABELS}
                 initialVisible={4}
               />
+            )}
+
+            {hasBatteryData && (
+              <div>
+                <label className="text-sm font-medium text-foreground">Akkukapazität (Wh)</label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={filters.batteryWhMin}
+                    onChange={(e) => update({ batteryWhMin: e.target.value })}
+                    className="w-0 flex-1"
+                  />
+                  <span className="shrink-0 text-sm text-muted-foreground">&ndash;</span>
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={filters.batteryWhMax}
+                    onChange={(e) => update({ batteryWhMax: e.target.value })}
+                    className="w-0 flex-1"
+                  />
+                </div>
+              </div>
             )}
 
             {availableFrameMaterials.length > 0 && (

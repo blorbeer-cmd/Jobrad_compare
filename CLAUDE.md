@@ -420,6 +420,13 @@ Run these steps before pushing to avoid deployment failures:
 - `ADMIN_EMAIL` — Auto-promoted to ADMIN role (required)
 - `ALLOW_DEV_LOGIN` — Set to `true` to enable CredentialsProvider dev login (optional, for testing)
 - `EMAIL_SERVER_HOST`, `EMAIL_SERVER_PORT`, `EMAIL_SERVER_USER`, `EMAIL_SERVER_PASSWORD`, `EMAIL_FROM` — For Resend magic link (not yet active)
+- `AWIN_API_KEY` — Awin publisher API token (optional). When set, structured product feeds replace HTML scraping for configured dealers. Get it from awin.com → Account → API credentials.
+- `AWIN_FEED_ID_FAHRRAD_XXL` — Awin advertiser ID for Fahrrad XXL (optional, replaces scraping)
+- `AWIN_FEED_ID_HIBIKE` — Awin advertiser ID for Hibike (optional, replaces scraping)
+- `AWIN_FEED_ID_BIKESTER` — Awin advertiser ID for Bikester (optional, replaces scraping)
+- `AWIN_FEED_ID_BRUEGELMANN` — Awin advertiser ID for Brügelmann (optional, replaces scraping)
+- `AWIN_FEED_ID_LUCKY_BIKE` — Awin advertiser ID for Lucky Bike (optional, only source for this dealer)
+- `AWIN_FEED_ID_BIKE_DISCOUNT` — Awin advertiser ID for Bike-Discount (optional, only source for this dealer)
 
 ### The user does not work locally
 All development goes through Vercel deployments. There is no local dev environment. Database operations (like `prisma db push`) must happen during the Vercel build.

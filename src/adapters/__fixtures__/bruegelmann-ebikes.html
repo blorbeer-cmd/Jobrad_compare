@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<body>
+<ul class="products-grid">
+
+  <!-- Sale product -->
+  <li class="product-item" data-product-id="bru-001">
+    <div class="product-item__image">
+      <a href="/kalkhoff-endeavour-5-b10-e-bike.html">
+        <img src="https://cdn.bruegelmann.de/kalkhoff-endeavour5.jpg" alt="Kalkhoff Endeavour 5 E-Bike" />
+      </a>
+    </div>
+    <div class="product-item__info">
+      <h3>
+        <a href="/kalkhoff-endeavour-5-b10-e-bike.html" class="product-item__title">
+          Kalkhoff Endeavour 5 B10 E-Bike 2025
+        </a>
+      </h3>
+      <div class="product-item__prices">
+        <span class="product-item__price-current">2.699,00 €</span>
+        <span class="product-item__price-old">2.999,00 €</span>
+      </div>
+    </div>
+  </li>
+
+  <!-- Regular price product -->
+  <li class="product-item" data-product-id="bru-002">
+    <div class="product-item__image">
+      <a href="/stevens-e-triton-plus-trekking-e-bike.html">
+        <img data-src="https://cdn.bruegelmann.de/stevens-e-triton.jpg" alt="Stevens E-Triton Plus" />
+      </a>
+    </div>
+    <div class="product-item__info">
+      <h3>
+        <a href="/stevens-e-triton-plus-trekking-e-bike.html" class="product-item__title">
+          Stevens E-Triton Plus Trekking E-Bike
+        </a>
+      </h3>
+      <div class="product-item__prices">
+        <span class="product-item__price-current">2.999,00 €</span>
+      </div>
+    </div>
+  </li>
+
+  <!-- Discounted product with data-sku -->
+  <li class="product-item" data-sku="KTM-MACINA-CROSS-2025">
+    <div class="product-item__image">
+      <a href="/ktm-macina-cross-p610-e-bike.html">
+        <img src="https://cdn.bruegelmann.de/ktm-macina-cross.jpg" alt="KTM Macina Cross" />
+      </a>
+    </div>
+    <div class="product-item__info">
+      <h3>
+        <a href="/ktm-macina-cross-p610-e-bike.html" class="product-item__title">
+          KTM Macina Cross P610 E-Bike 2025
+        </a>
+      </h3>
+      <div class="product-item__prices">
+        <span class="product-item__price-current">3.099,00 €</span>
+        <span class="product-item__price-old">3.399,00 €</span>
+      </div>
+    </div>
+  </li>
+
+  <!-- Card with missing price — should be skipped -->
+  <li class="product-item" data-product-id="bru-noprice">
+    <div class="product-item__info">
+      <h3><a href="/no-price-bike.html" class="product-item__title">Preislos Bike</a></h3>
+    </div>
+  </li>
+
+</ul>
+</body>
+</html>

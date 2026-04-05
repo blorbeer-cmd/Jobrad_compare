@@ -25,6 +25,15 @@ import { BikeDiscountAdapter } from "./bike-discount";
 import { BOCAdapter } from "./boc";
 import { RoseBikesAdapter } from "./rose-bikes";
 import { Bike24Adapter } from "./bike24";
+import { HibikeAdapter } from "./hibike";
+import { FahrradDeAdapter } from "./bruegelmann";
+import { BikesterAdapter } from "./bikester";
+import { SportBittlAdapter } from "./sport-bittl";
+import { ZweiradStadlerAdapter } from "./zweirad-stadler";
+import { CanyonAdapter } from "./canyon";
+import { DecathlonAdapter } from "./decathlon";
+import { SpecializedAdapter } from "./specialized";
+import { SimplyBikeAdapter } from "./simply-bike";
 import type { Bike } from "./types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -61,6 +70,66 @@ class TestRoseBikes extends RoseBikesAdapter {
 }
 
 class TestBike24 extends Bike24Adapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestHibike extends HibikeAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestFahrradDe extends FahrradDeAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestSportBittl extends SportBittlAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestZweiradStadler extends ZweiradStadlerAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestBikester extends BikesterAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestBOC extends BOCAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestCanyon extends CanyonAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestDecathlon extends DecathlonAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestSpecialized extends SpecializedAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestSimplyBike extends SimplyBikeAdapter {
   parse(html: string, path: string): Bike[] {
     return this.stampAndRecord(this.parseListing(html, path));
   }
@@ -312,14 +381,244 @@ describe("Bike24Adapter contract", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Test subclass for B.O.C.
+// Hibike
 // ---------------------------------------------------------------------------
 
-class TestBOC extends BOCAdapter {
-  parse(html: string, path: string): Bike[] {
-    return this.stampAndRecord(this.parseListing(html, path));
-  }
-}
+describe("HibikeAdapter contract", () => {
+  const adapter = new TestHibike();
+  const html = fixture("hibike-ebikes.html");
+  const bikes = adapter.parse(html, "/c/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Hibike");
+  });
+
+  it("parses Haibike with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Haibike"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3199);
+    expect(bike!.listPrice).toBe(3599);
+    expect(bike!.offerPrice).toBe(3199);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Cube Touring without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Cube Touring"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(1199);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("parses Specialized Turbo Vado with batteryWh inferred from name", () => {
+    const bike = bikes.find((b) => b.name.includes("Specialized"));
+    expect(bike).toBeDefined();
+    expect(bike!.batteryWh).toBe(500);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/c/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/c/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Brügelmann (now fahrrad.de)
+// ---------------------------------------------------------------------------
+
+describe("FahrradDeAdapter contract (formerly Brügelmann)", () => {
+  const adapter = new TestFahrradDe();
+  const html = fixture("bruegelmann-ebikes.html"); // fixture HTML still valid — same selectors
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "fahrrad.de");
+  });
+
+  it("parses Kalkhoff with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2699);
+    expect(bike!.listPrice).toBe(2999);
+    expect(bike!.offerPrice).toBe(2699);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Stevens without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Stevens"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2999);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sport Bittl
+// ---------------------------------------------------------------------------
+
+describe("SportBittlAdapter contract", () => {
+  const adapter = new TestSportBittl();
+  const html = fixture("sport-bittl-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Sport Bittl");
+  });
+
+  it("parses Kalkhoff with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2899);
+    expect(bike!.listPrice).toBe(3299);
+    expect(bike!.offerPrice).toBe(2899);
+    expect(bike!.category).toBe("E-Bike");
+    expect(bike!.batteryWh).toBe(625);
+  });
+
+  it("parses Focus Jarifa without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Focus"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3499);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("parses Haibike HardNine and infers hardtail suspension", () => {
+    const bike = bikes.find((b) => b.name.includes("Haibike"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(999);
+    expect(bike!.listPrice).toBe(1299);
+    expect(bike!.suspension).toBe("hardtail");
+  });
+
+  it("reads availability from stock element", () => {
+    const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
+    expect(bike!.availability).toBe("Auf Lager");
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Zweirad Stadler
+// ---------------------------------------------------------------------------
+
+describe("ZweiradStadlerAdapter contract", () => {
+  const adapter = new TestZweiradStadler();
+  const html = fixture("zweirad-stadler-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Zweirad Stadler");
+  });
+
+  it("parses Cube Kathmandu with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Cube Kathmandu"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3799);
+    expect(bike!.listPrice).toBe(4199);
+    expect(bike!.offerPrice).toBe(3799);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Trek Marlin without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Trek Marlin"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(699);
+    expect(bike!.listPrice).toBeUndefined();
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Stevens Courier with discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Stevens"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(1199);
+    expect(bike!.listPrice).toBe(1399);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bikester
+// ---------------------------------------------------------------------------
+
+describe("BikesterAdapter contract", () => {
+  const adapter = new TestBikester();
+  const html = fixture("bikester-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Bikester");
+  });
+
+  it("parses Bulls Lacuba with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Bulls"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3499);
+    expect(bike!.listPrice).toBe(3899);
+    expect(bike!.offerPrice).toBe(3499);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Bergamont without discount and infers hardtail suspension", () => {
+    const bike = bikes.find((b) => b.name.includes("Bergamont"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3299);
+    expect(bike!.listPrice).toBeUndefined();
+    expect(bike!.suspension).toBe("hardtail");
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // B.O.C.
@@ -376,32 +675,228 @@ describe("BOCAdapter contract", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Canyon
+// ---------------------------------------------------------------------------
+
+describe("CanyonAdapter contract", () => {
+  const adapter = new TestCanyon();
+  const html = fixture("canyon-ebikes.html");
+  const bikes = adapter.parse(html, "/de-de/e-bikes/");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Canyon");
+  });
+
+  it("parses Canyon Spectral:ON with correct price", () => {
+    const bike = bikes.find((b) => b.name.includes("Spectral"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(4499);
+    expect(bike!.brand).toBe("Canyon");
+    expect(bike!.sourceId).toBe("3810");
+  });
+
+  it("parses Canyon Pathlite:ON Trekking bike", () => {
+    const bike = bikes.find((b) => b.name.includes("Pathlite"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2999);
+    expect(bike!.batteryWh).toBe(750);
+  });
+
+  it("parses Canyon Commuter:ON City bike", () => {
+    const bike = bikes.find((b) => b.name.includes("Commuter"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2199);
+    expect(bike!.batteryWh).toBe(500);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/de-de/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/de-de/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Decathlon
+// ---------------------------------------------------------------------------
+
+describe("DecathlonAdapter contract", () => {
+  const adapter = new TestDecathlon();
+  const html = fixture("decathlon-ebikes.html");
+  const bikes = adapter.parse(html, "/browse/c0-fahrraeder/_/N-1nfp7h6");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Decathlon");
+  });
+
+  it("parses Riverside 500E with correct price and sku", () => {
+    const bike = bikes.find((b) => b.name.includes("Riverside"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(1299.99);
+    expect(bike!.brand).toBe("Decathlon");
+    expect(bike!.sourceId).toBe("8665985");
+  });
+
+  it("parses EXPL 900 mountainbike", () => {
+    const bike = bikes.find((b) => b.name.includes("EXPL"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2999.99);
+  });
+
+  it("parses Elops 500E city bike", () => {
+    const bike = bikes.find((b) => b.name.includes("Elops"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(999.99);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/browse/c0-fahrraeder/_/N-1nfp7h6")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/browse/c0-fahrraeder/_/N-1nfp7h6")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Specialized
+// ---------------------------------------------------------------------------
+
+describe("SpecializedAdapter contract", () => {
+  const adapter = new TestSpecialized();
+  const html = fixture("specialized-ebikes.html");
+  const bikes = adapter.parse(html, "/de/de/electric");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Specialized");
+  });
+
+  it("parses Turbo Vado SL with correct price", () => {
+    const bike = bikes.find((b) => b.name.includes("Vado"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(4500);
+    expect(bike!.brand).toBe("Specialized");
+    expect(bike!.sourceId).toBe("96922-6004");
+  });
+
+  it("parses Turbo Levo Comp e-mountainbike", () => {
+    const bike = bikes.find((b) => b.name.includes("Levo"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(6000);
+    expect(bike!.suspension).toBe("fully");
+  });
+
+  it("parses Turbo Como SL and infers batteryWh", () => {
+    const bike = bikes.find((b) => b.name.includes("Como"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3500);
+    expect(bike!.batteryWh).toBe(320);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/de/de/electric")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/de/de/electric")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Simply Bike
+// ---------------------------------------------------------------------------
+
+describe("SimplyBikeAdapter contract", () => {
+  const adapter = new TestSimplyBike();
+  const html = fixture("simply-bike-ebikes.html");
+  const bikes = adapter.parse(html, "/collections/e-bikes");
+
+  it("parses 3 valid bikes and skips 1 without price", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Simply Bike");
+  });
+
+  it("parses Kalkhoff with offer price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2599);
+    expect(bike!.listPrice).toBe(2899);
+    expect(bike!.offerPrice).toBe(2599);
+    expect(bike!.category).toBe("E-Bike");
+  });
+
+  it("parses Winora Sinus without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Winora"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2299);
+    expect(bike!.listPrice).toBeUndefined();
+  });
+
+  it("parses Hercules Rob Cross with sale price", () => {
+    const bike = bikes.find((b) => b.name.includes("Hercules"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(1899);
+    expect(bike!.listPrice).toBe(2099);
+    expect(bike!.batteryWh).toBe(625);
+  });
+
+  it("sets sourceId from data-product-id", () => {
+    const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
+    expect(bike!.sourceId).toBe("SMPL-001");
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/collections/e-bikes")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/collections/e-bikes")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Cross-adapter: all parsed bikes pass the unified BikeSchema
 // ---------------------------------------------------------------------------
 
+type AnyTestAdapter =
+  | TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestRoseBikes | TestBike24
+  | TestHibike | TestFahrradDe | TestBikester | TestSportBittl | TestZweiradStadler
+  | TestBOC | TestCanyon | TestDecathlon | TestSpecialized | TestSimplyBike;
+
 describe("All adapters: unified schema compliance", () => {
-  const cases: [string, TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestRoseBikes | TestBike24 | TestBOC, string, string][] = [
-    [
-      "fahrrad-xxl-ebikes.html",
-      new TestFahrradXXL(),
-      "/fahrraeder/e-bikes",
-      "Fahrrad XXL",
-    ],
+  const cases: [string, AnyTestAdapter, string, string][] = [
+    ["fahrrad-xxl-ebikes.html", new TestFahrradXXL(), "/fahrraeder/e-bikes", "Fahrrad XXL"],
     ["lucky-bike-ebikes.html", new TestLuckyBike(), "/e-bikes/", "Lucky Bike"],
-    [
-      "bike-discount-ebikes.html",
-      new TestBikeDiscount(),
-      "/fahrraeder/e-bikes",
-      "Bike-Discount",
-    ],
+    ["bike-discount-ebikes.html", new TestBikeDiscount(), "/fahrraeder/e-bikes", "Bike-Discount"],
     ["rose-bikes-ebikes.html", new TestRoseBikes(), "/fahrraeder/e-bike", "Rose Bikes"],
     ["bike24-ebikes.html", new TestBike24(), "/fahrraeder/e-bikes/", "Bike24"],
-    [
-      "boc-ebikes.html",
-      new TestBOC(),
-      "/collections/e-bikes",
-      "B.O.C.",
-    ],
+    ["hibike-ebikes.html", new TestHibike(), "/c/e-bikes/", "Hibike"],
+    ["bruegelmann-ebikes.html", new TestFahrradDe(), "/fahrraeder/e-bikes/", "fahrrad.de"],
+    ["bikester-ebikes.html", new TestBikester(), "/fahrraeder/e-bikes/", "Bikester"],
+    ["sport-bittl-ebikes.html", new TestSportBittl(), "/fahrraeder/e-bikes/", "Sport Bittl"],
+    ["zweirad-stadler-ebikes.html", new TestZweiradStadler(), "/fahrraeder/e-bikes/", "Zweirad Stadler"],
+    ["boc-ebikes.html", new TestBOC(), "/collections/e-bikes", "B.O.C."],
+    ["canyon-ebikes.html", new TestCanyon(), "/de-de/e-bikes/", "Canyon"],
+    ["decathlon-ebikes.html", new TestDecathlon(), "/browse/c0-fahrraeder/_/N-1nfp7h6", "Decathlon"],
+    ["specialized-ebikes.html", new TestSpecialized(), "/de/de/electric", "Specialized"],
+    ["simply-bike-ebikes.html", new TestSimplyBike(), "/collections/e-bikes", "Simply Bike"],
   ];
 
   for (const [fixtureName, adapter, path, dealerName] of cases) {
