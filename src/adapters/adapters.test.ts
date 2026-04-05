@@ -38,6 +38,11 @@ import { CubeAdapter } from "./cube";
 import { TrekAdapter } from "./trek";
 import { RadonAdapter } from "./radon";
 import { RieseMuellerAdapter } from "./riese-mueller";
+import { HaibikeAdapter } from "./haibike";
+import { BullsAdapter } from "./bulls";
+import { OrbeaAdapter } from "./orbea";
+import { KtmBikesAdapter } from "./ktm-bikes";
+import { GhostBikesAdapter } from "./ghost-bikes";
 import type { Bike } from "./types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -158,6 +163,36 @@ class TestRadon extends RadonAdapter {
 }
 
 class TestRieseMueller extends RieseMuellerAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestHaibike extends HaibikeAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestBulls extends BullsAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestOrbea extends OrbeaAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestKtmBikes extends KtmBikesAdapter {
+  parse(html: string, path: string): Bike[] {
+    return this.stampAndRecord(this.parseListing(html, path));
+  }
+}
+
+class TestGhostBikes extends GhostBikesAdapter {
   parse(html: string, path: string): Bike[] {
     return this.stampAndRecord(this.parseListing(html, path));
   }
@@ -900,6 +935,260 @@ describe("SimplyBikeAdapter contract", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Haibike
+// ---------------------------------------------------------------------------
+
+describe("HaibikeAdapter contract", () => {
+  const adapter = new TestHaibike();
+  const html = fixture("haibike-adapter-ebikes.html");
+  const bikes = adapter.parse(html, "/de/bikes/e-mountainbike/");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Haibike");
+  });
+
+  it("parses AllMtn 5 Fully e-MTB with batteryWh and suspension", () => {
+    const bike = bikes.find((b) => b.name.includes("AllMtn"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3799);
+    expect(bike!.brand).toBe("Haibike");
+    expect(bike!.batteryWh).toBe(750);
+    expect(bike!.suspension).toBe("fully");
+    expect(bike!.sourceId).toBe("HB-AMT5-2025");
+  });
+
+  it("parses Trekking 4 with batteryWh inferred", () => {
+    const bike = bikes.find((b) => b.name.includes("Trekking 4"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2299);
+    expect(bike!.batteryWh).toBe(500);
+  });
+
+  it("parses HardNine 5 hardtail e-MTB", () => {
+    const bike = bikes.find((b) => b.name.includes("HardNine"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2799);
+    expect(bike!.suspension).toBe("hardtail");
+    expect(bike!.batteryWh).toBe(630);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/de/bikes/e-mountainbike/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/de/bikes/e-mountainbike/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BULLS
+// ---------------------------------------------------------------------------
+
+describe("BullsAdapter contract", () => {
+  const adapter = new TestBulls();
+  const html = fixture("bulls-ebikes.html");
+  const bikes = adapter.parse(html, "/fahrraeder/e-bikes/");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "BULLS");
+  });
+
+  it("parses Lacuba Evo E45 trekking bike with batteryWh", () => {
+    const bike = bikes.find((b) => b.name.includes("Lacuba"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3299);
+    expect(bike!.brand).toBe("BULLS");
+    expect(bike!.batteryWh).toBe(625);
+    expect(bike!.sourceId).toBe("BULLS-LACE45-2025");
+  });
+
+  it("parses Iconic Evo Cross 1 and infers belt drive", () => {
+    const bike = bikes.find((b) => b.name.includes("Iconic"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2699);
+    expect(bike!.driveType).toBe("belt");
+    expect(bike!.batteryWh).toBe(500);
+  });
+
+  it("parses Copperhead EVO AM 3 fully e-MTB", () => {
+    const bike = bikes.find((b) => b.name.includes("Copperhead"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(4999);
+    expect(bike!.suspension).toBe("fully");
+    expect(bike!.batteryWh).toBe(750);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/fahrraeder/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Orbea
+// ---------------------------------------------------------------------------
+
+describe("OrbeaAdapter contract", () => {
+  const adapter = new TestOrbea();
+  const html = fixture("orbea-ebikes.html");
+  const bikes = adapter.parse(html, "/de-de/elektrische-fahrraeder/");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Orbea");
+  });
+
+  it("parses Vibe Mid H30 city e-bike", () => {
+    const bike = bikes.find((b) => b.name.includes("Vibe"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2299);
+    expect(bike!.brand).toBe("Orbea");
+    expect(bike!.batteryWh).toBe(360);
+    expect(bike!.sourceId).toBe("N35157IB");
+  });
+
+  it("parses Rise LT M20 fully e-MTB", () => {
+    const bike = bikes.find((b) => b.name.includes("Rise"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(5499);
+    expect(bike!.suspension).toBe("fully");
+    expect(bike!.batteryWh).toBe(540);
+  });
+
+  it("parses Gain M30 e-road bike", () => {
+    const bike = bikes.find((b) => b.name.includes("Gain"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3499);
+    expect(bike!.batteryWh).toBe(360);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/de-de/elektrische-fahrraeder/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/de-de/elektrische-fahrraeder/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// KTM Bikes
+// ---------------------------------------------------------------------------
+
+describe("KtmBikesAdapter contract", () => {
+  const adapter = new TestKtmBikes();
+  const html = fixture("ktm-bikes-ebikes.html");
+  const bikes = adapter.parse(html, "/de/e-bikes/");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "KTM Bikes");
+  });
+
+  it("parses Macina Style 730 trekking bike", () => {
+    const bike = bikes.find((b) => b.name.includes("Style"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(3499);
+    expect(bike!.brand).toBe("KTM");
+    expect(bike!.batteryWh).toBe(625);
+    expect(bike!.sourceId).toBe("KTM-MS730-2025");
+  });
+
+  it("parses Macina Chacana 772 fully e-MTB", () => {
+    const bike = bikes.find((b) => b.name.includes("Chacana"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(4799);
+    expect(bike!.suspension).toBe("fully");
+    expect(bike!.batteryWh).toBe(750);
+  });
+
+  it("parses Macina Gran 610 hardtail city bike", () => {
+    const bike = bikes.find((b) => b.name.includes("Gran"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2199);
+    expect(bike!.suspension).toBe("hardtail");
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/de/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/de/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Ghost Bikes
+// ---------------------------------------------------------------------------
+
+describe("GhostBikesAdapter contract", () => {
+  const adapter = new TestGhostBikes();
+  const html = fixture("ghost-bikes-ebikes.html");
+  const bikes = adapter.parse(html, "/de/e-bikes/");
+
+  it("parses 3 bikes from JSON-LD", () => {
+    expect(bikes.length).toBe(3);
+  });
+
+  it("each bike satisfies the contract", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Ghost Bikes");
+  });
+
+  it("parses E-ASX Universal 160 fully e-MTB", () => {
+    const bike = bikes.find((b) => b.name.includes("ASX"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(4299);
+    expect(bike!.brand).toBe("Ghost");
+    expect(bike!.suspension).toBe("fully");
+    expect(bike!.batteryWh).toBe(750);
+    expect(bike!.sourceId).toBe("GHOST-EASX160-2025");
+  });
+
+  it("parses E-Hybride Trekking hardtail with batteryWh", () => {
+    const bike = bikes.find((b) => b.name.includes("Hybride"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(1999);
+    expect(bike!.suspension).toBe("hardtail");
+    expect(bike!.batteryWh).toBe(500);
+  });
+
+  it("parses Kato EQ hardtail e-MTB", () => {
+    const bike = bikes.find((b) => b.name.includes("Kato"));
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2699);
+    expect(bike!.suspension).toBe("hardtail");
+    expect(bike!.batteryWh).toBe(630);
+  });
+
+  it("returns empty array for empty HTML", () => {
+    expect(adapter.parse("<html><body></body></html>", "/de/e-bikes/")).toEqual([]);
+  });
+
+  it("returns empty array for garbled HTML", () => {
+    expect(adapter.parse("<<GARBLED##", "/de/e-bikes/")).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Cube
 // ---------------------------------------------------------------------------
 
@@ -1102,7 +1391,8 @@ type AnyTestAdapter =
   | TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestRoseBikes | TestBike24
   | TestHibike | TestFahrradDe | TestBikester | TestSportBittl | TestZweiradStadler
   | TestBOC | TestCanyon | TestDecathlon | TestSpecialized | TestSimplyBike
-  | TestCube | TestTrek | TestRadon | TestRieseMueller;
+  | TestCube | TestTrek | TestRadon | TestRieseMueller
+  | TestHaibike | TestBulls | TestOrbea | TestKtmBikes | TestGhostBikes;
 
 describe("All adapters: unified schema compliance", () => {
   const cases: [string, AnyTestAdapter, string, string][] = [
@@ -1125,6 +1415,11 @@ describe("All adapters: unified schema compliance", () => {
     ["trek-ebikes.html", new TestTrek(), "/de-de/bikes/category/elektrisch/", "Trek"],
     ["radon-ebikes.html", new TestRadon(), "/e-bike/", "Radon Bikes"],
     ["riese-mueller-ebikes.html", new TestRieseMueller(), "/bikes/", "Riese & Müller"],
+    ["haibike-adapter-ebikes.html", new TestHaibike(), "/de/bikes/e-mountainbike/", "Haibike"],
+    ["bulls-ebikes.html", new TestBulls(), "/fahrraeder/e-bikes/", "BULLS"],
+    ["orbea-ebikes.html", new TestOrbea(), "/de-de/elektrische-fahrraeder/", "Orbea"],
+    ["ktm-bikes-ebikes.html", new TestKtmBikes(), "/de/e-bikes/", "KTM Bikes"],
+    ["ghost-bikes-ebikes.html", new TestGhostBikes(), "/de/e-bikes/", "Ghost Bikes"],
   ];
 
   for (const [fixtureName, adapter, path, dealerName] of cases) {
