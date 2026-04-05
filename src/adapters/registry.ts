@@ -25,6 +25,11 @@ import { BullsAdapter } from "./bulls";
 import { OrbeaAdapter } from "./orbea";
 import { KtmBikesAdapter } from "./ktm-bikes";
 import { GhostBikesAdapter } from "./ghost-bikes";
+import { ScottAdapter } from "./scott";
+import { KalkhoffAdapter } from "./kalkhoff";
+import { WinoraAdapter } from "./winora";
+import { CenturionAdapter } from "./centurion";
+import { PegasusAdapter } from "./pegasus";
 import {
   HibikeAwinAdapter,
   BikesterAwinAdapter,
@@ -93,6 +98,11 @@ function buildAdapters(): BaseAdapter[] {
     new OrbeaAdapter(),
     new KtmBikesAdapter(),
     new GhostBikesAdapter(),
+    new ScottAdapter(),
+    new KalkhoffAdapter(),
+    new WinoraAdapter(),
+    new CenturionAdapter(),
+    new PegasusAdapter(),
     // LuckyBike + BikeDiscount scraping doesn't work — only via Awin above
   ].filter((a) => !awinDealerNames.has(a.name));
 
