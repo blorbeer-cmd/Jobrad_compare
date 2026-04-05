@@ -2,6 +2,7 @@ import type { Bike, DealerAdapter, AdapterHealth } from "./types";
 import { BaseAdapter } from "./base-adapter";
 import { cacheGet, cacheSet, cacheClear } from "./cache";
 import { FahrradXXLAdapter } from "./fahrrad-xxl";
+import { BOCAdapter } from "./boc";
 import { LuckyBikeAdapter } from "./lucky-bike";
 import { BikeDiscountAdapter } from "./bike-discount";
 import { RoseBikesAdapter } from "./rose-bikes";
@@ -11,7 +12,6 @@ import { FahrradDeAdapter } from "./bruegelmann";
 import { BikesterAdapter } from "./bikester";
 import { SportBittlAdapter } from "./sport-bittl";
 import { ZweiradStadlerAdapter } from "./zweirad-stadler";
-import { BocAdapter } from "./boc";
 import { CanyonAdapter } from "./canyon";
 import { DecathlonAdapter } from "./decathlon";
 import { SpecializedAdapter } from "./specialized";
@@ -70,7 +70,7 @@ function buildAdapters(): BaseAdapter[] {
     new BikesterAdapter(),
     new SportBittlAdapter(),
     new ZweiradStadlerAdapter(),
-    new BocAdapter(),
+    new BOCAdapter(),
     new CanyonAdapter(),
     new DecathlonAdapter(),
     new SpecializedAdapter(),

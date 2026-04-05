@@ -1,67 +1,89 @@
 <!DOCTYPE html>
 <html lang="de">
 <body>
-<div class="cms-element-product-listing">
+<div class="collection">
 
-  <!-- Shopware 6 product card — sale -->
-  <article class="product-box" data-product-id="BOC-001">
-    <div class="product-box__media">
-      <a href="/bulls-iconic-evo-cross-1-e-bike/p/BOC-001">
-        <img src="https://cdn.boc24.de/bulls-iconic-evo.jpg" alt="Bulls Iconic Evo Cross 1" />
+  <!-- Sale product with compare-at price -->
+  <product-card handle="kettler-quadriga-town-country-p10" class="product-card product-card--blends bg-custom text-custom">
+    <div class="product-card__badge-list">
+      <on-sale-badge class="badge badge--on-sale">Spare 47%</on-sale-badge>
+    </div>
+    <div class="product-card__figure">
+      <a href="/products/kettler-quadriga-town-country-p10">
+        <img src="//boc24.de/cdn/shop/files/kettler-quadriga.jpg?width=800" alt="Kettler Quadriga" class="product-card__image product-card__image--primary aspect-short" width="1740" height="979" loading="lazy" />
       </a>
     </div>
-    <div class="product-box__info">
-      <a href="/bulls-iconic-evo-cross-1-e-bike/p/BOC-001" class="product-name">
-        Bulls Iconic Evo Cross 1 E-Bike 625Wh 2025
-      </a>
-      <div class="product-box__price">
-        <div class="price--default">2.999,00 €</div>
-        <div class="price--line-through">3.299,00 €</div>
+    <div class="product-card__info">
+      <div class="v-stack gap-0.5 w-full">
+        <span class="product-card__title">
+          <a href="/products/kettler-quadriga-town-country-p10" class="bold">Kettler QUADRIGA TOWN +COUNTRY P10</a>
+        </span>
+        <price-list class="price-list">
+          <sale-price class="text-on-sale">
+            <span class="sr-only">Angebot</span>€1.999,00<span> *</span>
+          </sale-price>
+          <compare-at-price class="text-subdued line-through">
+            <span class="sr-only">Regulärer Preis</span>€3.799,00<span> *</span>
+          </compare-at-price>
+        </price-list>
       </div>
     </div>
-  </article>
+  </product-card>
 
-  <!-- Regular price -->
-  <article class="product-box" data-product-id="BOC-002">
-    <div class="product-box__media">
-      <a href="/gazelle-medeo-t9-hmb-e-bike/p/BOC-002">
-        <img data-src="https://cdn.boc24.de/gazelle-medeo-t9.jpg" alt="Gazelle Medeo T9 HMB" />
+  <!-- Regular price product (no discount) -->
+  <product-card handle="cube-kathmandu-hybrid-one-800" class="product-card product-card--blends bg-custom text-custom">
+    <div class="product-card__figure">
+      <a href="/products/cube-kathmandu-hybrid-one-800">
+        <img src="//boc24.de/cdn/shop/files/cube-kathmandu.jpg?width=800" alt="Cube Kathmandu" class="product-card__image product-card__image--primary aspect-short" width="1740" height="979" loading="lazy" />
       </a>
     </div>
-    <div class="product-box__info">
-      <a href="/gazelle-medeo-t9-hmb-e-bike/p/BOC-002" class="product-name">
-        Gazelle Medeo T9 HMB E-Bike 2025
-      </a>
-      <div class="product-box__price">
-        <div class="price--default">2.499,00 €</div>
+    <div class="product-card__info">
+      <div class="v-stack gap-0.5 w-full">
+        <span class="product-card__title">
+          <a href="/products/cube-kathmandu-hybrid-one-800" class="bold">Cube Kathmandu Hybrid ONE 800 WA</a>
+        </span>
+        <price-list class="price-list">
+          <sale-price class="text-subdued">
+            <span class="sr-only">Angebot</span>€3.199,00<span> *</span>
+          </sale-price>
+        </price-list>
       </div>
     </div>
-  </article>
+  </product-card>
 
-  <!-- Sale with belt drive -->
-  <article class="product-box" data-product-id="BOC-003">
-    <div class="product-box__media">
-      <a href="/riese-mueller-charger4-vario-e-bike/p/BOC-003">
-        <img src="https://cdn.boc24.de/riese-mueller-charger4.jpg" alt="Riese & Müller Charger4 Vario" />
+  <!-- Third product -->
+  <product-card handle="cube-kathmandu-hybrid-pro-800" class="product-card product-card--blends bg-custom text-custom">
+    <div class="product-card__figure">
+      <a href="/products/cube-kathmandu-hybrid-pro-800">
+        <img src="//boc24.de/cdn/shop/files/cube-kathmandu-pro.jpg?width=800" alt="Cube Kathmandu Pro" class="product-card__image product-card__image--primary aspect-short" width="1740" height="979" loading="lazy" />
       </a>
     </div>
-    <div class="product-box__info">
-      <a href="/riese-mueller-charger4-vario-e-bike/p/BOC-003" class="product-name">
-        Riese &amp; Müller Charger4 Vario Riemenantrieb 625Wh E-Bike
-      </a>
-      <div class="product-box__price">
-        <div class="price--default">5.299,00 €</div>
-        <div class="price--line-through">5.799,00 €</div>
+    <div class="product-card__info">
+      <div class="v-stack gap-0.5 w-full">
+        <span class="product-card__title">
+          <a href="/products/cube-kathmandu-hybrid-pro-800" class="bold">Cube Kathmandu Hybrid Pro 800 WA</a>
+        </span>
+        <price-list class="price-list">
+          <sale-price class="text-subdued">
+            <span class="sr-only">Angebot</span>€3.599,00<span> *</span>
+          </sale-price>
+        </price-list>
       </div>
     </div>
-  </article>
+  </product-card>
 
-  <!-- No price — skip -->
-  <article class="product-box" data-product-id="BOC-noprice">
-    <div class="product-box__info">
-      <a href="/no-price/p/BOC-noprice" class="product-name">Bike ohne Preis</a>
+  <!-- Empty/broken card — should be skipped -->
+  <product-card handle="" class="product-card">
+  </product-card>
+
+  <!-- Card without price — should be skipped -->
+  <product-card handle="no-price-bike" class="product-card">
+    <div class="product-card__info">
+      <span class="product-card__title">
+        <a href="/products/no-price" class="bold">Some Bike Without Price</a>
+      </span>
     </div>
-  </article>
+  </product-card>
 
 </div>
 </body>
