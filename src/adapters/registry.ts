@@ -7,8 +7,10 @@ import { BikeDiscountAdapter } from "./bike-discount";
 import { RoseBikesAdapter } from "./rose-bikes";
 import { Bike24Adapter } from "./bike24";
 import { HibikeAdapter } from "./hibike";
-import { BruegelmannAdapter } from "./bruegelmann";
+import { FahrradDeAdapter } from "./bruegelmann";
 import { BikesterAdapter } from "./bikester";
+import { SportBittlAdapter } from "./sport-bittl";
+import { ZweiradStadlerAdapter } from "./zweirad-stadler";
 import {
   HibikeAwinAdapter,
   BikesterAwinAdapter,
@@ -56,11 +58,13 @@ function buildAdapters(): BaseAdapter[] {
   // Scraping adapters — used for any dealer not covered by Awin
   const scrapingAdapters: BaseAdapter[] = [
     new FahrradXXLAdapter(),
-    new RoseBikesAdapter(), // Rose Bikes not on Awin — scraping only
+    new RoseBikesAdapter(),     // Rose Bikes not on Awin — scraping only
     new Bike24Adapter(),
     new HibikeAdapter(),
-    new BruegelmannAdapter(),
+    new FahrradDeAdapter(),     // formerly Brügelmann — bruegelmann.de → fahrrad.de
     new BikesterAdapter(),
+    new SportBittlAdapter(),
+    new ZweiradStadlerAdapter(),
     // LuckyBike + BikeDiscount scraping doesn't work — only via Awin above
   ].filter((a) => !awinDealerNames.has(a.name));
 

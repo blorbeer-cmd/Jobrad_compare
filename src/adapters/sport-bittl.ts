@@ -4,20 +4,24 @@ import { BikeSchema } from "./types";
 import { BaseAdapter } from "./base-adapter";
 
 /**
- * fahrrad.de adapter (fahrrad.de).
+ * Sport Bittl adapter (bittl.com).
+ * Sport Bittl is a large German sports retailer with an extensive bike department
+ * and confirmed JobRad partner. Their online shop runs on Magento 2, which
+ * serves product listings as server-rendered HTML.
  *
- * NOTE: bruegelmann.de has redirected to fahrrad.de since May 2024 following
- * the Internetstores insolvency. The brand is now operated by
- * fahrrad.de Bikester GmbH, Stuttgart. This adapter was updated accordingly.
- *
- * fahrrad.de and bikester.de are the same legal entity but run as separate
- * storefronts — both adapters are kept to maximise product coverage.
+ * Magento 2 product grid selectors:
+ *   Cards:     .products-grid .product-item  /  ol.products li.product-item
+ *   Name:      .product-item-details .product-item-link
+ *   Price:     .price-box .price  (special price for discounts)
+ *   Old price: .price-box .old-price .price
+ *   Image:     .product-image-photo
+ *   URL:       .product-item-photo[href]  /  .product-item-link[href]
  */
-export class FahrradDeAdapter extends BaseAdapter {
-  readonly name = "fahrrad.de";
+export class SportBittlAdapter extends BaseAdapter {
+  readonly name = "Sport Bittl";
   readonly cacheTtlMs = 6 * 60 * 60 * 1000; // 6 hours
 
-  private baseUrl = "https://www.fahrrad.de";
+  private baseUrl = "https://www.bittl.com";
   private searchUrls = [
     "/fahrraeder/e-bikes/",
     "/fahrraeder/trekkingbikes/",
@@ -44,7 +48,7 @@ export class FahrradDeAdapter extends BaseAdapter {
         allBikes.push(...result.value);
       } else {
         const path = this.searchUrls[i];
-        console.error(`[fahrrad.de] Error fetching ${path}:`, result.reason);
+        console.error(`[Sport Bittl] Error fetching ${path}:`, result.reason);
         this.recordError(result.reason instanceof Error ? result.reason.message : String(result.reason));
       }
     }
@@ -55,48 +59,61 @@ export class FahrradDeAdapter extends BaseAdapter {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
 
-    const cards = $(
-      "article.product-item, li.product-item, .product-card, " +
-      "[data-product-id], [data-testid='product-card'], .product"
-    );
+    // Magento 2 product grid: ol.products > li.product-item
+    const cards = $("li.product-item, .product-item-info, [data-product-id]");
     const seenIds = new Set<string>();
 
     cards.each((_, el) => {
       try {
         const $el = $(el);
 
+        // Magento 2 stores the product id on a form or a data attribute
         const sourceId =
+          $el.find("[data-product-id]").first().attr("data-product-id") ||
           $el.attr("data-product-id") ||
-          $el.attr("data-sku") ||
-          $el.attr("data-id") ||
           undefined;
         if (sourceId && seenIds.has(sourceId)) return;
         if (sourceId) seenIds.add(sourceId);
 
+        // Name: Magento 2 uses <a class="product-item-link">
         const name =
-          $el.find(".product-item__title a, .product-title a, .product-name a").first().text().trim() ||
-          $el.find("h2 a, h3 a, h4 a").first().text().trim() ||
-          $el.find(".product-item__title, .product-title, .product-name").first().text().trim();
+          $el.find(".product-item-link, .product-name a").first().text().trim() ||
+          $el.find("h2 a, h3 a").first().text().trim();
         if (!name) return;
 
-        const priceText =
-          $el.find(".product-item__price-current, .price-current, .offer-price, .special-price .price").first().text().trim() ||
-          $el.find(".product-item__price, .product-price").first().text().trim();
+        // Price: Magento 2 .price-box structure
+        // For discounted items: .special-price .price
+        // For regular items:    .price-box > .price
+        const specialPriceText =
+          $el.find(".special-price .price").first().text().trim();
+        const regularPriceText =
+          $el.find(".price-box > .price, .normal-price .price").first().text().trim();
+        const priceText = specialPriceText || regularPriceText;
         const price = this.parsePrice(priceText);
         if (!price) return;
 
+        // Old price: .old-price .price
         const listPriceText =
-          $el.find(".product-item__price-old, .price-old, del, s, .old-price .price").first().text().trim();
+          $el.find(".old-price .price, .price-box .old-price").first().text().trim();
         const listPrice = listPriceText ? (this.parsePrice(listPriceText) ?? undefined) : undefined;
 
+        // URL: .product-item-photo or .product-item-link
         const href =
-          $el.find("a.product-item__title, a.product-title, a[href]").first().attr("href") || "";
+          $el.find("a.product-item-photo, a.product-item-link").first().attr("href") ||
+          $el.find("a[href]").first().attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
         if (!href) return;
 
+        // Image: Magento 2 .product-image-photo
         const imageUrl =
-          $el.find("img").first().attr("data-src") ||
-          $el.find("img").first().attr("src") ||
+          $el.find("img.product-image-photo, .product-image-wrapper img").first().attr("data-src") ||
+          $el.find("img.product-image-photo, .product-image-wrapper img").first().attr("src") ||
+          undefined;
+
+        // Availability from stock status
+        const availability =
+          $el.find(".stock.available, .product-item-available").first().text().trim() ||
+          $el.find(".stock.unavailable, .product-item-unavailable").first().text().trim() ||
           undefined;
 
         const category = this.mapCategory(categoryPath.replace(/\//g, " "));
@@ -111,6 +128,7 @@ export class FahrradDeAdapter extends BaseAdapter {
           dealer: this.name,
           dealerUrl,
           imageUrl,
+          availability,
           sourceId,
           sourceType: "scrape" as const,
           ...this.inferFromName(name),
@@ -122,6 +140,3 @@ export class FahrradDeAdapter extends BaseAdapter {
     return bikes;
   }
 }
-
-/** @deprecated bruegelmann.de redirects to fahrrad.de since May 2024 — use FahrradDeAdapter */
-export { FahrradDeAdapter as BruegelmannAdapter };

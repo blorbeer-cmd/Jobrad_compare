@@ -4,20 +4,26 @@ import { BikeSchema } from "./types";
 import { BaseAdapter } from "./base-adapter";
 
 /**
- * fahrrad.de adapter (fahrrad.de).
+ * Zweirad Stadler adapter (zweirad-stadler.de).
+ * Zweirad Stadler is one of Germany's largest bike retail chains with stores
+ * across southern Germany and a growing online shop. Confirmed JobRad partner.
  *
- * NOTE: bruegelmann.de has redirected to fahrrad.de since May 2024 following
- * the Internetstores insolvency. The brand is now operated by
- * fahrrad.de Bikester GmbH, Stuttgart. This adapter was updated accordingly.
+ * Their shop uses a Shopware-based platform (similar product card structure
+ * to other Shopware 6 shops). Product listings are server-rendered.
  *
- * fahrrad.de and bikester.de are the same legal entity but run as separate
- * storefronts — both adapters are kept to maximise product coverage.
+ * Typical Shopware 6 selectors:
+ *   Cards:     article.product-box  /  .product-box
+ *   Name:      .product-name a  /  .product-box__title a
+ *   Price:     .product-box__price .price--current  /  .price--default
+ *   Old price: .price--line-through  /  del
+ *   Image:     img.product-image  /  .product-box__image img
+ *   URL:       a.product-name[href]  /  a[href^="/detail/"]
  */
-export class FahrradDeAdapter extends BaseAdapter {
-  readonly name = "fahrrad.de";
+export class ZweiradStadlerAdapter extends BaseAdapter {
+  readonly name = "Zweirad Stadler";
   readonly cacheTtlMs = 6 * 60 * 60 * 1000; // 6 hours
 
-  private baseUrl = "https://www.fahrrad.de";
+  private baseUrl = "https://www.zweirad-stadler.de";
   private searchUrls = [
     "/fahrraeder/e-bikes/",
     "/fahrraeder/trekkingbikes/",
@@ -44,7 +50,7 @@ export class FahrradDeAdapter extends BaseAdapter {
         allBikes.push(...result.value);
       } else {
         const path = this.searchUrls[i];
-        console.error(`[fahrrad.de] Error fetching ${path}:`, result.reason);
+        console.error(`[Zweirad Stadler] Error fetching ${path}:`, result.reason);
         this.recordError(result.reason instanceof Error ? result.reason.message : String(result.reason));
       }
     }
@@ -55,9 +61,10 @@ export class FahrradDeAdapter extends BaseAdapter {
     const $ = cheerio.load(html);
     const bikes: Bike[] = [];
 
+    // Shopware 6 product cards
     const cards = $(
-      "article.product-item, li.product-item, .product-card, " +
-      "[data-product-id], [data-testid='product-card'], .product"
+      "article.product-box, .product-box, " +
+      "[data-product-id], .product-card, li.product-item"
     );
     const seenIds = new Set<string>();
 
@@ -67,33 +74,37 @@ export class FahrradDeAdapter extends BaseAdapter {
 
         const sourceId =
           $el.attr("data-product-id") ||
-          $el.attr("data-sku") ||
           $el.attr("data-id") ||
           undefined;
         if (sourceId && seenIds.has(sourceId)) return;
         if (sourceId) seenIds.add(sourceId);
 
+        // Name — Shopware 6 and fallbacks
         const name =
-          $el.find(".product-item__title a, .product-title a, .product-name a").first().text().trim() ||
-          $el.find("h2 a, h3 a, h4 a").first().text().trim() ||
-          $el.find(".product-item__title, .product-title, .product-name").first().text().trim();
+          $el.find(".product-name a, .product-box__title a, .product-info--name a").first().text().trim() ||
+          $el.find("h2 a, h3 a").first().text().trim() ||
+          $el.find(".product-name, .product-title").first().text().trim();
         if (!name) return;
 
+        // Current price
         const priceText =
-          $el.find(".product-item__price-current, .price-current, .offer-price, .special-price .price").first().text().trim() ||
-          $el.find(".product-item__price, .product-price").first().text().trim();
+          $el.find(".price--current, .price--default, .product-price .price").first().text().trim() ||
+          $el.find(".price").first().text().trim();
         const price = this.parsePrice(priceText);
         if (!price) return;
 
+        // Old / list price
         const listPriceText =
-          $el.find(".product-item__price-old, .price-old, del, s, .old-price .price").first().text().trim();
+          $el.find(".price--line-through, .price--strike, del, s").first().text().trim();
         const listPrice = listPriceText ? (this.parsePrice(listPriceText) ?? undefined) : undefined;
 
+        // URL
         const href =
-          $el.find("a.product-item__title, a.product-title, a[href]").first().attr("href") || "";
+          $el.find("a[href*='/detail/'], a.product-name, a[href]").first().attr("href") || "";
         const dealerUrl = href.startsWith("http") ? href : `${this.baseUrl}${href}`;
         if (!href) return;
 
+        // Image
         const imageUrl =
           $el.find("img").first().attr("data-src") ||
           $el.find("img").first().attr("src") ||
@@ -122,6 +133,3 @@ export class FahrradDeAdapter extends BaseAdapter {
     return bikes;
   }
 }
-
-/** @deprecated bruegelmann.de redirects to fahrrad.de since May 2024 — use FahrradDeAdapter */
-export { FahrradDeAdapter as BruegelmannAdapter };
