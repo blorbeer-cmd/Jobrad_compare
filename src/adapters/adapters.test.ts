@@ -48,7 +48,8 @@ import { KalkhoffAdapter } from "./kalkhoff";
 import { WinoraAdapter } from "./winora";
 import { CenturionAdapter } from "./centurion";
 import { PegasusAdapter } from "./pegasus";
-import type { Bike } from "./types";
+import type { Bike, BikeCategory } from "./types";
+import type { ShopifyProduct } from "./shopify-adapter";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -120,8 +121,8 @@ class TestBikester extends BikesterAdapter {
 }
 
 class TestBOC extends BOCAdapter {
-  parse(html: string, path: string): Bike[] {
-    return this.stampAndRecord(this.parseListing(html, path));
+  parse(products: ShopifyProduct[], category: BikeCategory): Bike[] {
+    return this.stampAndRecord(this.parseShopifyProducts(products, category));
   }
 }
 
@@ -144,8 +145,8 @@ class TestSpecialized extends SpecializedAdapter {
 }
 
 class TestSimplyBike extends SimplyBikeAdapter {
-  parse(html: string, path: string): Bike[] {
-    return this.stampAndRecord(this.parseListing(html, path));
+  parse(products: ShopifyProduct[], category: BikeCategory): Bike[] {
+    return this.stampAndRecord(this.parseShopifyProducts(products, category));
   }
 }
 
@@ -237,13 +238,17 @@ class TestPegasus extends PegasusAdapter {
 // Shared contract assertions
 // ---------------------------------------------------------------------------
 
-function assertBikeContract(bike: Bike, adapterName: string) {
+function assertBikeContract(
+  bike: Bike,
+  adapterName: string,
+  sourceType: "scrape" | "api" = "scrape"
+) {
   expect(bike.name.length).toBeGreaterThan(0);
   expect(bike.brand.length).toBeGreaterThan(0);
   expect(bike.price).toBeGreaterThan(0);
   expect(bike.dealer).toBe(adapterName);
   expect(bike.dealerUrl).toMatch(/^https?:\/\//);
-  expect(bike.sourceType).toBe("scrape");
+  expect(bike.sourceType).toBe(sourceType);
   expect(bike.lastSeenAt).toBeDefined();
   expect(() => new Date(bike.lastSeenAt!)).not.toThrow();
 }
@@ -724,15 +729,17 @@ describe("BikesterAdapter contract", () => {
 
 describe("BOCAdapter contract", () => {
   const adapter = new TestBOC();
-  const html = fixture("boc-ebikes.html");
-  const bikes = adapter.parse(html, "/collections/e-bikes");
+  const bocData = JSON.parse(fixture("boc-products.json")) as {
+    products: ShopifyProduct[];
+  };
+  const bikes = adapter.parse(bocData.products, "E-Bike");
 
-  it("parses 3 valid bikes and skips 2 invalid cards", () => {
+  it("parses 3 valid bikes and skips entries without title or variants", () => {
     expect(bikes.length).toBe(3);
   });
 
-  it("each bike satisfies the contract", () => {
-    for (const bike of bikes) assertBikeContract(bike, "B.O.C.");
+  it("each bike satisfies the contract (sourceType=api)", () => {
+    for (const bike of bikes) assertBikeContract(bike, "B.O.C.", "api");
   });
 
   it("parses Kettler with sale price and list price", () => {
@@ -753,22 +760,30 @@ describe("BOCAdapter contract", () => {
     expect(cube!.brand).toBe("Cube");
   });
 
-  it("parses image URL with https prefix", () => {
+  it("parses image URL", () => {
     const kettler = bikes.find((b) => b.name.includes("Kettler"));
     expect(kettler?.imageUrl).toMatch(/^https:\/\//);
   });
 
-  it("sets sourceId from handle attribute", () => {
+  it("sets sourceId from Shopify product ID", () => {
     const kettler = bikes.find((b) => b.name.includes("Kettler"));
-    expect(kettler?.sourceId).toBe("kettler-quadriga-town-country-p10");
+    expect(kettler?.sourceId).toBe("8821234567890");
   });
 
-  it("returns empty array for empty HTML", () => {
-    expect(adapter.parse("<html><body></body></html>", "/collections/e-bikes")).toEqual([]);
+  it("sets dealerUrl from product handle", () => {
+    const kettler = bikes.find((b) => b.name.includes("Kettler"));
+    expect(kettler?.dealerUrl).toBe(
+      "https://www.boc24.de/products/kettler-quadriga-town-country-p10"
+    );
   });
 
-  it("returns empty array for garbled HTML", () => {
-    expect(adapter.parse("<<GARBLED##", "/collections/e-bikes")).toEqual([]);
+  it("returns empty array for empty product list", () => {
+    expect(adapter.parse([], "E-Bike")).toEqual([]);
+  });
+
+  it("infers belt driveType from name", () => {
+    const cube = bikes.find((b) => b.name.includes("Pro"));
+    expect(cube?.driveType).toBe("belt");
   });
 });
 
@@ -920,52 +935,57 @@ describe("SpecializedAdapter contract", () => {
 
 describe("SimplyBikeAdapter contract", () => {
   const adapter = new TestSimplyBike();
-  const html = fixture("simply-bike-ebikes.html");
-  const bikes = adapter.parse(html, "/collections/e-bikes");
+  const simplyData = JSON.parse(fixture("simply-bike-products.json")) as {
+    products: ShopifyProduct[];
+  };
+  const bikes = adapter.parse(simplyData.products, "E-Bike");
 
-  it("parses 3 valid bikes and skips 1 without price", () => {
+  it("parses 3 valid bikes", () => {
     expect(bikes.length).toBe(3);
   });
 
-  it("each bike satisfies the contract", () => {
-    for (const bike of bikes) assertBikeContract(bike, "Simply Bike");
+  it("each bike satisfies the contract (sourceType=api)", () => {
+    for (const bike of bikes) assertBikeContract(bike, "Simply Bike", "api");
   });
 
-  it("parses Kalkhoff with offer price and list price", () => {
-    const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
+  it("parses Cube with sale price and list price", () => {
+    const bike = bikes.find((b) => b.name.includes("Cube"));
     expect(bike).toBeDefined();
-    expect(bike!.price).toBe(2599);
-    expect(bike!.listPrice).toBe(2899);
-    expect(bike!.offerPrice).toBe(2599);
+    expect(bike!.price).toBe(4299);
+    expect(bike!.listPrice).toBe(4999);
+    expect(bike!.offerPrice).toBe(4299);
     expect(bike!.category).toBe("E-Bike");
   });
 
-  it("parses Winora Sinus without discount", () => {
-    const bike = bikes.find((b) => b.name.includes("Winora"));
+  it("parses Trek without discount", () => {
+    const bike = bikes.find((b) => b.name.includes("Trek"));
     expect(bike).toBeDefined();
-    expect(bike!.price).toBe(2299);
+    expect(bike!.price).toBe(3199);
     expect(bike!.listPrice).toBeUndefined();
+    expect(bike!.brand).toBe("Trek");
   });
 
-  it("parses Hercules Rob Cross with sale price", () => {
-    const bike = bikes.find((b) => b.name.includes("Hercules"));
-    expect(bike).toBeDefined();
-    expect(bike!.price).toBe(1899);
-    expect(bike!.listPrice).toBe(2099);
-    expect(bike!.batteryWh).toBe(625);
-  });
-
-  it("sets sourceId from data-product-id", () => {
+  it("parses Kalkhoff Belt e-city", () => {
     const bike = bikes.find((b) => b.name.includes("Kalkhoff"));
-    expect(bike!.sourceId).toBe("SMPL-001");
+    expect(bike).toBeDefined();
+    expect(bike!.price).toBe(2499);
+    expect(bike!.driveType).toBe("belt");
   });
 
-  it("returns empty array for empty HTML", () => {
-    expect(adapter.parse("<html><body></body></html>", "/collections/e-bikes")).toEqual([]);
+  it("sets sourceId from Shopify product ID", () => {
+    const bike = bikes.find((b) => b.name.includes("Trek"));
+    expect(bike?.sourceId).toBe("7712345678901");
   });
 
-  it("returns empty array for garbled HTML", () => {
-    expect(adapter.parse("<<GARBLED##", "/collections/e-bikes")).toEqual([]);
+  it("sets dealerUrl from product handle", () => {
+    const bike = bikes.find((b) => b.name.includes("Trek"));
+    expect(bike?.dealerUrl).toBe(
+      "https://simply.bike/products/trek-allant-plus-7"
+    );
+  });
+
+  it("returns empty array for empty product list", () => {
+    expect(adapter.parse([], "E-Bike")).toEqual([]);
   });
 });
 
@@ -1683,7 +1703,8 @@ type AnyTestAdapter =
   | TestScott | TestKalkhoff | TestWinora | TestCenturion | TestPegasus;
 
 describe("All adapters: unified schema compliance", () => {
-  const cases: [string, AnyTestAdapter, string, string][] = [
+  // HTML-scraping adapters: parse(html, path)
+  const htmlCases: [string, AnyTestAdapter, string, string][] = [
     ["fahrrad-xxl-ebikes.html", new TestFahrradXXL(), "/fahrraeder/e-bikes", "Fahrrad XXL"],
     ["lucky-bike-ebikes.html", new TestLuckyBike(), "/e-bikes/", "Lucky Bike"],
     ["bike-discount-ebikes.html", new TestBikeDiscount(), "/fahrraeder/e-bikes", "Bike-Discount"],
@@ -1694,11 +1715,9 @@ describe("All adapters: unified schema compliance", () => {
     ["bikester-ebikes.html", new TestBikester(), "/fahrraeder/e-bikes/", "Bikester"],
     ["sport-bittl-ebikes.html", new TestSportBittl(), "/fahrraeder/e-bikes/", "Sport Bittl"],
     ["zweirad-stadler-ebikes.html", new TestZweiradStadler(), "/fahrraeder/e-bikes/", "Zweirad Stadler"],
-    ["boc-ebikes.html", new TestBOC(), "/collections/e-bikes", "B.O.C."],
     ["canyon-ebikes.html", new TestCanyon(), "/de-de/e-bikes/", "Canyon"],
     ["decathlon-ebikes.html", new TestDecathlon(), "/browse/c0-fahrraeder/_/N-1nfp7h6", "Decathlon"],
     ["specialized-ebikes.html", new TestSpecialized(), "/de/de/electric", "Specialized"],
-    ["simply-bike-ebikes.html", new TestSimplyBike(), "/collections/e-bikes", "Simply Bike"],
     ["cube-ebikes.html", new TestCube(), "/de-de/bikes-list/e-bikes/", "Cube"],
     ["trek-ebikes.html", new TestTrek(), "/de-de/bikes/category/elektrisch/", "Trek"],
     ["radon-ebikes.html", new TestRadon(), "/e-bike/", "Radon Bikes"],
@@ -1715,11 +1734,30 @@ describe("All adapters: unified schema compliance", () => {
     ["pegasus-ebikes.html", new TestPegasus(), "/bikes/e-bikes/", "Pegasus"],
   ];
 
-  for (const [fixtureName, adapter, path, dealerName] of cases) {
+  for (const [fixtureName, adapter, path, dealerName] of htmlCases) {
     it(`${dealerName}: all bikes pass BikeSchema validation`, async () => {
       const { BikeSchema } = await import("./types");
       const html = fixture(fixtureName);
       const bikes = adapter.parse(html, path);
+      expect(bikes.length).toBeGreaterThan(0);
+      for (const bike of bikes) {
+        const result = BikeSchema.safeParse(bike);
+        expect(result.success, `Schema failed for: ${JSON.stringify(bike)}`).toBe(true);
+      }
+    });
+  }
+
+  // Shopify JSON API adapters: parse(products, category)
+  const shopifyCases: [string, TestBOC | TestSimplyBike, BikeCategory, string][] = [
+    ["boc-products.json", new TestBOC(), "E-Bike", "B.O.C."],
+    ["simply-bike-products.json", new TestSimplyBike(), "E-Bike", "Simply Bike"],
+  ];
+
+  for (const [fixtureName, adapter, category, dealerName] of shopifyCases) {
+    it(`${dealerName}: all bikes pass BikeSchema validation`, async () => {
+      const { BikeSchema } = await import("./types");
+      const data = JSON.parse(fixture(fixtureName)) as { products: ShopifyProduct[] };
+      const bikes = adapter.parse(data.products, category);
       expect(bikes.length).toBeGreaterThan(0);
       for (const bike of bikes) {
         const result = BikeSchema.safeParse(bike);

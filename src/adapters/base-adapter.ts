@@ -66,6 +66,28 @@ export abstract class BaseAdapter {
     }
   }
 
+  protected async fetchJson<T>(url: string): Promise<T> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 55_000);
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          Accept: "application/json",
+          "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
+          "Cache-Control": "no-cache",
+        },
+      });
+      console.log(`[${this.name}] ${url} → HTTP ${response.status} (JSON)`);
+      if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+      return response.json() as Promise<T>;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   protected mapCategory(raw: string): BikeCategory {
     const lower = raw.toLowerCase();
     if (lower.includes("e-bike") || lower.includes("ebike") || lower.includes("elektro")) return "E-Bike";
