@@ -16,6 +16,20 @@ import { CanyonAdapter } from "./canyon";
 import { DecathlonAdapter } from "./decathlon";
 import { SpecializedAdapter } from "./specialized";
 import { SimplyBikeAdapter } from "./simply-bike";
+import { CubeAdapter } from "./cube";
+import { TrekAdapter } from "./trek";
+import { RadonAdapter } from "./radon";
+import { RieseMuellerAdapter } from "./riese-mueller";
+import { HaibikeAdapter } from "./haibike";
+import { BullsAdapter } from "./bulls";
+import { OrbeaAdapter } from "./orbea";
+import { KtmBikesAdapter } from "./ktm-bikes";
+import { GhostBikesAdapter } from "./ghost-bikes";
+import { ScottAdapter } from "./scott";
+import { KalkhoffAdapter } from "./kalkhoff";
+import { WinoraAdapter } from "./winora";
+import { CenturionAdapter } from "./centurion";
+import { PegasusAdapter } from "./pegasus";
 import {
   HibikeAwinAdapter,
   BikesterAwinAdapter,
@@ -75,6 +89,20 @@ function buildAdapters(): BaseAdapter[] {
     new DecathlonAdapter(),
     new SpecializedAdapter(),
     new SimplyBikeAdapter(),
+    new CubeAdapter(),
+    new TrekAdapter(),
+    new RadonAdapter(),
+    new RieseMuellerAdapter(),
+    new HaibikeAdapter(),
+    new BullsAdapter(),
+    new OrbeaAdapter(),
+    new KtmBikesAdapter(),
+    new GhostBikesAdapter(),
+    new ScottAdapter(),
+    new KalkhoffAdapter(),
+    new WinoraAdapter(),
+    new CenturionAdapter(),
+    new PegasusAdapter(),
     // LuckyBike + BikeDiscount scraping doesn't work — only via Awin above
   ].filter((a) => !awinDealerNames.has(a.name));
 
