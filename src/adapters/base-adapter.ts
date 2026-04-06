@@ -92,14 +92,27 @@ export abstract class BaseAdapter {
 
   protected mapCategory(raw: string): BikeCategory {
     const lower = raw.toLowerCase();
-    if (lower.includes("e-bike") || lower.includes("ebike") || lower.includes("elektro")) return "E-Bike";
-    if (lower.includes("city") || lower.includes("urban")) return "City";
-    if (lower.includes("trekking") || lower.includes("touring")) return "Trekking";
-    if (lower.includes("mountain") || lower.includes("mtb")) return "Mountainbike";
-    if (lower.includes("gravel") || lower.includes("cyclocross") || lower.includes("crossrad") || lower.includes("crossbike")) return "Gravel";
-    if (lower.includes("rennrad") || lower.includes("rennrae") || lower.includes("road") || lower.includes("race")) return "Rennrad";
-    if (lower.includes("cargo") || lower.includes("lasten") || lower.includes("transport")) return "Cargo";
-    if (lower.includes("kinder") || lower.includes("jugend") || lower.includes("kids")) return "Kinder";
+    if (lower.includes("e-bike") || lower.includes("ebike") ||
+        lower.includes("elektro") || lower.includes("electric") ||
+        lower.includes("pedelec")) return "E-Bike";
+    if (lower.includes("trekking") || lower.includes("touring") ||
+        lower.includes("reiserad")) return "Trekking";
+    if (lower.includes("city") || lower.includes("urban") ||
+        lower.includes("commuter") || lower.includes("hybrid") ||
+        lower.includes("lifestyle")) return "City";
+    if (lower.includes("mountain") || lower.includes("mtb") ||
+        lower.includes("fatbike") || lower.includes("fat bike") ||
+        lower.includes("enduro") || lower.includes("trail")) return "Mountainbike";
+    if (lower.includes("gravel") || lower.includes("cyclocross") ||
+        lower.includes("crossrad") || lower.includes("crossbike")) return "Gravel";
+    if (lower.includes("rennrad") || lower.includes("rennrae") ||
+        lower.includes("road") || lower.includes("race") ||
+        lower.includes("fixie") || lower.includes("fixed")) return "Rennrad";
+    if (lower.includes("cargo") || lower.includes("lasten") ||
+        lower.includes("transport") || lower.includes("bakfiets")) return "Cargo";
+    if (lower.includes("kinder") || lower.includes("jugend") ||
+        lower.includes("kids") || lower.includes("junior") ||
+        lower.includes("bmx")) return "Kinder";
     return "Sonstige";
   }
 
