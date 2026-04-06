@@ -35,9 +35,14 @@ export class RoseBikesAdapter extends BaseAdapter {
 
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
+
+    // Try JSON-LD first — rosebikes.de uses Next.js SSR and includes product schema
+    const jsonLdBikes = this.parseJsonLdProducts($, categoryPath);
+    if (jsonLdBikes.length > 0) return jsonLdBikes;
+
     const bikes: Bike[] = [];
 
-    // Rose Bikes uses Next.js with custom product grid
+    // Fallback: Rose Bikes custom product grid CSS selectors
     $(".product-tile, .catalog-product-tile, [data-testid='product-tile']").each((_, el) => {
       try {
         const $el = $(el);

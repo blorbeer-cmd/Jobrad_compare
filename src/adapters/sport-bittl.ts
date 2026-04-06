@@ -57,9 +57,14 @@ export class SportBittlAdapter extends BaseAdapter {
 
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
+
+    // Try JSON-LD first — Magento 2 shops often include product schema
+    const jsonLdBikes = this.parseJsonLdProducts($, categoryPath);
+    if (jsonLdBikes.length > 0) return jsonLdBikes;
+
     const bikes: Bike[] = [];
 
-    // Magento 2 product grid: ol.products > li.product-item
+    // Fallback: Magento 2 product grid
     const cards = $("li.product-item, .product-item-info, [data-product-id]");
     const seenIds = new Set<string>();
 

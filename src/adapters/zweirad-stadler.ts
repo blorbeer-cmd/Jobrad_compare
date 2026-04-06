@@ -59,9 +59,14 @@ export class ZweiradStadlerAdapter extends BaseAdapter {
 
   protected parseListing(html: string, categoryPath: string): Bike[] {
     const $ = cheerio.load(html);
+
+    // Try JSON-LD first — Shopware 6 shops often include product schema
+    const jsonLdBikes = this.parseJsonLdProducts($, categoryPath);
+    if (jsonLdBikes.length > 0) return jsonLdBikes;
+
     const bikes: Bike[] = [];
 
-    // Shopware 6 product cards
+    // Fallback: Shopware 6 product card selectors
     const cards = $(
       "article.product-box, .product-box, " +
       "[data-product-id], .product-card, li.product-item"

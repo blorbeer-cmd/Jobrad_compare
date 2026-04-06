@@ -55,7 +55,7 @@ export class CanyonAdapter extends BaseAdapter {
     const bikes: Bike[] = [];
 
     // Try JSON-LD structured data first (most reliable for SSR shops)
-    const jsonLdBikes = this.parseJsonLd($, categoryPath);
+    const jsonLdBikes = this.parseJsonLdProducts($, categoryPath, "Canyon");
     if (jsonLdBikes.length > 0) return jsonLdBikes;
 
     // Fallback: Canyon product tile selectors
@@ -115,58 +115,4 @@ export class CanyonAdapter extends BaseAdapter {
     return bikes;
   }
 
-  /** Parse JSON-LD Product schema embedded in page — most reliable signal. */
-  private parseJsonLd($: cheerio.CheerioAPI, categoryPath: string): Bike[] {
-    const bikes: Bike[] = [];
-
-    $("script[type='application/ld+json']").each((_, el) => {
-      try {
-        const json = JSON.parse($(el).html() ?? "");
-        const items: unknown[] =
-          json["@type"] === "ItemList"
-            ? (json.itemListElement ?? []).map((e: { item?: unknown }) => e.item)
-            : json["@type"] === "Product"
-              ? [json]
-              : [];
-
-        for (const item of items) {
-          if (!item || typeof item !== "object") continue;
-          const p = item as Record<string, unknown>;
-          if ((p["@type"] as string) !== "Product") continue;
-
-          const name = (p.name as string)?.trim();
-          if (!name) continue;
-
-          const offer = (Array.isArray(p.offers) ? p.offers[0] : p.offers) as Record<string, unknown> | undefined;
-          if (!offer) continue;
-
-          const price = this.parsePrice(String(offer.price ?? ""));
-          if (!price) continue;
-
-          const dealerUrl = (offer.url as string) || (p.url as string) || "";
-          if (!dealerUrl.startsWith("http")) continue;
-
-          const imageUrl = Array.isArray(p.image) ? (p.image[0] as string) : (p.image as string | undefined);
-          const sku = (p.sku as string) || (p.productID as string) || undefined;
-          const category = this.mapCategory(categoryPath.replace(/\//g, " "));
-
-          const result = BikeSchema.safeParse({
-            name,
-            brand: "Canyon",
-            category,
-            price,
-            dealer: this.name,
-            dealerUrl,
-            imageUrl: imageUrl || undefined,
-            sourceId: sku,
-            sourceType: "scrape" as const,
-            ...this.inferFromName(name),
-          });
-          if (result.success) bikes.push(result.data);
-        }
-      } catch { /* malformed JSON-LD — skip */ }
-    });
-
-    return bikes;
-  }
 }

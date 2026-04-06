@@ -1,4 +1,6 @@
+import * as cheerio from "cheerio";
 import type { Bike, BikeCategory, AdapterHealth } from "./types";
+import { BikeSchema } from "./types";
 
 export abstract class BaseAdapter {
   abstract readonly name: string;
@@ -169,6 +171,117 @@ export abstract class BaseAdapter {
       if (productName.toLowerCase().startsWith(brand.toLowerCase())) return brand;
     }
     return productName.split(/\s+/)[0] || "Unbekannt";
+  }
+
+  /**
+   * Extract bike listings from `application/ld+json` structured data.
+   *
+   * Handles all common JSON-LD patterns found on bike shop category pages:
+   *   - Top-level `@type: "Product"`
+   *   - `@type: "ItemList"` with `itemListElement` array
+   *   - `@graph` array containing Product nodes
+   *   - Bare array of JSON-LD objects
+   *
+   * @param $            - Loaded Cheerio document
+   * @param categoryPath - URL path used to derive category via mapCategory
+   * @param defaultBrand - Brand to use when not present in the schema.
+   *                       For single-brand shops pass the brand name (e.g. "Cube").
+   *                       Omit for multi-brand retailers — falls back to extractBrand().
+   */
+  protected parseJsonLdProducts(
+    $: cheerio.CheerioAPI,
+    categoryPath: string,
+    defaultBrand?: string
+  ): Bike[] {
+    const bikes: Bike[] = [];
+
+    $("script[type='application/ld+json']").each((_, el) => {
+      try {
+        const raw: unknown = JSON.parse($(el).html() ?? "");
+        if (!raw || typeof raw !== "object") return;
+
+        // Collect Product nodes from various JSON-LD patterns
+        const productNodes: unknown[] = [];
+        const root = raw as Record<string, unknown>;
+
+        if (root["@type"] === "Product") {
+          productNodes.push(root);
+        } else if (root["@type"] === "ItemList") {
+          for (const entry of (root.itemListElement as unknown[] | undefined) ?? []) {
+            if (!entry || typeof entry !== "object") continue;
+            const node = (entry as Record<string, unknown>).item ?? entry;
+            productNodes.push(node);
+          }
+        } else if (Array.isArray(root["@graph"])) {
+          for (const node of root["@graph"] as unknown[]) {
+            if (node && typeof node === "object" &&
+                (node as Record<string, unknown>)["@type"] === "Product") {
+              productNodes.push(node);
+            }
+          }
+        } else if (Array.isArray(raw)) {
+          for (const item of raw as unknown[]) {
+            if (item && typeof item === "object" &&
+                (item as Record<string, unknown>)["@type"] === "Product") {
+              productNodes.push(item);
+            }
+          }
+        }
+
+        for (const rawNode of productNodes) {
+          if (!rawNode || typeof rawNode !== "object") continue;
+          const p = rawNode as Record<string, unknown>;
+          if ((p["@type"] as string) !== "Product") continue;
+
+          const name = (p.name as string)?.trim();
+          if (!name) continue;
+
+          // Brand: prefer schema.brand.name, then explicit default, then extractBrand
+          const schemaBrand = (p.brand as Record<string, unknown> | undefined)?.name as string | undefined;
+          const brand = schemaBrand || defaultBrand || this.extractBrand(name);
+
+          // Offers: normalize to array, use first entry
+          const rawOffers = p.offers;
+          const offer = (Array.isArray(rawOffers) ? rawOffers[0] : rawOffers) as
+            | Record<string, unknown>
+            | undefined;
+          if (!offer) continue;
+
+          const price = this.parsePrice(String(offer.price ?? ""));
+          if (!price) continue;
+
+          // List price from highPrice or priceSpecification
+          const listPrice = offer.highPrice
+            ? (this.parsePrice(String(offer.highPrice)) ?? undefined)
+            : undefined;
+
+          const dealerUrl = (offer.url as string) || (p.url as string) || "";
+          if (!dealerUrl.startsWith("http")) continue;
+
+          const imageRaw = p.image;
+          const imageUrl = (Array.isArray(imageRaw) ? (imageRaw[0] as string) : (imageRaw as string | undefined)) ?? undefined;
+          const category = this.mapCategory(categoryPath.replace(/\//g, " "));
+
+          const result = BikeSchema.safeParse({
+            name,
+            brand,
+            category,
+            price: listPrice && price < listPrice ? price : price,
+            listPrice: listPrice && listPrice > price ? listPrice : undefined,
+            offerPrice: listPrice && price < listPrice ? price : undefined,
+            dealer: this.name,
+            dealerUrl,
+            imageUrl: imageUrl || undefined,
+            sourceId: (p.sku as string) || (p.productID as string) || undefined,
+            sourceType: "scrape" as const,
+            ...this.inferFromName(name),
+          });
+          if (result.success) bikes.push(result.data);
+        }
+      } catch { /* malformed JSON-LD — skip */ }
+    });
+
+    return bikes;
   }
 
   /** Stamp lastSeenAt onto all bikes and handle health recording */
