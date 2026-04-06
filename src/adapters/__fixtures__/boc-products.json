@@ -1,0 +1,75 @@
+{
+  "products": [
+    {
+      "id": 8821234567890,
+      "title": "Kettler QUADRIGA TOWN+COUNTRY P10",
+      "handle": "kettler-quadriga-town-country-p10",
+      "vendor": "Kettler",
+      "product_type": "E-Bike",
+      "variants": [
+        {
+          "id": 47001234567890,
+          "price": "1999.00",
+          "compare_at_price": "3799.00"
+        }
+      ],
+      "images": [
+        { "src": "https://boc24.de/cdn/shop/files/kettler-quadriga.jpg" }
+      ]
+    },
+    {
+      "id": 8821234567891,
+      "title": "Cube Kathmandu Hybrid ONE 800 WA E-Trekking 625 Wh 2025",
+      "handle": "cube-kathmandu-hybrid-one-800",
+      "vendor": "Cube",
+      "product_type": "E-Trekking",
+      "variants": [
+        {
+          "id": 47001234567891,
+          "price": "3199.00",
+          "compare_at_price": null
+        }
+      ],
+      "images": [
+        { "src": "https://boc24.de/cdn/shop/files/cube-kathmandu.jpg" }
+      ]
+    },
+    {
+      "id": 8821234567892,
+      "title": "Cube Kathmandu Hybrid Pro 800 WA E-Trekking Belt 625 Wh 2025",
+      "handle": "cube-kathmandu-hybrid-pro-800",
+      "vendor": "Cube",
+      "product_type": "E-Trekking",
+      "variants": [
+        {
+          "id": 47001234567892,
+          "price": "3599.00",
+          "compare_at_price": null
+        }
+      ],
+      "images": [
+        { "src": "https://boc24.de/cdn/shop/files/cube-kathmandu-pro.jpg" }
+      ]
+    },
+    {
+      "id": 8821234567893,
+      "title": "",
+      "handle": "empty-title",
+      "vendor": "Unknown",
+      "product_type": "",
+      "variants": [
+        { "id": 47001234567893, "price": "999.00", "compare_at_price": null }
+      ],
+      "images": []
+    },
+    {
+      "id": 8821234567894,
+      "title": "Bike Without Price",
+      "handle": "bike-without-price",
+      "vendor": "SomeBrand",
+      "product_type": "Bike",
+      "variants": [],
+      "images": []
+    }
+  ]
+}

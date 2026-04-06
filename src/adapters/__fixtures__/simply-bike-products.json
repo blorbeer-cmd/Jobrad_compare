@@ -1,0 +1,55 @@
+{
+  "products": [
+    {
+      "id": 7712345678901,
+      "title": "Trek Allant+ 7 E-Trekking 500 Wh 2025",
+      "handle": "trek-allant-plus-7",
+      "vendor": "Trek",
+      "product_type": "E-Trekking",
+      "variants": [
+        {
+          "id": 43001234567901,
+          "price": "3199.00",
+          "compare_at_price": null
+        }
+      ],
+      "images": [
+        { "src": "https://simply.bike/cdn/shop/files/trek-allant-plus-7.jpg" }
+      ]
+    },
+    {
+      "id": 7712345678902,
+      "title": "Cube Stereo Hybrid 140 HPC Pro E-Mountainbike Fully 750 Wh 2025",
+      "handle": "cube-stereo-hybrid-140-hpc-pro",
+      "vendor": "Cube",
+      "product_type": "E-Mountainbike",
+      "variants": [
+        {
+          "id": 43001234567902,
+          "price": "4299.00",
+          "compare_at_price": "4999.00"
+        }
+      ],
+      "images": [
+        { "src": "https://simply.bike/cdn/shop/files/cube-stereo-hybrid.jpg" }
+      ]
+    },
+    {
+      "id": 7712345678903,
+      "title": "Kalkhoff Image 5.B Move E-City Belt 500 Wh 2025",
+      "handle": "kalkhoff-image-5b-move",
+      "vendor": "Kalkhoff",
+      "product_type": "E-City",
+      "variants": [
+        {
+          "id": 43001234567903,
+          "price": "2499.00",
+          "compare_at_price": null
+        }
+      ],
+      "images": [
+        { "src": "https://simply.bike/cdn/shop/files/kalkhoff-image-5b.jpg" }
+      ]
+    }
+  ]
+}
