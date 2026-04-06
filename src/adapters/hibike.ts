@@ -70,17 +70,19 @@ export class HibikeAdapter extends BaseAdapter {
         if (sourceId && seenIds.has(sourceId)) return;
         if (sourceId) seenIds.add(sourceId);
 
-        // Name: Shopware 6 product title link, with fallback to any h2/h3 anchor
+        // Shopware 6 Storefront: <a class="product-name"> IS the anchor.
+        // Also handle older pattern where anchor is nested inside .product-name.
         const name =
-          $el.find(".product-name a, .product-info--name a, .product-box__info a").first().text().trim() ||
+          $el.find("a.product-name").first().text().trim() ||
+          $el.find(".product-name a, .product-info--name a").first().text().trim() ||
           $el.find("h2 a, h3 a").first().text().trim() ||
           $el.find(".product-name, .product-title").first().text().trim();
         if (!name) return;
 
-        // Current price
+        // Shopware 6 Storefront price selectors
         const priceText =
-          $el.find(".price--default, .price--current, .product-price .price").first().text().trim() ||
-          $el.find(".price").first().text().trim();
+          $el.find(".price--default, .price-unit-value, .price--current").first().text().trim() ||
+          $el.find(".product-price .price, .price").first().text().trim();
         const price = this.parsePrice(priceText);
         if (!price) return;
 

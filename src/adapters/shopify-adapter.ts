@@ -79,7 +79,11 @@ export abstract class ShopifyAdapter extends BaseAdapter {
     handle: string,
     category: BikeCategory
   ): Promise<Bike[]> {
-    const url = `${this.baseUrl}/collections/${handle}/products.json?limit=250`;
+    // "all" is the Shopify built-in collection containing every product.
+    // Other handles fetch a specific collection.
+    const url = handle === "all"
+      ? `${this.baseUrl}/products.json?limit=250`
+      : `${this.baseUrl}/collections/${handle}/products.json?limit=250`;
     const data = await this.fetchJson<{ products: ShopifyProduct[] }>(url);
     return this.parseShopifyProducts(data.products ?? [], category);
   }
@@ -115,10 +119,16 @@ export abstract class ShopifyAdapter extends BaseAdapter {
         const dealerUrl = `${this.baseUrl}/products/${product.handle}`;
         const imageUrl = product.images?.[0]?.src ?? undefined;
 
+        // When fetching from /products.json (all collection), category is
+        // "Sonstige" — derive the real category from the product_type field.
+        const effectiveCategory: BikeCategory = category !== "Sonstige"
+          ? category
+          : this.mapCategory(product.product_type || name);
+
         const result = BikeSchema.safeParse({
           name,
           brand,
-          category,
+          category: effectiveCategory,
           price: listPrice && price < listPrice ? price : price,
           listPrice: listPrice && listPrice > price ? listPrice : undefined,
           offerPrice: listPrice && price < listPrice ? price : undefined,
