@@ -84,17 +84,18 @@ export class ZweiradStadlerAdapter extends BaseAdapter {
         if (sourceId && seenIds.has(sourceId)) return;
         if (sourceId) seenIds.add(sourceId);
 
-        // Name — Shopware 6 and fallbacks
+        // Shopware 6 Storefront: <a class="product-name"> IS the anchor
         const name =
+          $el.find("a.product-name").first().text().trim() ||
           $el.find(".product-name a, .product-box__title a, .product-info--name a").first().text().trim() ||
           $el.find("h2 a, h3 a").first().text().trim() ||
           $el.find(".product-name, .product-title").first().text().trim();
         if (!name) return;
 
-        // Current price
+        // Shopware 6 Storefront price selectors
         const priceText =
-          $el.find(".price--current, .price--default, .product-price .price").first().text().trim() ||
-          $el.find(".price").first().text().trim();
+          $el.find(".price--current, .price--default, .price-unit-value").first().text().trim() ||
+          $el.find(".product-price .price, .price").first().text().trim();
         const price = this.parsePrice(priceText);
         if (!price) return;
 

@@ -80,9 +80,10 @@ export class SportBittlAdapter extends BaseAdapter {
         if (sourceId && seenIds.has(sourceId)) return;
         if (sourceId) seenIds.add(sourceId);
 
-        // Name: Magento 2 uses <a class="product-item-link">
+        // Magento 2: <a class="product-item-link"> IS the anchor with that class
         const name =
-          $el.find(".product-item-link, .product-name a").first().text().trim() ||
+          $el.find("a.product-item-link, .product-item-link").first().text().trim() ||
+          $el.find(".product-name a, a.product-name").first().text().trim() ||
           $el.find("h2 a, h3 a").first().text().trim();
         if (!name) return;
 
