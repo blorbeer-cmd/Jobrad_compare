@@ -125,6 +125,11 @@ export abstract class ShopifyAdapter extends BaseAdapter {
           ? category
           : this.mapCategory(product.product_type || name);
 
+        // Skip accessories, clothing, locks, etc. that don't map to a bike
+        // category. Only applies when using the "all" collection endpoint
+        // (category === "Sonstige" initially).
+        if (category === "Sonstige" && effectiveCategory === "Sonstige") continue;
+
         const result = BikeSchema.safeParse({
           name,
           brand,
