@@ -52,9 +52,10 @@ export abstract class ShopifyAdapter extends BaseAdapter {
       const result = results[i];
       if (result.status === "fulfilled") {
         for (const bike of result.value) {
-          // Deduplicate across collections by Shopify product ID
-          if (!seenIds.has(bike.sourceId)) {
-            seenIds.add(bike.sourceId);
+          // Deduplicate across collections by Shopify product ID (or dealerUrl)
+          const key = bike.sourceId ?? bike.dealerUrl;
+          if (!seenIds.has(key)) {
+            seenIds.add(key);
             allBikes.push(bike);
           }
         }

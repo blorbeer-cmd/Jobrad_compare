@@ -1694,10 +1694,11 @@ describe("PegasusAdapter contract", () => {
 // Cross-adapter: all parsed bikes pass the unified BikeSchema
 // ---------------------------------------------------------------------------
 
+// HTML-scraping adapters (parse(html, path)) — excludes Shopify adapters
 type AnyTestAdapter =
   | TestFahrradXXL | TestLuckyBike | TestBikeDiscount | TestRoseBikes | TestBike24
   | TestHibike | TestFahrradDe | TestBikester | TestSportBittl | TestZweiradStadler
-  | TestBOC | TestCanyon | TestDecathlon | TestSpecialized | TestSimplyBike
+  | TestCanyon | TestDecathlon | TestSpecialized
   | TestCube | TestTrek | TestRadon | TestRieseMueller
   | TestHaibike | TestBulls | TestOrbea | TestKtmBikes | TestGhostBikes
   | TestScott | TestKalkhoff | TestWinora | TestCenturion | TestPegasus;
