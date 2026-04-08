@@ -39,7 +39,7 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
             className="mx-auto h-28 w-auto rounded-lg object-contain"
           />
         ) : (
-          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">
+          <div role="img" aria-label="Kein Bild verfügbar" className="mx-auto flex h-28 w-28 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">
             Kein Bild
           </div>
         ),
@@ -97,15 +97,16 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border">
+      <div className="overflow-x-auto rounded-xl border" role="region" aria-label="Vergleichstabelle" tabIndex={0}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/40">
-              <th className="w-28 px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                &nbsp;
+              <th scope="col" className="w-28 px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <span className="sr-only">Eigenschaft</span>
               </th>
               {bikes.map((bike) => (
                 <th
+                  scope="col"
                   key={`${bike.dealer}:${bike.name}`}
                   className={cn(
                     "min-w-[180px] px-4 py-3",
@@ -139,9 +140,9 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
                 key={field.label}
                 className={cn("border-b last:border-0", i % 2 === 0 ? "" : "bg-muted/20")}
               >
-                <td className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th scope="row" className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   {field.label}
-                </td>
+                </th>
                 {bikes.map((bike) => (
                   <td
                     key={`${bike.dealer}:${bike.name}`}

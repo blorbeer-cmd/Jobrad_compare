@@ -62,8 +62,8 @@ export function SavedBikeCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground/20">
-              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex h-full items-center justify-center text-muted-foreground/20" role="img" aria-label={`Kein Bild für ${bike.name}`}>
+              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>

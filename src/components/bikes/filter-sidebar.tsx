@@ -72,6 +72,7 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors",
         active
@@ -149,6 +150,7 @@ function FilterSection({
     <div>
       <button
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
         className="flex w-full items-center justify-between py-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
       >
         <span className="flex items-center gap-2">
@@ -273,6 +275,7 @@ export function FilterSidebar({
       {/* Nur reduzierte Angebote */}
       <button
         onClick={() => update({ onlyDiscounted: !filters.onlyDiscounted })}
+        aria-pressed={filters.onlyDiscounted}
         className={cn(
           "flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors",
           filters.onlyDiscounted
@@ -524,7 +527,7 @@ export function FilterSidebar({
       </div>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block">
+      <aside aria-label="Filter" className="hidden lg:block">
         <div className="sticky top-[4.5rem] w-60 overflow-y-auto max-h-[calc(100vh-5rem)] rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="flex items-center gap-2 font-semibold text-sm">

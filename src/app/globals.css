@@ -57,7 +57,7 @@
     @apply bg-background text-foreground;
   }
 
-  /* Smooth scrolling */
+  /* Smooth scrolling — respect reduced motion preference */
   html {
     scroll-behavior: smooth;
   }
@@ -79,5 +79,22 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Skip link — visually hidden until focused */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground focus:shadow-lg;
+  }
+}
+
+/* Reduced motion: disable animations and transitions globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

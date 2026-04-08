@@ -71,7 +71,7 @@ export default function ProfilPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="font-medium">Meine Daten exportieren</h3>
+            <h2 className="font-medium">Meine Daten exportieren</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Lade alle deine gespeicherten Daten (Profil, Favoriten, Notizen) als JSON-Datei herunter.
             </p>
@@ -82,7 +82,7 @@ export default function ProfilPage() {
           </div>
 
           <div className="border-t pt-4">
-            <h3 className="font-medium text-destructive">Konto loeschen</h3>
+            <h2 className="font-medium text-destructive">Konto loeschen</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Loescht dein Konto und alle damit verbundenen Daten unwiderruflich.
               Dies umfasst dein Profil, alle Favoriten und Notizen.

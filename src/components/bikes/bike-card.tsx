@@ -40,12 +40,13 @@ export function BikeCard({ bike, isSaved, onToggleSave, onCompare, isComparing, 
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
+          <div className="flex h-full items-center justify-center" role="img" aria-label={`Kein Bild für ${bike.name}`}>
             <svg
               className="h-16 w-16 text-muted-foreground/20"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"

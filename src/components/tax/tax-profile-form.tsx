@@ -124,10 +124,12 @@ export function TaxProfileForm({ initialProfile, onSave, onClear }: Props) {
               value={salary}
               onChange={(e) => { setSalary(e.target.value); setSaved(false); }}
               placeholder="z.B. 45000"
+              aria-invalid={!!errors.salary}
+              aria-describedby={errors.salary ? "salary-error" : undefined}
               className={cn(errors.salary && "border-destructive")}
             />
             {errors.salary && (
-              <p className="text-xs text-destructive">{errors.salary}</p>
+              <p id="salary-error" className="text-xs text-destructive" role="alert">{errors.salary}</p>
             )}
           </div>
 
@@ -171,6 +173,7 @@ export function TaxProfileForm({ initialProfile, onSave, onClear }: Props) {
                 <button
                   key={label}
                   type="button"
+                  aria-pressed={churchTax === value}
                   onClick={() => { setChurchTax(value); setSaved(false); }}
                   className={cn(
                     "flex-1 rounded-md border px-3 py-1.5 text-sm transition-colors",

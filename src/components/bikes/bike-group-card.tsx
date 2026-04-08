@@ -69,12 +69,13 @@ export function BikeGroupCard({ group }: BikeGroupCardProps) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
+          <div className="flex h-full items-center justify-center" role="img" aria-label={`Kein Bild für ${group.name}`}>
             <svg
               className="h-16 w-16 text-muted-foreground/20"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
