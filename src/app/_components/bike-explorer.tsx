@@ -11,7 +11,7 @@ import { StatsBar } from "@/components/bikes/stats-bar";
 import { SavedBikeCard } from "@/components/bikes/saved-bike-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock, Layers, X } from "lucide-react";
+import { RefreshCw, AlertTriangle, Heart, GitCompareArrows, Search, Clock, Layers, X, Calculator } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn, uniqueSortedStrings } from "@/lib/utils";
 import { formatDataAge } from "@/lib/freshness";
@@ -238,37 +238,37 @@ export function BikeExplorer() {
   const savedKeySet = new Set(savedKeys.keys());
 
   return (
-    <Tabs defaultValue="browse" className="space-y-3 sm:space-y-4">
+    <Tabs defaultValue="browse" className="space-y-4 sm:space-y-6">
       <div className="flex items-center gap-3">
         {/* Tabs: icon-only on mobile, icon+label on sm+ */}
-        <TabsList className="h-10 rounded-lg p-1 grid grid-cols-4 flex-1 sm:flex-none sm:inline-flex sm:w-auto">
-          <TabsTrigger value="browse" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
-            <Search className="h-3.5 w-3.5 shrink-0" />
+        <TabsList className="h-11 rounded-xl p-1 grid grid-cols-4 flex-1 sm:flex-none sm:inline-flex sm:w-auto bg-muted/70">
+          <TabsTrigger value="browse" className="gap-1.5 rounded-lg px-2 sm:gap-2 sm:px-4 data-[state=active]:shadow-sm">
+            <Search className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline text-sm">Durchsuchen</span>
           </TabsTrigger>
-          <TabsTrigger value="favorites" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
-            <Heart className="h-3.5 w-3.5 shrink-0" />
+          <TabsTrigger value="favorites" className="gap-1.5 rounded-lg px-2 sm:gap-2 sm:px-4 data-[state=active]:shadow-sm">
+            <Heart className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline text-sm">Favoriten</span>
             {savedBikes.length > 0 && (
-              <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary/20 px-0.5 text-[10px] font-bold text-primary">
+              <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary/15 px-1 text-[10px] font-bold text-primary">
                 {savedBikes.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="compare" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
-            <GitCompareArrows className="h-3.5 w-3.5 shrink-0" />
+          <TabsTrigger value="compare" className="gap-1.5 rounded-lg px-2 sm:gap-2 sm:px-4 data-[state=active]:shadow-sm">
+            <GitCompareArrows className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline text-sm">Vergleich</span>
             {compareBikes.length > 0 && (
-              <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary/20 px-0.5 text-[10px] font-bold text-primary">
+              <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary/15 px-1 text-[10px] font-bold text-primary">
                 {compareBikes.length}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="models" className="gap-1 rounded-md px-2 sm:gap-1.5 sm:px-3">
-            <Layers className="h-3.5 w-3.5 shrink-0" />
+          <TabsTrigger value="models" className="gap-1.5 rounded-lg px-2 sm:gap-2 sm:px-4 data-[state=active]:shadow-sm">
+            <Layers className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline text-sm">Modelle</span>
             {resolution.multiDealerGroups > 0 && (
-              <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary/20 px-0.5 text-[10px] font-bold text-primary">
+              <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary/15 px-1 text-[10px] font-bold text-primary">
                 {resolution.multiDealerGroups}
               </span>
             )}
@@ -276,19 +276,19 @@ export function BikeExplorer() {
         </TabsList>
 
         {/* Cache info + refresh — desktop only */}
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground ml-auto">
+        <div className="hidden sm:flex items-center gap-2.5 text-xs text-muted-foreground ml-auto">
           {fetchState.fetchedAt && (
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-2.5 py-1.5">
               <Clock className="h-3 w-3" />
               Daten {formatDataAge(fetchState.fetchedAt)}
               {fetchState.fromCache && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px]">Cache</span>
+                <span className="rounded-full bg-background px-1.5 py-0.5 text-[10px] font-medium">Cache</span>
               )}
             </span>
           )}
           {fetchState.errors.length > 0 && (
             <span
-              className="flex items-center gap-1 text-amber-600 dark:text-amber-400 cursor-help"
+              className="flex items-center gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 px-2.5 py-1.5 cursor-help"
               title={fetchState.errors.map((e) => `${e.dealer}: ${e.error}`).join("\n")}
             >
               <AlertTriangle className="h-3 w-3" />
@@ -296,13 +296,13 @@ export function BikeExplorer() {
             </span>
           )}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => loadBikes(true)}
             disabled={fetchState.loading}
-            className="h-7 gap-1.5 text-xs"
+            className="h-8 gap-1.5 text-xs rounded-lg"
           >
-            <RefreshCw className={cn("h-3 w-3", fetchState.loading && "animate-spin")} />
+            <RefreshCw className={cn("h-3.5 w-3.5", fetchState.loading && "animate-spin")} />
             Aktualisieren
           </Button>
         </div>
@@ -310,12 +310,12 @@ export function BikeExplorer() {
 
       <TabsContent value="browse" className="space-y-4 mt-0">
         {fetchState.error ? (
-          <div role="alert" className="flex flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/5 py-16 text-center px-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertTriangle className="h-6 w-6 text-destructive" />
+          <div role="alert" className="flex flex-col items-center justify-center rounded-2xl border-2 border-destructive/20 bg-destructive/5 py-20 text-center px-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
+              <AlertTriangle className="h-7 w-7 text-destructive" />
             </div>
-            <p className="mt-4 font-medium">{fetchState.error}</p>
-            <Button variant="outline" className="mt-4" onClick={() => loadBikes()}>
+            <p className="mt-5 text-lg font-semibold">{fetchState.error}</p>
+            <Button variant="outline" className="mt-5" onClick={() => loadBikes()}>
               Erneut versuchen
             </Button>
           </div>
@@ -398,9 +398,14 @@ export function BikeExplorer() {
 
               <div className="flex-1 min-w-0 space-y-3">
                 {!profile && (
-                  <div className="rounded-lg border border-dashed px-4 py-2.5 text-sm text-muted-foreground flex items-center gap-2">
-                    <span>Netto-Raten basieren auf Standardwerten (45.000 € Jahresgehalt, SK 1).</span>
-                    <span className="text-xs">Passe dein Steuerprofil im Rechner an.</span>
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <Calculator className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <span>Netto-Raten basieren auf Standardwerten.</span>{" "}
+                      <span className="text-xs">Passe dein Steuerprofil im Rechner an für genaue Werte.</span>
+                    </div>
                   </div>
                 )}
                 <BikeGrid
@@ -434,12 +439,12 @@ export function BikeExplorer() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
           </div>
         ) : savedBikes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center px-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <Heart className="h-7 w-7 text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/20 py-24 text-center px-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+              <Heart className="h-8 w-8 text-muted-foreground/40" />
             </div>
-            <p className="mt-4 font-semibold">Keine Favoriten gespeichert</p>
-            <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+            <p className="mt-5 text-lg font-semibold">Keine Favoriten gespeichert</p>
+            <p className="mt-1.5 text-sm text-muted-foreground max-w-sm">
               Klicke auf das Herz-Symbol bei einem Fahrrad, um es hier zu speichern.
             </p>
           </div>
@@ -473,12 +478,12 @@ export function BikeExplorer() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
           </div>
         ) : bikeGroups.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center px-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <Layers className="h-7 w-7 text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/20 py-24 text-center px-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+              <Layers className="h-8 w-8 text-muted-foreground/40" />
             </div>
-            <p className="mt-4 font-semibold">Keine Modelle gefunden</p>
-            <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+            <p className="mt-5 text-lg font-semibold">Keine Modelle gefunden</p>
+            <p className="mt-1.5 text-sm text-muted-foreground max-w-sm">
               Lade Fahrräder, um die Modellübersicht zu sehen.
             </p>
           </div>
@@ -486,18 +491,23 @@ export function BikeExplorer() {
           <>
             {/* Summary banner */}
             {resolution.multiDealerGroups > 0 && (
-              <div className="rounded-xl border bg-primary/5 px-4 py-3 text-sm">
-                <span className="font-semibold">{resolution.multiDealerGroups} Modell{resolution.multiDealerGroups !== 1 ? "e" : ""}</span>
-                {" "}bei mehreren Händlern erhältlich
-                {resolution.maxSavings !== null && resolution.maxSavings > 0 && (
-                  <span className="text-muted-foreground">
-                    {" "}— bis zu{" "}
-                    <span className="font-semibold text-green-600 dark:text-green-400">
-                      {resolution.maxSavings.toLocaleString("de-DE")} €
-                    </span>{" "}
-                    Preisunterschied
-                  </span>
-                )}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 px-5 py-4 text-sm flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <Layers className="h-4.5 w-4.5 text-primary" />
+                </div>
+                <div>
+                  <span className="font-semibold">{resolution.multiDealerGroups} Modell{resolution.multiDealerGroups !== 1 ? "e" : ""}</span>
+                  {" "}bei mehreren Händlern erhältlich
+                  {resolution.maxSavings !== null && resolution.maxSavings > 0 && (
+                    <span className="text-muted-foreground">
+                      {" "}— bis zu{" "}
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {resolution.maxSavings.toLocaleString("de-DE")} €
+                      </span>{" "}
+                      Preisunterschied
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import type { Bike } from "@/adapters/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Search, TrendingUp, ArrowLeftRight, Store } from "lucide-react";
 
 interface StatsBarProps {
   bikes: Bike[];
@@ -31,6 +32,9 @@ export function StatsBar({ bikes, totalCount, loading }: StatsBarProps) {
   const stats = [
     {
       label: "Ergebnisse",
+      icon: Search,
+      iconColor: "text-primary",
+      iconBg: "bg-primary/10",
       value: (
         <span>
           {bikes.length}
@@ -42,26 +46,43 @@ export function StatsBar({ bikes, totalCount, loading }: StatsBarProps) {
     },
     {
       label: "Ø Preis",
+      icon: TrendingUp,
+      iconColor: "text-blue-600 dark:text-blue-400",
+      iconBg: "bg-blue-50 dark:bg-blue-950/50",
       value: `${avgPrice.toLocaleString("de-DE", { maximumFractionDigits: 0 })} €`,
     },
     {
       label: "Preisspanne",
+      icon: ArrowLeftRight,
+      iconColor: "text-amber-600 dark:text-amber-400",
+      iconBg: "bg-amber-50 dark:bg-amber-950/50",
       value: `${minPrice.toLocaleString("de-DE")} – ${maxPrice.toLocaleString("de-DE")} €`,
     },
     {
       label: "Händler",
+      icon: Store,
+      iconColor: "text-violet-600 dark:text-violet-400",
+      iconBg: "bg-violet-50 dark:bg-violet-950/50",
       value: dealers,
     },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {stats.map((stat) => (
-        <div key={stat.label} className="rounded-xl border bg-card p-3 sm:p-4">
-          <p className="text-xs text-muted-foreground">{stat.label}</p>
-          <p className="mt-1 text-xl font-bold tabular-nums sm:text-2xl">{stat.value}</p>
-        </div>
-      ))}
+      {stats.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <div key={stat.label} className="rounded-xl border bg-card p-3 sm:p-4 transition-shadow hover:shadow-card-hover">
+            <div className="flex items-center gap-2">
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                <Icon className={`h-3.5 w-3.5 ${stat.iconColor}`} />
+              </div>
+              <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
+            </div>
+            <p className="mt-2 text-xl font-bold tabular-nums sm:text-2xl">{stat.value}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }
