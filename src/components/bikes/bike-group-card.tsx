@@ -29,10 +29,10 @@ function PriceRow({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+        "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
         isBestOffer
           ? "bg-primary/10 text-primary font-medium hover:bg-primary/15"
-          : "hover:bg-muted/60"
+          : "hover:bg-muted/50"
       )}
     >
       <span className="flex items-center gap-1.5 min-w-0">
@@ -57,7 +57,7 @@ export function BikeGroupCard({ group }: BikeGroupCardProps) {
   const representativeListing = group.listings[0];
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+    <div className="group flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1">
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {representativeListing.imageUrl ? (
@@ -66,44 +66,31 @@ export function BikeGroupCard({ group }: BikeGroupCardProps) {
             src={representativeListing.imageUrl}
             alt={group.name}
             loading="lazy"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center" role="img" aria-label={`Kein Bild für ${group.name}`}>
-            <svg
-              className="h-16 w-16 text-muted-foreground/20"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-muted to-muted/60" role="img" aria-label={`Kein Bild für ${group.name}`}>
+            <Store className="h-16 w-16 text-muted-foreground/15" aria-hidden="true" />
           </div>
         )}
 
         {/* Category badge */}
         <Badge
-          className="absolute left-2.5 top-2.5 backdrop-blur-sm bg-white/90 text-foreground border-white/50 dark:bg-slate-900/90 dark:border-slate-700/50 dark:text-foreground"
+          className="absolute left-2.5 top-2.5 backdrop-blur-md bg-white/90 text-foreground border-white/40 dark:bg-slate-900/90 dark:border-slate-700/50 dark:text-foreground shadow-sm"
           variant="outline"
         >
           {group.category}
         </Badge>
 
         {/* Dealer count badge */}
-        <div className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm border border-white/50 dark:bg-slate-900/90 dark:border-slate-700/50 px-2 py-1">
+        <div className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-md border border-white/40 dark:bg-slate-900/90 dark:border-slate-700/50 px-2.5 py-1 shadow-sm">
           <Store className="h-3 w-3 text-muted-foreground" />
-          <span className="text-xs font-medium">{group.dealerCount}</span>
+          <span className="text-xs font-semibold">{group.dealerCount}</span>
         </div>
 
         {/* Savings badge — only for multi-dealer groups with price differences */}
         {group.dealerCount > 1 && savings > 0 && (
-          <div className="absolute bottom-2.5 left-2.5 rounded-full bg-green-600 px-2 py-0.5 text-xs font-semibold text-white shadow">
+          <div className="absolute bottom-2.5 left-2.5 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-md">
             bis {savings.toLocaleString("de-DE")} € sparen
           </div>
         )}
@@ -111,7 +98,7 @@ export function BikeGroupCard({ group }: BikeGroupCardProps) {
         {/* Fuzzy match warning */}
         {group.confidence === "fuzzy" && (
           <div
-            className="absolute bottom-2.5 right-2.5 flex items-center gap-1 rounded-full bg-amber-100/90 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200 px-2 py-0.5 text-xs"
+            className="absolute bottom-2.5 right-2.5 flex items-center gap-1 rounded-full bg-amber-50/95 dark:bg-amber-900/80 text-amber-700 dark:text-amber-200 px-2 py-0.5 text-xs shadow-sm"
             title="Diese Angebote wurden automatisch zusammengeführt — Übereinstimmung nicht gesichert"
           >
             <AlertCircle className="h-3 w-3" />
@@ -122,7 +109,7 @@ export function BikeGroupCard({ group }: BikeGroupCardProps) {
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {group.brand}
         </p>
         <h3 className="mt-1 font-semibold leading-snug line-clamp-2 text-sm">
@@ -130,18 +117,18 @@ export function BikeGroupCard({ group }: BikeGroupCardProps) {
         </h3>
 
         {/* Price range */}
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-2xl font-bold tabular-nums">
+        <div className="mt-3 flex items-baseline gap-1.5">
+          <span className="text-2xl font-extrabold tabular-nums">
             {group.bestPrice.toLocaleString("de-DE")}
           </span>
-          <span className="text-base font-medium text-muted-foreground">&euro;</span>
+          <span className="text-sm font-medium text-muted-foreground">&euro;</span>
           {group.dealerCount > 1 && (
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground/70">
               – {group.highestPrice.toLocaleString("de-DE")} €
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           {group.dealerCount === 1
             ? "bei 1 Händler"
             : `bei ${group.dealerCount} Händlern`}

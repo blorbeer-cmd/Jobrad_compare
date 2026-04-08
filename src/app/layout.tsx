@@ -38,20 +38,23 @@ export default function RootLayout({
                 Zum Hauptinhalt springen
               </a>
 
-              <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-top">
-                <div className="container flex h-14 items-center gap-3 px-4 sm:px-6">
+              <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 safe-top">
+                <div className="container flex h-16 items-center gap-4 px-4 sm:px-6">
                   <Link
                     href="/"
-                    className="flex shrink-0 items-center gap-2 font-bold text-foreground hover:text-primary transition-colors"
+                    className="group flex shrink-0 items-center gap-2.5 font-bold text-foreground transition-colors"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground" aria-hidden="true">
-                      <Bike className="h-4 w-4" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm transition-transform group-hover:scale-105" aria-hidden="true">
+                      <Bike className="h-[18px] w-[18px]" />
                     </div>
-                    <span className="hidden sm:inline">JobRad Vergleich</span>
+                    <div className="hidden sm:block">
+                      <span className="text-base font-bold tracking-tight">JobRad</span>
+                      <span className="text-base font-bold tracking-tight text-primary"> Vergleich</span>
+                    </div>
                   </Link>
 
-                  <nav aria-label="Hauptnavigation" className="flex items-center gap-3 text-sm">
-                    <Link href="/rechner" className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">
+                  <nav aria-label="Hauptnavigation" className="flex items-center gap-1 text-sm">
+                    <Link href="/rechner" className="rounded-lg px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground whitespace-nowrap">
                       Rechner
                     </Link>
                   </nav>
@@ -63,10 +66,10 @@ export default function RootLayout({
                 </div>
               </header>
 
-              <main id="main-content" className="container flex-1 py-4 px-4 sm:px-6 sm:py-6">{children}</main>
+              <main id="main-content" className="container flex-1 py-6 px-4 sm:px-6 sm:py-8">{children}</main>
 
-              <footer className="border-t bg-card">
-                <div className="container flex items-center justify-between px-4 py-4 text-xs text-muted-foreground sm:px-6">
+              <footer className="border-t border-border/50 bg-muted/30">
+                <div className="container flex items-center justify-between px-4 py-5 text-xs text-muted-foreground sm:px-6">
                   <span>JobRad Fahrrad-Vergleichstool &middot; Internes Werkzeug</span>
                   <nav aria-label="Footer">
                     <Link href="/datenschutz" className="hover:text-foreground transition-colors">

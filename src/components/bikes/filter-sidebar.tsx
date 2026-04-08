@@ -74,10 +74,10 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors",
+        "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200",
         active
-          ? "bg-primary text-primary-foreground"
-          : "border bg-background text-foreground hover:bg-muted"
+          ? "bg-primary text-primary-foreground shadow-sm scale-[1.02]"
+          : "border bg-background text-foreground hover:bg-muted hover:border-muted-foreground/20"
       )}
     >
       {label}
@@ -151,19 +151,27 @@ function FilterSection({
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between py-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
+        className="flex w-full items-center justify-between py-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors group"
       >
         <span className="flex items-center gap-2">
           {title}
           {activeCount !== undefined && activeCount > 0 && (
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
               {activeCount}
             </span>
           )}
         </span>
-        {open ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+        <ChevronDown className={cn(
+          "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+          open && "rotate-180"
+        )} />
       </button>
-      {open && <div className="mt-2">{children}</div>}
+      <div className={cn(
+        "grid transition-all duration-200",
+        open ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"
+      )}>
+        <div className="overflow-hidden">{children}</div>
+      </div>
     </div>
   );
 }
@@ -277,13 +285,13 @@ export function FilterSidebar({
         onClick={() => update({ onlyDiscounted: !filters.onlyDiscounted })}
         aria-pressed={filters.onlyDiscounted}
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors",
+          "flex w-full items-center gap-2.5 rounded-xl border px-3 py-3 text-sm transition-all duration-200",
           filters.onlyDiscounted
-            ? "border-primary bg-primary/10 text-primary font-medium"
-            : "bg-background hover:bg-muted"
+            ? "border-primary/50 bg-primary/10 text-primary font-medium shadow-sm"
+            : "bg-background hover:bg-muted hover:border-muted-foreground/20"
         )}
       >
-        <Tag className={cn("h-4 w-4 shrink-0", filters.onlyDiscounted ? "text-primary" : "text-muted-foreground")} />
+        <Tag className={cn("h-4 w-4 shrink-0 transition-colors", filters.onlyDiscounted ? "text-primary" : "text-muted-foreground")} />
         Nur reduzierte Angebote
         {filters.onlyDiscounted && <X className="ml-auto h-3.5 w-3.5 shrink-0" />}
       </button>
@@ -493,8 +501,8 @@ export function FilterSidebar({
 
       {/* Reset */}
       <Button
-        variant="outline"
-        className="w-full"
+        variant="ghost"
+        className="w-full text-muted-foreground hover:text-destructive"
         onClick={() => onFiltersChange(defaultFilters)}
         disabled={activeFilterCount === 0 && !filters.search}
       >
@@ -528,14 +536,14 @@ export function FilterSidebar({
 
       {/* Desktop sidebar */}
       <aside aria-label="Filter" className="hidden lg:block">
-        <div className="sticky top-[4.5rem] w-60 overflow-y-auto max-h-[calc(100vh-5rem)] rounded-xl border bg-card p-4 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="sticky top-[5rem] w-64 overflow-y-auto max-h-[calc(100vh-6rem)] rounded-xl border bg-card p-5 shadow-card thin-scrollbar">
+          <div className="mb-5 flex items-center justify-between">
             <h3 className="flex items-center gap-2 font-semibold text-sm">
-              <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
               Filter
             </h3>
             {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge className="text-[11px] bg-primary/10 text-primary border-primary/20">
                 {activeFilterCount} aktiv
               </Badge>
             )}

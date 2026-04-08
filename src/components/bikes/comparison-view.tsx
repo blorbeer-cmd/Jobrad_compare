@@ -15,12 +15,12 @@ interface ComparisonViewProps {
 export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps) {
   if (bikes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center px-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-          <GitCompareArrows className="h-7 w-7 text-muted-foreground/50" />
+      <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted-foreground/20 py-24 text-center px-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+          <GitCompareArrows className="h-8 w-8 text-muted-foreground/40" />
         </div>
-        <p className="mt-4 font-semibold">Kein Vergleich gestartet</p>
-        <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+        <p className="mt-5 text-lg font-semibold">Kein Vergleich gestartet</p>
+        <p className="mt-1.5 text-sm text-muted-foreground max-w-sm">
           Wähle bis zu 4 Fahrräder im Durchsuchen-Tab aus, um sie hier zu vergleichen.
         </p>
       </div>
@@ -85,23 +85,23 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">
+        <h3 className="text-lg font-semibold">
           Vergleich
-          <span className="ml-1.5 text-sm font-normal text-muted-foreground">
+          <span className="ml-2 text-sm font-normal text-muted-foreground">
             ({bikes.length} Fahrräder)
           </span>
         </h3>
-        <Button variant="ghost" size="sm" onClick={onClear} className="gap-1.5">
+        <Button variant="ghost" size="sm" onClick={onClear} className="gap-1.5 text-muted-foreground hover:text-destructive">
           <X className="h-4 w-4" />
           Alle entfernen
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border" role="region" aria-label="Vergleichstabelle" tabIndex={0}>
+      <div className="overflow-x-auto rounded-xl border shadow-card thin-scrollbar" role="region" aria-label="Vergleichstabelle" tabIndex={0}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-muted/40">
-              <th scope="col" className="w-28 px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <tr className="border-b bg-muted/30">
+              <th scope="col" className="w-32 px-4 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 <span className="sr-only">Eigenschaft</span>
               </th>
               {bikes.map((bike) => (
@@ -109,7 +109,7 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
                   scope="col"
                   key={`${bike.dealer}:${bike.name}`}
                   className={cn(
-                    "min-w-[180px] px-4 py-3",
+                    "min-w-[200px] px-4 py-4",
                     bike.price === minPrice && "bg-primary/5"
                   )}
                 >
@@ -119,14 +119,14 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
                     </span>
                     <button
                       onClick={() => onRemove(bike)}
-                      className="shrink-0 rounded-full p-1 hover:bg-muted transition-colors"
+                      className="shrink-0 rounded-full p-1.5 hover:bg-destructive/10 hover:text-destructive transition-colors"
                       aria-label="Aus Vergleich entfernen"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   {bike.price === minPrice && bikes.length > 1 && (
-                    <Badge className="mt-1 text-[10px]" variant="default">
+                    <Badge className="mt-2 text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
                       Bestes Angebot
                     </Badge>
                   )}
@@ -138,16 +138,16 @@ export function ComparisonView({ bikes, onRemove, onClear }: ComparisonViewProps
             {fields.map((field, i) => (
               <tr
                 key={field.label}
-                className={cn("border-b last:border-0", i % 2 === 0 ? "" : "bg-muted/20")}
+                className={cn("border-b last:border-0 transition-colors", i % 2 === 0 ? "" : "bg-muted/15")}
               >
-                <th scope="row" className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th scope="row" className="px-4 py-3.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   {field.label}
                 </th>
                 {bikes.map((bike) => (
                   <td
                     key={`${bike.dealer}:${bike.name}`}
                     className={cn(
-                      "px-4 py-3 text-center",
+                      "px-4 py-3.5 text-center",
                       field.label === "Preis" && bike.price === minPrice && bikes.length > 1
                         ? "text-primary font-bold"
                         : ""

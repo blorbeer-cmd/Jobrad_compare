@@ -35,9 +35,9 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full border bg-background px-2 py-1 pr-3 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <button className="flex items-center gap-2 rounded-full border border-border/50 bg-card px-2 py-1 pr-3 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
           <Avatar className="h-7 w-7">
-            <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+            <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
               {initials}
             </AvatarFallback>
           </Avatar>

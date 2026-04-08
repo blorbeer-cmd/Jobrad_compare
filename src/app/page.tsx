@@ -5,12 +5,12 @@ export default async function Home() {
   await requireAuth();
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Fahrrad-Angebote vergleichen
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-4xl">
+          Fahrrad-Angebote <span className="text-gradient">vergleichen</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+        <p className="mt-2 text-sm text-muted-foreground sm:text-base max-w-lg">
           Finde das beste JobRad-Angebot bei verschiedenen Händlern.
         </p>
       </div>
