@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ interface TooltipProps {
 
 export function Tooltip({ content, children, className }: TooltipProps) {
   const [visible, setVisible] = useState(false);
+  const tooltipId = useId();
 
   return (
     <span
@@ -20,10 +21,15 @@ export function Tooltip({ content, children, className }: TooltipProps) {
       onMouseLeave={() => setVisible(false)}
       onFocus={() => setVisible(true)}
       onBlur={() => setVisible(false)}
+      aria-describedby={visible ? tooltipId : undefined}
     >
       {children}
       {visible && (
-        <span className="absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 rounded-lg border bg-popover px-3 py-2 text-xs leading-relaxed text-popover-foreground shadow-md">
+        <span
+          id={tooltipId}
+          role="tooltip"
+          className="absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 rounded-lg border bg-popover px-3 py-2 text-xs leading-relaxed text-popover-foreground shadow-md"
+        >
           {content}
         </span>
       )}
@@ -40,7 +46,9 @@ interface InfoTooltipProps {
 export function InfoTooltip({ content, className }: InfoTooltipProps) {
   return (
     <Tooltip content={content} className={className}>
-      <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground hover:text-foreground transition-colors" />
+      <span tabIndex={0} aria-label="Weitere Informationen" className="inline-flex">
+        <Info className="h-3.5 w-3.5 cursor-help text-muted-foreground hover:text-foreground transition-colors" aria-hidden="true" />
+      </span>
     </Tooltip>
   );
 }

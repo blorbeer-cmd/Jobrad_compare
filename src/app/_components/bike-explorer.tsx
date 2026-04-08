@@ -310,7 +310,7 @@ export function BikeExplorer() {
 
       <TabsContent value="browse" className="space-y-4 mt-0">
         {fetchState.error ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/5 py-16 text-center px-4">
+          <div role="alert" className="flex flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/5 py-16 text-center px-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
               <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
@@ -430,7 +430,7 @@ export function BikeExplorer() {
 
       <TabsContent value="favorites" className="mt-0">
         {savedLoading ? (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex items-center justify-center py-20" role="status" aria-label="Favoriten werden geladen">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
           </div>
         ) : savedBikes.length === 0 ? (
@@ -469,7 +469,7 @@ export function BikeExplorer() {
 
       <TabsContent value="models" className="mt-0 space-y-4">
         {fetchState.loading ? (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex items-center justify-center py-20" role="status" aria-label="Modelle werden geladen">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
           </div>
         ) : bikeGroups.length === 0 ? (

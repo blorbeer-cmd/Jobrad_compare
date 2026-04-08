@@ -33,7 +33,7 @@ export function AdminSidebar({ email }: { email: string }) {
         </div>
 
         {/* Navigation */}
-        <nav className="rounded-lg border bg-card">
+        <nav aria-label="Admin-Navigation" className="rounded-lg border bg-card">
           <div className="p-2">
             {navItems.map((item) => {
               const isActive = pathname === item.href;

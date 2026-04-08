@@ -103,7 +103,7 @@ function LoginContent() {
         </CardHeader>
         <CardContent className="space-y-4">
           {(error || loginError) && (
-            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+            <div role="alert" className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
               {loginError || errorMessages[error!] || errorMessages.Default}
             </div>
           )}

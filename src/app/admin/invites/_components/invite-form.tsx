@@ -48,6 +48,7 @@ export function InviteForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="name@beispiel.de"
           required
+          aria-label="E-Mail-Adresse für Einladung"
           className="max-w-sm"
         />
         <Button type="submit" disabled={loading}>
@@ -57,7 +58,7 @@ export function InviteForm() {
       </form>
 
       {message && (
-        <p className={`mt-3 text-sm ${message.type === "success" ? "text-green-600" : "text-destructive"}`}>
+        <p role="alert" aria-live="polite" className={`mt-3 text-sm ${message.type === "success" ? "text-green-600" : "text-destructive"}`}>
           {message.text}
         </p>
       )}

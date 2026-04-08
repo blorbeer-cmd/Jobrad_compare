@@ -12,6 +12,9 @@ interface SheetProps {
 }
 
 export function Sheet({ open, onClose, children, title }: SheetProps) {
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  const titleId = React.useId();
+
   // Close on Escape key
   React.useEffect(() => {
     if (!open) return;
@@ -34,6 +37,38 @@ export function Sheet({ open, onClose, children, title }: SheetProps) {
     };
   }, [open]);
 
+  // Focus trap and initial focus
+  React.useEffect(() => {
+    if (!open || !panelRef.current) return;
+    const el = panelRef.current;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+
+    // Focus close button initially
+    const closeBtn = el.querySelector<HTMLElement>('[data-sheet-close]');
+    closeBtn?.focus();
+
+    function trapFocus(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !el) return;
+      const focusableEls = el.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableEls.length === 0) return;
+      const first = focusableEls[0];
+      const last = focusableEls[focusableEls.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+
+    document.addEventListener("keydown", trapFocus);
+    return () => {
+      document.removeEventListener("keydown", trapFocus);
+      previouslyFocused?.focus();
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -47,18 +82,21 @@ export function Sheet({ open, onClose, children, title }: SheetProps) {
 
       {/* Panel */}
       <div
+        ref={panelRef}
         className={cn(
           "relative ml-auto flex h-full w-[min(85vw,360px)] flex-col bg-background shadow-xl",
           "animate-in slide-in-from-right duration-300"
         )}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : "Seitenpanel"}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b px-4 py-3">
-          {title && <h2 className="font-semibold">{title}</h2>}
+          {title && <h2 id={titleId} className="font-semibold">{title}</h2>}
           <button
+            data-sheet-close
             onClick={onClose}
             className="ml-auto rounded-md p-1.5 hover:bg-muted transition-colors"
             aria-label="Schließen"
